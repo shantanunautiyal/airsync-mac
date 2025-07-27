@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScanView: View {
 
+
     var body: some View {
         NavigationStack{
             HStack {
@@ -74,6 +75,7 @@ struct ScanView: View {
 
                     //                Spacer()
                 }
+                .frame(minWidth: 300)
             }
             .navigationTitle("AirSync")
             .navigationSubtitle("Connect an Android")

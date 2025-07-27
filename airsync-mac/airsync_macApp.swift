@@ -11,7 +11,13 @@ import SwiftUI
 struct airsync_macApp: App {
     var body: some Scene {
         WindowGroup {
-            ScanView()
+            HomeView()
+                .containerBackground(
+                    .ultraThinMaterial , for: .window
+                )
+                .toolbarBackgroundVisibility(
+                    .hidden, for: .windowToolbar
+                )
         }
     }
 }

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State var isDisconnected: Bool = false
+
     var body: some View {
             NavigationSplitView {
             VStack{
@@ -20,6 +22,7 @@ struct HomeView: View {
             .safeAreaInset(edge: .bottom) {
                 HStack{
                     Button{
+                        isDisconnected = true
                         //                    isShowingSafariView = true
                     } label: {
                         Label("Disconnect", systemImage: "xmark")
@@ -96,6 +99,9 @@ struct HomeView: View {
         .navigationTitle("Sameera's Pixel")
         .navigationSubtitle("Connected")
 
+        .sheet(isPresented: $isDisconnected){
+            ScanView()
+        }
     }
 }
 

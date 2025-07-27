@@ -10,15 +10,22 @@ import SwiftUI
 struct PhoneView: View {
     var body: some View {
         ZStack{
+
             Rectangle()
-                .fill(.black)
+                .fill(.gray.opacity(0.2))
                 .frame(width: 190, height: 410)
                 .cornerRadius(25)
 
-            Rectangle()
-                .fill(Color.blue.gradient)
+            Image("wallpaper")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
                 .frame(width: 180, height: 400)
                 .cornerRadius(20)
+
+//            Rectangle()
+//                .fill(Color.blue.gradient)
+//                .frame(width: 180, height: 400)
+//                .cornerRadius(20)
 
             ScreenView()
 
@@ -36,7 +43,7 @@ struct StatusBarView: View {
             HStack{
                 Spacer()
                 Circle()
-                    .fill(.black)
+                    .fill(.gray.opacity(0.2))
                     .frame(width: 15, height: 15)
                 Spacer()
             }
@@ -71,9 +78,10 @@ struct MediaPlayer: View {
     var body: some View {
         ZStack{
             Rectangle()
-                .fill(.thinMaterial)
+                .fill(.background.opacity(0))
                 .frame(width: 170, height: 70)
-                .cornerRadius(13.5)
+                .glassEffect(in: .rect(cornerRadius: 16.0))
+
             VStack{
                 Label("Emptyness Machine", systemImage: "music.note.list")
                     .font(.caption)
