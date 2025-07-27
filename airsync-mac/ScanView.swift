@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ScanView: View {
-    @State var isConnected: Bool = false
 
     var body: some View {
         NavigationStack{
@@ -80,10 +79,7 @@ struct ScanView: View {
             .navigationSubtitle("Connect an Android")
             .padding()
 
-            .sheet(isPresented: $isConnected){
-                HomeView()
           }
-        }
     }
 }
 
