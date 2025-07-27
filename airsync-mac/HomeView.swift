@@ -55,7 +55,9 @@ struct HomeView: View {
                         .buttonStyle(.glass)
                         .labelStyle(.iconOnly)
                         .controlSize(.large)
+                        .help("Dismiss All")
                     }
+                    .padding()
 
                         List{
                             NotificationView()
@@ -90,7 +92,6 @@ struct HomeView: View {
 
 
                 }
-                .padding()
         }
         .navigationTitle("Sameera's Pixel")
         .navigationSubtitle("Connected")
