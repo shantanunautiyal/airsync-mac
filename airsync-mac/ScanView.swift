@@ -17,11 +17,25 @@ struct ScanView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.blue)
                         .frame(width: 300, height: 300)
+                        .padding(.bottom, 20)
 
 
-                    Text("Scan from your phone")
-                        .padding()
+                    HStack{
+
+                        Text("Scan from your phone")
+
+                        Spacer()
+
+                        Button{
+                            //                    isShowingSafariView = true
+                        } label: {
+                            Label("Connect", systemImage: "paperplane.fill")
+                        }
+                        .buttonStyle(.glass)
+                        .controlSize(.large)
+                    }
                 }
+                .padding()
 
                 VStack{
                     VStack{
@@ -55,6 +69,7 @@ struct ScanView: View {
                         ConnectionInfoText()
                         ConnectionInfoText()
                         ConnectionInfoText()
+
                     }
                     .padding()
 
