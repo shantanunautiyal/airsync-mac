@@ -13,32 +13,48 @@ struct ContentView: View {
             VStack{
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.blue)
-                    .frame(width: 200, height: 200)
+                    .frame(width: 300, height: 300)
 
-                Spacer()
-
-                VStack{
-                    ConnectionInfoText()
-                    ConnectionInfoText()
-                    ConnectionInfoText()
-                    ConnectionInfoText()
-                }
+                Text("Scan from your phone")
+                    .padding()
             }
 
             VStack{
                 VStack{
-                    Label("Device Name", systemImage: "pencil")
+                    HStack{
+                        Label("Device Name", systemImage: "pencil")
+                        Spacer()
+                    }
                     TextField("Device Name", text: .constant("Sameera's macBook"))
+                }
+                .padding()
+
+                VStack{
                     HStack{
                         Label("Connect ADB", systemImage: "iphone")
+                        Spacer()
+                        Toggle("", isOn: .constant(true))
+                            .toggleStyle(.switch)
+                    }
+
+                    HStack{
+                        Label("Sync device status", systemImage: "battery.75percent")
+                        Spacer()
                         Toggle("", isOn: .constant(true))
                             .toggleStyle(.switch)
                     }
                 }
                 .padding()
-                Toggle("Sync devices status", isOn: .constant(true))
-                    .toggleStyle(.switch)
-                    .padding()
+
+                VStack{
+                    ConnectionInfoText()
+                    ConnectionInfoText()
+                    ConnectionInfoText()
+                    ConnectionInfoText()
+                }
+                .padding()
+
+//                Spacer()
             }
         }
         .padding()
@@ -54,6 +70,7 @@ struct ConnectionInfoText: View {
     var body: some View {
         HStack{
             Label("IP Address", systemImage: "wifi")
+            Spacer()
             Text("192.168.100.1")
         }
         .padding(1)
