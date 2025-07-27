@@ -61,7 +61,8 @@ struct ScanView: View {
                     //                Spacer()
                 }
             }
-            .navigationTitle("⌘ Frameworks")
+            .navigationTitle("AirSync")
+            .navigationSubtitle("Connect an Android")
             .padding()
 
             .sheet(isPresented: $isConnected){

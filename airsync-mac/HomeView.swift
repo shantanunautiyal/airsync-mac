@@ -9,18 +9,15 @@ import SwiftUI
 
 struct HomeView: View {
     var body: some View {
-        HStack{
+            NavigationSplitView {
             VStack{
-                HStack{
-                    Label("Sameera's Pixel", systemImage: "macbook.and.iphone")
-                        .font(.title2)
-
-                    Spacer()
-                }
-                .padding()
 
                 PhoneView()
 
+
+            }
+            .padding()
+            .safeAreaInset(edge: .bottom) {
                 HStack{
                     Button{
                         //                    isShowingSafariView = true
@@ -39,29 +36,65 @@ struct HomeView: View {
                     .labelStyle(.iconOnly)
                     .controlSize(.large)
                 }
+                .controlSize(.small)
+//                .labelStyle(.iconOnly)
             }
-            .padding()
-
-            VStack{
-                HStack{
-                    Label("Notifications", systemImage: "bell.badge.fill")
-                        .font(.title2)
-
-                    Spacer()
-                }
-
+        } detail: {
                 VStack{
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    Spacer()
+                    HStack{
+                        Label("Notifications", systemImage: "bell.badge.fill")
+                            .font(.title2)
+
+                        Spacer()
+
+                        Button{
+                            //                    isShowingSafariView = true
+                        } label: {
+                            Label("Dismiss All", systemImage: "xmark")
+                        }
+                        .buttonStyle(.glass)
+                        .labelStyle(.iconOnly)
+                        .controlSize(.large)
+                    }
+
+                        List{
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                            NotificationView()
+                        }
+
+
                 }
-
-
-            }
-            .padding()
+                .padding()
         }
+        .navigationTitle("Sameera's Pixel")
+        .navigationSubtitle("Connected")
+
     }
 }
 
@@ -102,5 +135,25 @@ struct NotificationView: View {
             }
             .padding()
         }
+        .swipeActions(edge: .leading) {
+            Button {
+//                store.toggleUnread(message)
+            } label: {
+                    Label("Unread", systemImage: "envelope.badge")
+            }
+        }
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+//                store.delete(message)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            Button {
+//                store.flag(message)
+            } label: {
+                Label("Flag", systemImage: "flag")
+            }
+        }
+        .listRowSeparator(.hidden)
     }
 }
