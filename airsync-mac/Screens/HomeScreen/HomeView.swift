@@ -40,9 +40,9 @@ struct SidebarView: View {
     var body: some View {
         VStack{
 
-            Label("Sameera's Pixel", systemImage: "iphone.gen3")
-                .font(.title3)
-            Text("Connected")
+//            Label("Sameera's Pixel", systemImage: "iphone.gen3")
+//                .font(.title3)
+//            Text("Connected")
 
             Spacer()
             PhoneView()
@@ -50,7 +50,7 @@ struct SidebarView: View {
 
 
         }
-        .frame(minWidth: 240, minHeight: 450)
+        .frame(minWidth: 240, minHeight: 400)
             .safeAreaInset(edge: .bottom) {
                 VStack{
                     HStack{

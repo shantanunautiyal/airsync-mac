@@ -61,8 +61,6 @@ struct ScanView: View {
                 }
                 .frame(minWidth: 300)
             }
-            .navigationTitle("AirSync")
-            .navigationSubtitle("Connect an Android")
             .padding()
 
           }

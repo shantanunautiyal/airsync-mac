@@ -7,84 +7,94 @@
 
 import SwiftUI
 
-struct AppContentView: View {
-    var body: some View {
-            TabView {
-                List{
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                    NotificationView()
-                }
-                .scrollContentBackground(.hidden)
-                .background(.clear)
-                .toolbar {
-                    Button {
+enum TabIdentifier: String, CaseIterable, Identifiable {
+    case notifications = "Notifications"
+    case apps = "Apps"
+    case settings = "Settings"
 
-                    } label: {
-                        Label("Notifications", systemImage: "wind")
-                    }
-                }
-                .background(.clear)
-                    .tabItem {
-                        Label("Notifications", systemImage: "bell.badge.fill")
-                            .font(.title2)
-                    }
+    var id: String { rawValue }
 
-                Text("(っ◕‿◕)っ")
-                    .tabItem {
-                        Label("Apps", systemImage: "bell.badge.fill")
-                            .font(.title2)
-                    }
-                    .toolbar {
-                        Button {
-
-                        } label: {
-                            Label("Refresh", systemImage: "repeat")
-                        }
-                    }
-
-                ScanView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gear")
-                            .font(.title2)
-                    }
-                    .toolbar {
-                        Button {
-
-                        } label: {
-                            Label("About", systemImage: "info.circle")
-                        }
-                    }
-            }
-            .frame(minWidth: 420)
-            .background(.clear)
+    var icon: String {
+        switch self {
+        case .notifications: return "bell.badge.fill"
+        case .apps: return "app.badge"
+        case .settings: return "gear"
+        }
     }
 }
+
+struct AppContentView: View {
+    @State private var selectedTab: TabIdentifier = .notifications
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                switch selectedTab {
+                case .notifications:
+                    List(0..<30, id: \.self) { _ in
+                        NotificationView()
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(.clear)
+                    .transition(.blurReplace)
+                    .toolbar{
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+
+                            } label: {
+                                Label("Clear", systemImage: "wind")
+                            }
+                        }
+                    }
+
+                case .apps:
+                    Text("(っ◕‿◕)っ")
+                        .font(.largeTitle)
+                        .transition(.blurReplace)
+                        .toolbar{
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+
+                                } label: {
+                                    Label("Refresh", systemImage: "repeat")
+                                }
+                            }
+                        }
+
+                case .settings:
+                    ScanView()
+                        .transition(.blurReplace)
+                        .toolbar{
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+
+                                } label: {
+                                    Label("About", systemImage: "info")
+                                }
+                            }
+                        }
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: selectedTab)
+            .frame(minWidth: 550)
+        }
+        .toolbar {
+            ToolbarItem(placement: .secondaryAction)  {
+                Picker("Tab", selection: $selectedTab) {
+                    ForEach(TabIdentifier.allCases) { tab in
+                        Label(tab.rawValue, systemImage: tab.icon)
+                            .labelStyle(.titleAndIcon)
+                            .tag(tab)
+                    }
+                }
+                .pickerStyle(.palette)
+
+                Spacer()
+            }
+        }
+    }
+}
+
 
 #Preview {
     AppContentView()
