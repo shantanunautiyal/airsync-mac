@@ -76,19 +76,6 @@ struct HomeView: View {
     HomeView()
 }
 
-struct ScannerView: View {
-    var body: some View {
-        VStack {
-            Spacer()
-            Rectangle()
-                .frame(width: 175, height: 175)
-                .padding()
-            Spacer()
-        }
-        .padding()
-    }
-}
-
 struct SidebarView: View {
     var action: () -> Void = {}
     @State private var isExpandedAllSeas: Bool = false
@@ -107,7 +94,7 @@ struct SidebarView: View {
 
 
         }
-        .frame(minWidth: 240, minHeight: 400)
+        .frame(minWidth: 270, minHeight: 400)
             .safeAreaInset(edge: .bottom) {
                 VStack{
                     HStack{

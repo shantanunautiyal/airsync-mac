@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B9673B572E35A2A1006D284A /* airsync-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "airsync-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = "airsync-mac";
 			packageProductDependencies = (
+				B9C3181D2E37AA1D00367F16 /* QRCode */,
 			);
 			productName = "airsync-mac";
 			productReference = B9673B572E35A2A1006D284A /* airsync-mac.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = B9673B4E2E35A2A1006D284A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9673B582E35A2A1006D284A /* Products */;
 			projectDirPath = "";
@@ -333,6 +342,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dagronf/QRCode";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 26.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B9C3181D2E37AA1D00367F16 /* QRCode */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCode;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B9673B4F2E35A2A1006D284A /* Project object */;
 }
