@@ -9,6 +9,11 @@ import SwiftUI
 
 @main
 struct airsync_macApp: App {
+    let socketServer = SocketServer()
+
+    init() {
+        socketServer.start()
+    }
     var body: some Scene {
         WindowGroup {
             HomeView()
