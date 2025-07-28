@@ -7,18 +7,63 @@
 
 import SwiftUI
 
+enum DeviceIdentifier: String, CaseIterable, Identifiable {
+    case pixel = "Sameera's Pixel"
+    case galaxy = "Sameera's Galaxy"
+    case add = "Add"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .pixel: return "iphone.gen3"
+        case .galaxy: return "iphone.gen1"
+        case .add: return "plus"
+        }
+    }
+
+}
+
 struct HomeView: View {
     @State var isDisconnected: Bool = false
+    @State private var selectedDevice: DeviceIdentifier = .pixel
 
     var body: some View {
             NavigationSplitView {
-                SidebarView(action: {
-                    isDisconnected = true
-                })
+                Picker("Device", selection: $selectedDevice) {
+                    ForEach(DeviceIdentifier.allCases) { tab in
+                        Label(tab.rawValue, systemImage: tab.icon)
+                            .labelStyle(.iconOnly)
+                            .tag(tab)
+                    }
+                }
+                .pickerStyle(.palette)
+
+                ZStack {
+                    switch selectedDevice {
+                    case .pixel:
+                        SidebarView(action: {
+                            isDisconnected = true
+                        })
+                        .transition(.move(edge: .leading))
+
+                    case .galaxy:
+                        SidebarView(action: {
+                            isDisconnected = true
+                        })
+                        .transition(.move(edge: .trailing))
+
+                    case .add:
+                        ScannerView()
+                            .transition(.scale)
+                    }
+
+                }
+                .animation(.easeInOut(duration: 0.3), value: selectedDevice)
         } detail: {
             AppContentView()
         }
-        .navigationTitle("Sameera's Pixel")
+        .navigationTitle(selectedDevice.id)
         .navigationSubtitle("Connected")
 
         .sheet(isPresented: $isDisconnected){
@@ -31,6 +76,18 @@ struct HomeView: View {
     HomeView()
 }
 
+struct ScannerView: View {
+    var body: some View {
+        VStack {
+            Spacer()
+            Rectangle()
+                .frame(width: 175, height: 175)
+                .padding()
+            Spacer()
+        }
+        .padding()
+    }
+}
 
 struct SidebarView: View {
     var action: () -> Void = {}
@@ -61,12 +118,12 @@ struct SidebarView: View {
                             action: action
                         )
 
-                        GlassButtonView(
-                            label: "Connect",
-                            systemImage: "plus",
-                            action: action
-                        )
-                        .labelStyle(.iconOnly)
+//                        GlassButtonView(
+//                            label: "Connect",
+//                            systemImage: "plus",
+//                            action: action
+//                        )
+//                        .labelStyle(.iconOnly)
                     }
                     .padding(.bottom, 20)
                 }
