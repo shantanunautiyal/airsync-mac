@@ -12,11 +12,9 @@ struct DeviceStatus: Hashable{
     let battery: Battery
     let isPaired: Bool
     let music: Music
-
 }
 
 struct Music: Hashable{
-
     let isPlaying: Bool
     let title: String
     let artist: String
