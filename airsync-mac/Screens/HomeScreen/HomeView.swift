@@ -34,28 +34,38 @@ struct HomeView: View {
 
 struct SidebarView: View {
     var action: () -> Void = {}
+    @State private var isExpandedAllSeas: Bool = false
+
 
     var body: some View {
         VStack{
+
+            Spacer()
             PhoneView()
+            Spacer()
+
+
         }
-        .padding()
-        .safeAreaInset(edge: .bottom) {
-            HStack{
+        .frame(minWidth: 250, minHeight: 400)
+            .safeAreaInset(edge: .bottom) {
+                VStack{
+                    HStack{
 
-                GlassButtonView(
-                    label: "Disconnect",
-                    systemImage: "xmark",
-                    action: action
-                )
+                        GlassButtonView(
+                            label: "Disconnect",
+                            systemImage: "xmark",
+                            action: action
+                        )
 
-                GlassButtonView(
-                    label: "Connect",
-                    systemImage: "plus",
-                    action: action
-                )
-                .labelStyle(.iconOnly)
+                        GlassButtonView(
+                            label: "Connect",
+                            systemImage: "plus",
+                            action: action
+                        )
+                        .labelStyle(.iconOnly)
+                    }
+                    .padding(.bottom, 20)
+                }
             }
         }
     }
-}
