@@ -7,3 +7,6 @@
 ![CleanShot 2025-07-28 at 5  49 42@2x Large](https://github.com/user-attachments/assets/58996c84-083f-4464-b0a5-bce069935898)
 
 ![CleanShot 2025-07-28 at 5  50 12@2x Large](https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439)
+
+### Libraries used
+- [dagronf/QRCode](https://github.com/dagronf/QRCode)
