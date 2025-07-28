@@ -12,7 +12,7 @@ struct airsync_macApp: App {
     let socketServer = SocketServer()
 
     init() {
-        socketServer.start()
+        socketServer.start(port: 6996)
     }
     var body: some Scene {
         WindowGroup {
@@ -23,6 +23,7 @@ struct airsync_macApp: App {
                 .toolbarBackgroundVisibility(
                     .hidden, for: .windowToolbar
                 )
+                .environmentObject(socketServer)
         }
     }
 }
