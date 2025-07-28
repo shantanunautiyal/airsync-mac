@@ -12,15 +12,10 @@ struct NotificationView: View {
         ZStack{
             GlassBoxView(
                 color: Color.gray.opacity(0.1),
-                width: .infinity,
                 maxHeight: 75,
                 radius: 20
             )
 
-//            Rectangle()
-//                .fill(Color.gray.opacity(0.1))
-//                .cornerRadius(20)
-//                .frame(maxHeight: 75)
 
             HStack{
                 Image(systemName: "app.badge")

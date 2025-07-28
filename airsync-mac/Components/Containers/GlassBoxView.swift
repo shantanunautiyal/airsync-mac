@@ -9,10 +9,10 @@ import SwiftUI
 
 struct GlassBoxView: View {
     var color: Color = .clear
-    var width: CGFloat = .infinity
-    var height: CGFloat = .infinity
-    var maxWidth: CGFloat?
-    var maxHeight: CGFloat?
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var maxWidth: CGFloat? = nil
+    var maxHeight: CGFloat? = nil
     var radius: CGFloat = 16.0
 
     var body: some View {
