@@ -11,7 +11,7 @@ struct NotificationView: View {
     var body: some View {
         ZStack{
             GlassBoxView(
-                color: Color.gray.opacity(0.1),
+                color: Color(.windowBackgroundColor).opacity(0.5),
                 maxHeight: 75,
                 radius: 20
             )

@@ -13,29 +13,6 @@ struct ScanView: View {
     var body: some View {
         NavigationStack{
             HStack {
-                VStack{
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.blue)
-                        .frame(width: 300, height: 300)
-                        .padding(.bottom, 20)
-
-
-                    HStack{
-
-                        Text("Scan from your phone")
-
-                        Spacer()
-
-                        Button{
-                            //                    isShowingSafariView = true
-                        } label: {
-                            Label("Connect", systemImage: "paperplane.fill")
-                        }
-                        .buttonStyle(.glass)
-                        .controlSize(.large)
-                    }
-                }
-                .padding()
 
                 VStack{
                     VStack{
@@ -51,7 +28,7 @@ struct ScanView: View {
                         HStack{
                             Label("Connect ADB", systemImage: "iphone")
                             Spacer()
-                            Toggle("", isOn: .constant(true))
+                            Toggle("", isOn: .constant(false))
                                 .toggleStyle(.switch)
                         }
 
@@ -61,14 +38,21 @@ struct ScanView: View {
                             Toggle("", isOn: .constant(true))
                                 .toggleStyle(.switch)
                         }
+
+                        HStack{
+                            Label("Sync clipoboard", systemImage: "clipboard")
+                            Spacer()
+                            Toggle("", isOn: .constant(true))
+                                .toggleStyle(.switch)
+                        }
                     }
                     .padding()
 
                     VStack{
-                        ConnectionInfoText()
-                        ConnectionInfoText()
-                        ConnectionInfoText()
-                        ConnectionInfoText()
+                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: "192.168.100.1")
+                        ConnectionInfoText(label: "Port", icon: "rectangle.connected.to.line.below", text: "5555")
+                        ConnectionInfoText(label: "Key", icon: "key", text: "OIh7GG4")
+                        ConnectionInfoText(label: "Plus features", icon: "plus.app", text: "Active")
 
                     }
                     .padding()
@@ -91,11 +75,15 @@ struct ScanView: View {
 
 
 struct ConnectionInfoText: View {
+    var label: String
+    var icon: String
+    var text: String
+
     var body: some View {
         HStack{
-            Label("IP Address", systemImage: "wifi")
+            Label(label, systemImage: icon)
             Spacer()
-            Text("192.168.100.1")
+            Text(text)
         }
         .padding(1)
     }

@@ -9,58 +9,80 @@ import SwiftUI
 
 struct AppContentView: View {
     var body: some View {
-        VStack{
-            HStack{
-                Label("Notifications", systemImage: "bell.badge.fill")
-                    .font(.title2)
-
-                Spacer()
-
-                Button{
-                    //                    isShowingSafariView = true
-                } label: {
-                    Label("Dismiss All", systemImage: "xmark")
+            TabView {
+                List{
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
+                    NotificationView()
                 }
-                .buttonStyle(.glass)
-                .labelStyle(.iconOnly)
-                .controlSize(.large)
-                .help("Dismiss All")
+                .scrollContentBackground(.hidden)
+                .background(.clear)
+                .toolbar {
+                    Button {
+
+                    } label: {
+                        Label("Notifications", systemImage: "wind")
+                    }
+                }
+                .background(.clear)
+                    .tabItem {
+                        Label("Notifications", systemImage: "bell.badge.fill")
+                            .font(.title2)
+                    }
+
+                Text("(っ◕‿◕)っ")
+                    .tabItem {
+                        Label("Apps", systemImage: "bell.badge.fill")
+                            .font(.title2)
+                    }
+                    .toolbar {
+                        Button {
+
+                        } label: {
+                            Label("Refresh", systemImage: "repeat")
+                        }
+                    }
+
+                ScanView()
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                            .font(.title2)
+                    }
+                    .toolbar {
+                        Button {
+
+                        } label: {
+                            Label("About", systemImage: "info.circle")
+                        }
+                    }
             }
-            .padding()
-
-            List{
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-                NotificationView()
-            }
-
-
-        }
+            .frame(minWidth: 420)
+            .background(.clear)
     }
 }
 
