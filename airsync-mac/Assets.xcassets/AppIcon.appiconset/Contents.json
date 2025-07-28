@@ -11,6 +11,7 @@
       "size" : "16x16"
     },
     {
+      "filename" : "airsync-32.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
@@ -21,6 +22,7 @@
       "size" : "32x32"
     },
     {
+      "filename" : "airsync-128.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
@@ -31,6 +33,7 @@
       "size" : "128x128"
     },
     {
+      "filename" : "airsync-256.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
@@ -41,6 +44,7 @@
       "size" : "256x256"
     },
     {
+      "filename" : "airsync-512.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
