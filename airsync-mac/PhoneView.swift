@@ -10,22 +10,18 @@ import SwiftUI
 struct PhoneView: View {
     var body: some View {
         ZStack{
-
-            Rectangle()
-                .fill(.gray.opacity(0.2))
-                .frame(width: 190, height: 410)
-                .cornerRadius(25)
+            GlassBoxView(
+                color: .gray.opacity(0.2),
+                width: 190,
+                height: 410,
+                radius: 25
+            )
 
             Image("wallpaper")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 180, height: 400)
                 .cornerRadius(20)
-
-//            Rectangle()
-//                .fill(Color.blue.gradient)
-//                .frame(width: 180, height: 400)
-//                .cornerRadius(20)
 
             ScreenView()
 
@@ -77,10 +73,7 @@ struct ScreenView: View {
 struct MediaPlayer: View {
     var body: some View {
         ZStack{
-            Rectangle()
-                .fill(.background.opacity(0))
-                .frame(width: 170, height: 70)
-                .glassEffect(in: .rect(cornerRadius: 16.0))
+            GlassBoxView(width: 170, height: 70)
 
             VStack{
                 Label("Emptyness Machine", systemImage: "music.note.list")

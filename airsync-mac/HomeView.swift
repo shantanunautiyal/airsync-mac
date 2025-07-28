@@ -12,89 +12,11 @@ struct HomeView: View {
 
     var body: some View {
             NavigationSplitView {
-            VStack{
-
-                PhoneView()
-
-
-            }
-            .padding()
-            .safeAreaInset(edge: .bottom) {
-                HStack{
-                    Button{
-                        isDisconnected = true
-                        //                    isShowingSafariView = true
-                    } label: {
-                        Label("Disconnect", systemImage: "xmark")
-                    }
-                    .buttonStyle(.glass)
-                    .controlSize(.large)
-
-                    Button{
-                        //                    isShowingSafariView = true
-                    } label: {
-                        Label("Disconnect", systemImage: "plus")
-                    }
-                    .buttonStyle(.glass)
-                    .labelStyle(.iconOnly)
-                    .controlSize(.large)
-                }
-                .controlSize(.small)
-//                .labelStyle(.iconOnly)
-            }
+                SidebarView(action: {
+                    isDisconnected = true
+                })
         } detail: {
-                VStack{
-                    HStack{
-                        Label("Notifications", systemImage: "bell.badge.fill")
-                            .font(.title2)
-
-                        Spacer()
-
-                        Button{
-                            //                    isShowingSafariView = true
-                        } label: {
-                            Label("Dismiss All", systemImage: "xmark")
-                        }
-                        .buttonStyle(.glass)
-                        .labelStyle(.iconOnly)
-                        .controlSize(.large)
-                        .help("Dismiss All")
-                    }
-                    .padding()
-
-                        List{
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                            NotificationView()
-                        }
-
-
-                }
+            AppContentView()
         }
         .navigationTitle("Sameera's Pixel")
         .navigationSubtitle("Connected")
@@ -110,57 +32,30 @@ struct HomeView: View {
 }
 
 
-struct NotificationView: View {
+struct SidebarView: View {
+    var action: () -> Void = {}
+
     var body: some View {
-        ZStack{
-            Rectangle()
-                .fill(Color.gray.opacity(0.1))
-                .cornerRadius(20)
-                .frame(maxHeight: 75)
-
+        VStack{
+            PhoneView()
+        }
+        .padding()
+        .safeAreaInset(edge: .bottom) {
             HStack{
-                Image(systemName: "app.badge")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 25, height: 25)
-                    .padding(3)
 
-                VStack{
-                    HStack{
-                        Text("WhatsApp")
-                            .font(.default)
+                GlassButtonView(
+                    label: "Disconnect",
+                    systemImage: "xmark",
+                    action: action
+                )
 
-                        Spacer()
-                    }
-
-                    HStack{
-                        Text("You've got a new message")
-
-                        Spacer()
-                    }
-                }
-            }
-            .padding()
-        }
-        .swipeActions(edge: .leading) {
-            Button {
-//                store.toggleUnread(message)
-            } label: {
-                    Label("Unread", systemImage: "envelope.badge")
+                GlassButtonView(
+                    label: "Connect",
+                    systemImage: "plus",
+                    action: action
+                )
+                .labelStyle(.iconOnly)
             }
         }
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-//                store.delete(message)
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            Button {
-//                store.flag(message)
-            } label: {
-                Label("Flag", systemImage: "flag")
-            }
-        }
-        .listRowSeparator(.hidden)
     }
 }
