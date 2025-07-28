@@ -47,22 +47,17 @@ struct NotificationView: View {
             .padding()
         }
         .swipeActions(edge: .leading) {
-            Button {
-                //                store.toggleUnread(message)
+            Button(role: .destructive) {
+                //                store.delete(message)
             } label: {
-                Label("Unread", systemImage: "envelope.badge")
+                Label("Dismiss", systemImage: "trash")
             }
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 //                store.delete(message)
             } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            Button {
-                //                store.flag(message)
-            } label: {
-                Label("Flag", systemImage: "flag")
+                Label("Dismiss", systemImage: "trash")
             }
         }
         .listRowSeparator(.hidden)

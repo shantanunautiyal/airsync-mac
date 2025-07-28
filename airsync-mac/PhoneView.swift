@@ -55,6 +55,7 @@ struct StatusBarView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 13, height: 13)
             }
+
         }
     }
 }
@@ -63,7 +64,13 @@ struct ScreenView: View {
     var body: some View {
         VStack{
             StatusBarView()
+
             Spacer()
+
+            TimeView()
+
+            Spacer()
+
             MediaPlayer()
         }
         .frame(maxWidth: 160, maxHeight: 390)
@@ -83,32 +90,25 @@ struct MediaPlayer: View {
                     .font(.footnote)
 
                 HStack{
-                    Button{
-                        //                    isShowingSafariView = true
-                    } label: {
-                        Label("", systemImage: "backward.end")
-                    }
-                    .buttonStyle(.glass)
+                    GlassButtonView(
+                        label: "",
+                        systemImage: "backward.end",
+                        size: .small
+                    )
                     .labelStyle(.iconOnly)
-                    .controlSize(.small)
 
-                    Button{
-                        //                    isShowingSafariView = true
-                    } label: {
-                        Label("", systemImage: "play.fill")
-                    }
-                    .buttonStyle(.glass)
+                    GlassButtonView(
+                        label: "",
+                        systemImage: "play.fill"
+                    )
                     .labelStyle(.iconOnly)
-                    .controlSize(.large)
 
-                    Button{
-                        //                    isShowingSafariView = true
-                    } label: {
-                        Label("", systemImage: "forward.end")
-                    }
-                    .buttonStyle(.glass)
+                    GlassButtonView(
+                        label: "",
+                        systemImage: "forward.end",
+                        size: .small
+                    )
                     .labelStyle(.iconOnly)
-                    .controlSize(.small)
                 }
 
 
