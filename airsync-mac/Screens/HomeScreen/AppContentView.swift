@@ -121,7 +121,7 @@ struct AppContentView: View {
                 Picker("Tab", selection: $selectedTab) {
                     ForEach(TabIdentifier.allCases) { tab in
                         Label(tab.rawValue, systemImage: tab.icon)
-                            .labelStyle(.titleAndIcon)
+                            .labelStyle(.iconOnly)
                             .tag(tab)
                     }
                 }

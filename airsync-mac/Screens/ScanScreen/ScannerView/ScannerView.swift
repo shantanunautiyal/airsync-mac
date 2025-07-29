@@ -10,6 +10,7 @@ import QRCode
 internal import SwiftImageReadWrite
 
 struct ScannerView: View {
+    @ObservedObject var appState = AppState.shared
     @EnvironmentObject var socketServer: SocketServer
     @State private var qrImage: CGImage?
 
@@ -33,7 +34,7 @@ struct ScannerView: View {
                 Text("Scan to connect")
             } else {
                 ProgressView("Generating QR…")
-                    .frame(width: 200, height: 200)
+                    .frame(width: 100, height: 100)
             }
 
             Spacer()
@@ -41,10 +42,17 @@ struct ScannerView: View {
         .onAppear {
             generateQRAsync()
         }
+        .onTapGesture {
+            generateQRAsync()
+        }
     }
 
     private func generateQRAsync() {
-        let text = generateQRText(ip: socketServer.localIPAddress, port: socketServer.localPort) ?? ";("
+        let text = generateQRText(
+            ip: socketServer.localIPAddress,
+            port: socketServer.localPort,
+            name: appState.myDevice?.name
+        ) ?? ";("
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -80,12 +88,15 @@ struct ScannerView: View {
     }
 }
 
-func generateQRText(ip: String?, port: UInt16?) -> String? {
+func generateQRText(ip: String?, port: UInt16?, name: String?) -> String? {
     guard let ip = ip, let port = port else {
         return nil
     }
-    return "airsync://\(ip):\(port)"
+
+    let encodedName = name?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Unknown"
+    return "airsync://\(ip):\(port)?name=\(encodedName)"
 }
+
 
 
 #Preview {

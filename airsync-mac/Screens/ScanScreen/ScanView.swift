@@ -8,21 +8,26 @@
 import SwiftUI
 
 struct ScanView: View {
+    @ObservedObject var appState = AppState.shared
+    @EnvironmentObject var socketServer: SocketServer
 
+    @State private var deviceName: String = ""
+    @State private var port: String = ""
 
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             HStack {
-
-                VStack{
-                    VStack{
-                        HStack{
+                VStack {
+                    // Name Field
+                    VStack {
+                        HStack {
                             Label("Device Name", systemImage: "pencil")
                             Spacer()
                         }
-                        TextField("Device Name", text: .constant("Sameera's macBook"))
+                        TextField("Device Name", text: $deviceName)
                     }
                     .padding()
+
 
                     VStack{
                         HStack{
@@ -48,23 +53,44 @@ struct ScanView: View {
                     }
                     .padding()
 
-                    VStack{
-                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: "192.168.100.1")
-                        ConnectionInfoText(label: "Port", icon: "rectangle.connected.to.line.below", text: "5555")
+                    // Info Section
+                    VStack {
+                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: socketServer.localIPAddress ?? "Unavailable")
+                        ConnectionInfoText(label: "Port", icon: "rectangle.connected.to.line.below", text: port)
                         ConnectionInfoText(label: "Key", icon: "key", text: "OIh7GG4")
                         ConnectionInfoText(label: "Plus features", icon: "plus.app", text: "Active")
-
                     }
                     .padding()
 
-                    //                Spacer()
+                    // Save button
+                    Button("Save Settings") {
+                        if let portNumber = UInt16(port) {
+                            appState.myDevice = Device(
+                                name: deviceName,
+                                ipAddress: socketServer.localIPAddress ?? "0.0.0.0",
+                                port: Int(portNumber)
+                            )
+                        }
+                    }
+
                 }
                 .frame(minWidth: 300)
             }
             .padding()
-
-          }
+            .onAppear {
+                if let device = appState.myDevice {
+                    deviceName = device.name
+                    port = String(device.port)
+                } else {
+                    // Default to current system name and default port
+                    deviceName = Host.current().localizedName ?? "My Mac"
+                    port = String(socketServer.localPort ?? 5555)
+                }
+            }
+        }
     }
+
+    
 }
 
 #Preview {
