@@ -33,7 +33,7 @@ struct AppContentView: View {
             ZStack {
                 switch selectedTab {
                 case .notifications:
-                    List(appState.notifications.prefix(20), id: \.title) { notif in
+                    List(appState.notifications.prefix(20), id: \.id) { notif in
                         NotificationView(
                             notification: notif,
                             deleteNotification: {
@@ -47,7 +47,7 @@ struct AppContentView: View {
                     .toolbar{
                         ToolbarItem(placement: .primaryAction) {
                             Button {
-
+                                appState.clearNotifications()
                             } label: {
                                 Label("Clear", systemImage: "wind")
                             }
