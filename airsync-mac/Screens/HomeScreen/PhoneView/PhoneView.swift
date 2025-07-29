@@ -59,54 +59,12 @@ struct ScreenView: View {
             Spacer()
 
             if let music = appState.status?.music {
-                MediaPlayer(music: music)
+                MediaPlayerView(music: music)
             } else {
                 Spacer()
             }
         }
-        .frame(maxWidth: 160, maxHeight: 390)
+        .frame(maxWidth: 175, maxHeight: 390)
     }
 }
 
-struct MediaPlayer: View {
-    var music: DeviceStatus.Music
-
-    var body: some View {
-        ZStack{
-                GlassBoxView(width: 170, height: 70)
-
-                VStack{
-                    Label(
-                        music.title,
-                        systemImage: "music.note.list"
-                    )
-                    .font(.caption)
-
-                    Text(music.artist)
-                        .font(.footnote)
-
-                    HStack{
-                        GlassButtonView(
-                            label: "",
-                            systemImage: "backward.end",
-                            size: .small
-                        )
-                        .labelStyle(.iconOnly)
-
-                        GlassButtonView(
-                            label: "",
-                            systemImage: "play.fill"
-                        )
-                        .labelStyle(.iconOnly)
-
-                        GlassButtonView(
-                            label: "",
-                            systemImage: "forward.end",
-                            size: .small
-                        )
-                        .labelStyle(.iconOnly)
-                    }
-            }
-        }
-    }
-}

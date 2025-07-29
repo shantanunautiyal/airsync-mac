@@ -11,7 +11,6 @@ import SwiftUI
 struct SidebarView: View {
 
     @ObservedObject var appState = AppState.shared
-    var disconnectAction: () -> Void = {}
     @State private var isExpandedAllSeas: Bool = false
 
     var body: some View {
@@ -22,19 +21,18 @@ struct SidebarView: View {
                     .background(.clear)
                     .glassEffect(in: .rect(cornerRadius: 20))
             }
-            Spacer()
+
             PhoneView()
-            Spacer()
+
         }
-        .frame(minWidth: 270, minHeight: 450)
+        .frame(minWidth: 270, minHeight: 400)
         .safeAreaInset(edge: .bottom) {
             VStack{
                 HStack{
-
                     GlassButtonView(
                         label: "Disconnect",
                         systemImage: "xmark",
-                        action: disconnectAction
+                        action: appState.disconnectDevice
                     )
                 }
                 .padding(.bottom, 20)

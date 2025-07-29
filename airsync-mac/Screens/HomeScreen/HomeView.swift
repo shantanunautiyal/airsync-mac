@@ -17,19 +17,20 @@ struct HomeView: View {
         NavigationSplitView {
             VStack {
                 if let device = appState.device {
-                    // Picker with only 1 device (for now)
-                    Picker("Device", selection: .constant(device)) {
-                        Label(device.name, systemImage: "iphone.gen3")
-                            .tag(device)
-                    }
-                    .pickerStyle(.automatic)
-                    .padding()
+//                    HStack{
+//                        // Picker with only 1 device (for now)
+//                        Picker("", selection: .constant(device)) {
+//                            Label(device.name, systemImage: "iphone.gen3")
+//                                .tag(device)
+//                        }
+//                        .pickerStyle(.menu)
+//                    }
+//                    .padding()
 
-                    SidebarView(
-                        disconnectAction: {
-                            appState.disconnectDevice()
-                        }
-                    )
+                    Spacer()
+                    SidebarView()
+                    Spacer()
+                    
                 } else {
                     // Show QR scanner if no device
                     ScannerView()
@@ -41,6 +42,7 @@ struct HomeView: View {
         } detail: {
             AppContentView()
         }
+        .navigationTitle(appState.device?.name ?? "AirSync")
         .sheet(isPresented: $isDisconnected) {
             ScanView()
         }
