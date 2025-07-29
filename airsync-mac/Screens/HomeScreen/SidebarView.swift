@@ -9,15 +9,19 @@ import SwiftUI
 
 
 struct SidebarView: View {
+
+    @ObservedObject var appState = AppState.shared
     var disconnectAction: () -> Void = {}
     @State private var isExpandedAllSeas: Bool = false
 
     var body: some View {
         VStack{
-            DeviceStatusView()
-                .padding()
-                .background(.clear)
-                .glassEffect(in: .rect(cornerRadius: 20))
+            if (appState.status != nil){
+                DeviceStatusView()
+                    .padding()
+                    .background(.clear)
+                    .glassEffect(in: .rect(cornerRadius: 20))
+            }
             Spacer()
             PhoneView()
             Spacer()
