@@ -25,6 +25,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 
 struct AppContentView: View {
     @State private var selectedTab: TabIdentifier = .notifications
+    @StateObject var server = SocketServer()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,7 +49,15 @@ struct AppContentView: View {
                     }
 
                 case .apps:
-                    Text("(っ◕‿◕)っ")
+                    VStack{
+                        Text("(っ◕‿◕)っ")
+                        Text("Connected to: \(server.connectedDevice?.name ?? "None")")
+                        List(server.notifications) { notification in
+                            Text("\(notification.app): \(notification.title) - \(notification.body)")
+                        }
+                        Text("Battery: \(server.deviceStatus?.battery.level ?? 0)%")
+
+                    }
                         .font(.largeTitle)
                         .transition(.blurReplace)
                         .toolbar{

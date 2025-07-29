@@ -7,8 +7,8 @@
 
 import Foundation
 
-struct Device: Hashable, Identifiable{
-    let id = UUID()
+struct Device: Hashable, Identifiable, Codable{
+    var id = UUID()
 
     let name: String
     let ipAddress: String

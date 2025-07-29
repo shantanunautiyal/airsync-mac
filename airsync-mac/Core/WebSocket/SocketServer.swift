@@ -15,6 +15,11 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
     @Published var localPort: UInt16?
     @Published var localIPAddress: String?
 
+    @Published var connectedDevice: Device?
+    @Published var notifications: [Notification] = []
+    @Published var deviceStatus: DeviceStatus?
+
+
     override init() {
         super.init()
         serverSocket = GCDAsyncSocket(delegate: self, delegateQueue: .main)
@@ -43,11 +48,46 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
     }
 
     func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
-        if let text = String(data: data, encoding: .utf8) {
-            print("Received: \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+        if let jsonString = String(data: data, encoding: .utf8),
+           let jsonData = jsonString.data(using: .utf8) {
+
+            do {
+                let base = try JSONDecoder().decode(BaseMessage.self, from: jsonData)
+
+                switch base.type {
+                case "notification":
+                    if let notif = try? JSONDecoder().decode(TypedMessage<Notification>.self, from: jsonData) {
+                        DispatchQueue.main.async {
+                            self.notifications.append(notif.data)
+                        }
+                    }
+
+                case "status":
+                    if let status = try? JSONDecoder().decode(TypedMessage<DeviceStatus>.self, from: jsonData) {
+                        DispatchQueue.main.async {
+                            self.deviceStatus = status.data
+                        }
+                    }
+
+                case "device":
+                    if let device = try? JSONDecoder().decode(TypedMessage<Device>.self, from: jsonData) {
+                        DispatchQueue.main.async {
+                            self.connectedDevice = device.data
+                        }
+                    }
+
+                default:
+                    print("Unknown message type: \(base.type)")
+                }
+
+            } catch {
+                print("Failed to decode: \(error)")
+            }
         }
+
         sock.readData(to: GCDAsyncSocket.crlfData(), withTimeout: -1, tag: 0)
     }
+
 
     // MARK: - Local IP
 
@@ -81,4 +121,13 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
         freeifaddrs(ifaddr)
         return address
     }
+}
+
+struct BaseMessage: Codable {
+    let type: String
+}
+
+struct TypedMessage<T: Codable>: Codable {
+    let type: String
+    let data: T
 }

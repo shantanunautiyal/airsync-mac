@@ -7,14 +7,15 @@
 
 import Foundation
 
-struct DeviceStatus: Hashable{
+struct DeviceStatus: Hashable, Identifiable, Codable{
+    var id = UUID()
 
     let battery: Battery
     let isPaired: Bool
     let music: Music
 }
 
-struct Music: Hashable{
+struct Music: Hashable, Codable{
     let isPlaying: Bool
     let title: String
     let artist: String
@@ -22,7 +23,7 @@ struct Music: Hashable{
     let isMuted: Bool
 }
 
-struct Battery: Hashable{
+struct Battery: Hashable, Codable{
     let level: Int
     let isCharging: Bool
 }

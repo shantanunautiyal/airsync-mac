@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum DeviceIdentifier: String, CaseIterable, Identifiable {
+enum DeviceIdentifier: String, CaseIterable, Identifiable, Hashable {
     case pixel = "Sameera's Pixel"
     case galaxy = "Sameera's Galaxy"
     case add = "Add"
@@ -21,7 +21,6 @@ enum DeviceIdentifier: String, CaseIterable, Identifiable {
         case .add: return "plus"
         }
     }
-
 }
 
 struct HomeView: View {
@@ -29,48 +28,44 @@ struct HomeView: View {
     @State private var selectedDevice: DeviceIdentifier = .pixel
 
     var body: some View {
-            NavigationSplitView {
+        NavigationSplitView {
+            VStack {
                 Picker("Device", selection: $selectedDevice) {
                     ForEach(DeviceIdentifier.allCases) { tab in
                         Label(tab.rawValue, systemImage: tab.icon)
-                            .labelStyle(.iconOnly)
                             .tag(tab)
                     }
                 }
-                .pickerStyle(.palette)
+                .pickerStyle(.automatic)
+                .padding()
 
-                ZStack {
-                    switch selectedDevice {
-                    case .pixel:
-                        SidebarView(action: {
-                            isDisconnected = true
-                        })
-                        .transition(.move(edge: .leading))
-
-                    case .galaxy:
-                        SidebarView(action: {
-                            isDisconnected = true
-                        })
-                        .transition(.move(edge: .trailing))
-
-                    case .add:
-                        ScannerView()
-                            .transition(.scale)
-                    }
-
+                // Show the preview in the sidebar
+                switch selectedDevice {
+                case .pixel, .galaxy:
+                    SidebarView(action: {
+                        isDisconnected = true
+                    })
+                case .add:
+                    ScannerView()
                 }
-                .animation(.easeInOut(duration: 0.3), value: selectedDevice)
+            }
+            .frame(minWidth: 270)
+            .navigationTitle("Devices")
+
         } detail: {
             AppContentView()
         }
-        .navigationTitle(selectedDevice.id)
-        .navigationSubtitle("Connected")
-
-        .sheet(isPresented: $isDisconnected){
+        .sheet(isPresented: $isDisconnected) {
             ScanView()
         }
     }
 }
+
+
+#Preview {
+    HomeView()
+}
+
 
 #Preview {
     HomeView()
