@@ -24,33 +24,44 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 }
 
 struct AppContentView: View {
-    @State private var selectedTab: TabIdentifier = .notifications
-    @StateObject var server = SocketServer()
     @ObservedObject var appState = AppState.shared
+    @State private var selectedTab: TabIdentifier = .settings
+    @StateObject var server = SocketServer()
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
                 switch selectedTab {
                 case .notifications:
-                    List(appState.notifications.prefix(20), id: \.id) { notif in
-                        NotificationView(
-                            notification: notif,
-                            deleteNotification: {
-                                appState.removeNotification(notif)
+                    if appState.notifications.count > 0{
+                        List(appState.notifications.prefix(20), id: \.id) { notif in
+                            NotificationView(
+                                notification: notif,
+                                deleteNotification: {
+                                    appState.removeNotification(notif)
+                                }
+                            )
+                        }
+                        .scrollContentBackground(.hidden)
+                        .background(.clear)
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    appState.clearNotifications()
+                                } label: {
+                                    Label("Clear", systemImage: "wind")
+                                }
                             }
-                        )
-                    }
-                    .scrollContentBackground(.hidden)
-                    .background(.clear)
-                    .transition(.blurReplace)
-                    .toolbar{
-                        ToolbarItem(placement: .primaryAction) {
-                            Button {
-                                appState.clearNotifications()
-                            } label: {
-                                Label("Clear", systemImage: "wind")
-                            }
+                        }
+                    } else {
+                        VStack{
+                            Spacer()
+                            Text("└(=^‥^=)┐")
+                                .font(.title)
+                                .padding()
+                            Label("You're all caught up!", systemImage: "tray")
+                            Spacer()
                         }
                     }
 
@@ -67,25 +78,25 @@ struct AppContentView: View {
                         }
                     }
                     .padding()
-                        .font(.largeTitle)
-                        .transition(.blurReplace)
-                        .toolbar{
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-
-                                } label: {
-                                    Label("Refresh", systemImage: "repeat")
-                                }
+                    .font(.largeTitle)
+                    .transition(.blurReplace)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+                                // Refresh
+                            } label: {
+                                Label("Refresh", systemImage: "repeat")
                             }
                         }
+                    }
 
                 case .settings:
                     ScanView()
                         .transition(.blurReplace)
-                        .toolbar{
+                        .toolbar {
                             ToolbarItem(placement: .primaryAction) {
                                 Button {
-
+                                    // About
                                 } label: {
                                     Label("About", systemImage: "info")
                                 }
@@ -96,6 +107,15 @@ struct AppContentView: View {
             .animation(.easeInOut(duration: 0.3), value: selectedTab)
             .frame(minWidth: 550)
         }
+        .onChange(of: appState.device) {
+            if appState.device == nil {
+                selectedTab = .settings
+            } else {
+                selectedTab = .notifications
+            }
+        }
+
+
         .toolbar {
             ToolbarItem(placement: .secondaryAction)  {
                 Picker("Tab", selection: $selectedTab) {
