@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct NotificationView: View {
+
+    let notification: Notification
+    let deleteNotification: () -> Void
+
     var body: some View {
         ZStack{
             GlassBoxView(
@@ -26,14 +30,14 @@ struct NotificationView: View {
 
                 VStack{
                     HStack{
-                        Text("WhatsApp")
+                        Text(notification.app)
                             .font(.default)
 
                         Spacer()
                     }
 
                     HStack{
-                        Text("You've got a new message")
+                        Text(notification.title)
 
                         Spacer()
                     }
@@ -44,6 +48,7 @@ struct NotificationView: View {
         .swipeActions(edge: .leading) {
             Button(role: .destructive) {
                 //                store.delete(message)
+                deleteNotification()
             } label: {
                 Label("Dismiss", systemImage: "trash")
             }
@@ -51,6 +56,7 @@ struct NotificationView: View {
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 //                store.delete(message)
+                deleteNotification()
             } label: {
                 Label("Dismiss", systemImage: "trash")
             }
@@ -60,5 +66,8 @@ struct NotificationView: View {
 }
 
 #Preview {
-    NotificationView()
+    NotificationView(
+        notification: MockData.sampleNotificaiton,
+        deleteNotification: {}
+    )
 }

@@ -14,5 +14,12 @@ class AppState: ObservableObject {
     @Published var device: Device? = nil
     @Published var notifications: [Notification] = []
     @Published var status: DeviceStatus? = nil
+
+    func removeNotification(_ notif: Notification) {
+        DispatchQueue.main.async {
+            self.notifications.removeAll { $0.id == notif.id }
+        }
+    }
+
 }
 

@@ -7,8 +7,14 @@
 
 import Foundation
 
-struct Notification: Codable {
+struct Notification: Codable, Identifiable, Equatable {
+    let id = UUID()
     let title: String
     let body: String
     let app: String
+
+    private enum CodingKeys: String, CodingKey {
+        case title, body, app
+        // id is omitted — won't be decoded or encoded
+    }
 }

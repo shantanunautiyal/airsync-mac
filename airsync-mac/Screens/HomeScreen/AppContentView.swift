@@ -33,8 +33,13 @@ struct AppContentView: View {
             ZStack {
                 switch selectedTab {
                 case .notifications:
-                    List(0..<30, id: \.self) { _ in
-                        NotificationView()
+                    List(appState.notifications.prefix(20), id: \.title) { notif in
+                        NotificationView(
+                            notification: notif,
+                            deleteNotification: {
+                                appState.removeNotification(notif)
+                            }
+                        )
                     }
                     .scrollContentBackground(.hidden)
                     .background(.clear)
@@ -59,19 +64,6 @@ struct AppContentView: View {
                         if let status = appState.status {
                             Text("🔋 Battery: \(status.battery.level)% \(status.battery.isCharging ? "⚡️ Charging" : "")")
                             Text("🎵 Now Playing: \(status.music.title) by \(status.music.artist)")
-                        }
-
-                        Text("🔔 Notifications")
-                            .font(.title2)
-                            .padding(.top)
-
-                        ForEach(appState.notifications.prefix(5), id: \.title) { notif in
-                            VStack(alignment: .leading) {
-                                Text("App: \(notif.app)")
-                                    .font(.subheadline)
-                                Text("Title: \(notif.title)")
-                                Text("Body: \(notif.body)")
-                            }.padding(.bottom, 4)
                         }
                     }
                     .padding()
