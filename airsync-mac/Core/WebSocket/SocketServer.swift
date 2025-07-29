@@ -44,49 +44,28 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
 
     func socket(_ sock: GCDAsyncSocket, didAcceptNewSocket newSocket: GCDAsyncSocket) {
         print("Accepted connection from \(newSocket.connectedHost ?? "unknown")")
-        newSocket.readData(to: GCDAsyncSocket.crlfData(), withTimeout: -1, tag: 0)
+        newSocket.readData(to: GCDAsyncSocket.lfData(), withTimeout: -1, tag: 0)
     }
 
     func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
-        if let jsonString = String(data: data, encoding: .utf8),
-           let jsonData = jsonString.data(using: .utf8) {
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("RAW RECEIVED:\n\(jsonString)")
 
             do {
-                let base = try JSONDecoder().decode(BaseMessage.self, from: jsonData)
+                let decoder = JSONDecoder()
+                let message = try decoder.decode(Message.self, from: data)
 
-                switch base.type {
-                case "notification":
-                    if let notif = try? JSONDecoder().decode(TypedMessage<Notification>.self, from: jsonData) {
-                        DispatchQueue.main.async {
-                            self.notifications.append(notif.data)
-                        }
-                    }
-
-                case "status":
-                    if let status = try? JSONDecoder().decode(TypedMessage<DeviceStatus>.self, from: jsonData) {
-                        DispatchQueue.main.async {
-                            self.deviceStatus = status.data
-                        }
-                    }
-
-                case "device":
-                    if let device = try? JSONDecoder().decode(TypedMessage<Device>.self, from: jsonData) {
-                        DispatchQueue.main.async {
-                            self.connectedDevice = device.data
-                        }
-                    }
-
-                default:
-                    print("Unknown message type: \(base.type)")
+                DispatchQueue.main.async {
+                    self.handleMessage(message)
                 }
-
             } catch {
                 print("Failed to decode: \(error)")
             }
         }
 
-        sock.readData(to: GCDAsyncSocket.crlfData(), withTimeout: -1, tag: 0)
+        sock.readData(to: GCDAsyncSocket.lfData(), withTimeout: -1, tag: 0)
     }
+
 
 
     // MARK: - Local IP
@@ -121,6 +100,46 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
         freeifaddrs(ifaddr)
         return address
     }
+    
+    func handleMessage(_ message: Message) {
+        switch message.type {
+        case .device:
+            if let dict = message.data.value as? [String: Any],
+               let name = dict["name"] as? String,
+               let ip = dict["ipAddress"] as? String,
+               let port = dict["port"] as? Int {
+                AppState.shared.device = Device(name: name, ipAddress: ip, port: port)
+            }
+
+        case .notification:
+            if let dict = message.data.value as? [String: Any],
+               let title = dict["title"] as? String,
+               let body = dict["body"] as? String,
+               let app = dict["app"] as? String {
+                AppState.shared.notifications.insert(Notification(title: title, body: body, app: app), at: 0)
+            }
+
+        case .status:
+            if let dict = message.data.value as? [String: Any],
+               let battery = dict["battery"] as? [String: Any],
+               let level = battery["level"] as? Int,
+               let isCharging = battery["isCharging"] as? Bool,
+               let paired = dict["isPaired"] as? Bool,
+               let music = dict["music"] as? [String: Any],
+               let playing = music["isPlaying"] as? Bool,
+               let title = music["title"] as? String,
+               let artist = music["artist"] as? String,
+               let volume = music["volume"] as? Int,
+               let isMuted = music["isMuted"] as? Bool {
+
+                AppState.shared.status = DeviceStatus(
+                    battery: .init(level: level, isCharging: isCharging),
+                    isPaired: paired,
+                    music: .init(isPlaying: playing, title: title, artist: artist, volume: volume, isMuted: isMuted)
+                )
+            }
+        }
+    }
 }
 
 struct BaseMessage: Codable {
@@ -131,3 +150,5 @@ struct TypedMessage<T: Codable>: Codable {
     let type: String
     let data: T
 }
+
+

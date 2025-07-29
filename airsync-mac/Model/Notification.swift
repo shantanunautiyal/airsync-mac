@@ -7,11 +7,8 @@
 
 import Foundation
 
-struct Notification: Hashable, Identifiable, Codable{
-    var id = UUID()
-
+struct Notification: Codable {
     let title: String
     let body: String
     let app: String
-
 }

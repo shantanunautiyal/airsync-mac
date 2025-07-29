@@ -26,6 +26,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 struct AppContentView: View {
     @State private var selectedTab: TabIdentifier = .notifications
     @StateObject var server = SocketServer()
+    @ObservedObject var appState = AppState.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,15 +50,31 @@ struct AppContentView: View {
                     }
 
                 case .apps:
-                    VStack{
-                        Text("(っ◕‿◕)っ")
-                        Text("Connected to: \(server.connectedDevice?.name ?? "None")")
-                        List(server.notifications) { notification in
-                            Text("\(notification.app): \(notification.title) - \(notification.body)")
+                    VStack(alignment: .leading) {
+                        if let device = appState.device {
+                            Text("📱 \(device.name) @ \(device.ipAddress):\(device.port)")
+                                .font(.headline)
                         }
-                        Text("Battery: \(server.deviceStatus?.battery.level ?? 0)%")
 
+                        if let status = appState.status {
+                            Text("🔋 Battery: \(status.battery.level)% \(status.battery.isCharging ? "⚡️ Charging" : "")")
+                            Text("🎵 Now Playing: \(status.music.title) by \(status.music.artist)")
+                        }
+
+                        Text("🔔 Notifications")
+                            .font(.title2)
+                            .padding(.top)
+
+                        ForEach(appState.notifications.prefix(5), id: \.title) { notif in
+                            VStack(alignment: .leading) {
+                                Text("App: \(notif.app)")
+                                    .font(.subheadline)
+                                Text("Title: \(notif.title)")
+                                Text("Body: \(notif.body)")
+                            }.padding(.bottom, 4)
+                        }
                     }
+                    .padding()
                         .font(.largeTitle)
                         .transition(.blurReplace)
                         .toolbar{

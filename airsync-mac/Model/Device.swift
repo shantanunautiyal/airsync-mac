@@ -7,13 +7,10 @@
 
 import Foundation
 
-struct Device: Hashable, Identifiable, Codable{
-    var id = UUID()
-
+struct Device: Codable {
     let name: String
     let ipAddress: String
     let port: Int
-
 }
 
 struct MockData{
