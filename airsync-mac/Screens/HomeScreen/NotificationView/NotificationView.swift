@@ -14,30 +14,24 @@ struct NotificationView: View {
 
     var body: some View {
         ZStack{
-            GlassBoxView(
-                color: Color(.windowBackgroundColor).opacity(0.5),
-                maxHeight: 75,
-                radius: 20
-            )
-
-
-            HStack{
+            HStack(alignment: .top){
                 Image(systemName: "app.badge")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 25, height: 25)
-                    .padding(3)
+                    .padding(5)
 
                 VStack{
                     HStack{
-                        Text(notification.app)
-                            .font(.default)
+                        Text(notification.app + " - " + notification.title)
+                            .font(.headline)
 
                         Spacer()
                     }
 
-                    HStack{
-                        Text(notification.title)
+                    HStack {
+                        Text(String(notification.body))
+                        .font(.body)
 
                         Spacer()
                     }
@@ -45,6 +39,8 @@ struct NotificationView: View {
             }
             .padding()
         }
+        .background(.clear)
+        .glassEffect(in: .rect(cornerRadius: 20))
         .swipeActions(edge: .leading) {
             Button(role: .destructive) {
                 //                store.delete(message)
