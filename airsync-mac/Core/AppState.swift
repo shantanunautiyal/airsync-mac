@@ -36,6 +36,8 @@ class AppState: ObservableObject {
     func disconnectDevice() {
         DispatchQueue.main.async{
             self.device = nil
+            self.notifications.removeAll()
+            self.status = nil
         }
     }
 
