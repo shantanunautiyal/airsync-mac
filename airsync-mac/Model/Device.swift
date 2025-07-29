@@ -7,10 +7,16 @@
 
 import Foundation
 
-struct Device: Codable {
+struct Device: Codable, Hashable, Identifiable {
+    let id = UUID()
+    
     let name: String
     let ipAddress: String
     let port: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case name, ipAddress, port
+    }
 }
 
 struct MockData{

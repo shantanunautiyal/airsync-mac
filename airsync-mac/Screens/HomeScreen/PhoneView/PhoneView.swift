@@ -35,28 +35,14 @@ struct PhoneView: View {
 
 struct StatusBarView: View {
     var body: some View {
-        ZStack{
             HStack{
                 Spacer()
                 Circle()
                     .fill(.gray.opacity(0.2))
                     .frame(width: 15, height: 15)
+                    .padding(5)
                 Spacer()
             }
-
-            HStack{
-                Spacer()
-                Image(systemName: "wifi")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 13, height: 13)
-                Image(systemName: "battery.75percent")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 13, height: 13)
-            }
-
-        }
     }
 }
 

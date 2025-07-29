@@ -7,45 +7,31 @@
 
 import SwiftUI
 
-enum DeviceIdentifier: String, CaseIterable, Identifiable, Hashable {
-    case pixel = "Sameera's Pixel"
-    case galaxy = "Sameera's Galaxy"
-    case add = "Add"
 
-    var id: String { rawValue }
-
-    var icon: String {
-        switch self {
-        case .pixel: return "iphone.gen3"
-        case .galaxy: return "iphone.gen1"
-        case .add: return "plus"
-        }
-    }
-}
 
 struct HomeView: View {
-    @State var isDisconnected: Bool = false
-    @State private var selectedDevice: DeviceIdentifier = .pixel
+    @ObservedObject var appState = AppState.shared
+    @State private var isDisconnected: Bool = false
 
     var body: some View {
         NavigationSplitView {
             VStack {
-                Picker("Device", selection: $selectedDevice) {
-                    ForEach(DeviceIdentifier.allCases) { tab in
-                        Label(tab.rawValue, systemImage: tab.icon)
-                            .tag(tab)
+                if let device = appState.device {
+                    // Picker with only 1 device (for now)
+                    Picker("Device", selection: .constant(device)) {
+                        Label(device.name, systemImage: "iphone.gen3")
+                            .tag(device)
                     }
-                }
-                .pickerStyle(.automatic)
-                .padding()
+                    .pickerStyle(.automatic)
+                    .padding()
 
-                // Show the preview in the sidebar
-                switch selectedDevice {
-                case .pixel, .galaxy:
-                    SidebarView(action: {
-                        isDisconnected = true
-                    })
-                case .add:
+                    SidebarView(
+                        disconnectAction: {
+                            appState.disconnectDevice()
+                        }
+                    )
+                } else {
+                    // Show QR scanner if no device
                     ScannerView()
                 }
             }
@@ -60,6 +46,7 @@ struct HomeView: View {
         }
     }
 }
+
 
 
 #Preview {
