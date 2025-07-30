@@ -11,6 +11,7 @@ import SwiftUI
 struct airsync_macApp: App {
     init() {
         WebSocketServer.shared.start() // default port 6996
+        loadCachedIcons()
     }
 
     var body: some Scene {

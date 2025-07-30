@@ -51,22 +51,19 @@ struct NotificationView: View {
 
     @ViewBuilder
     private func appIconView() -> some View {
-        if let base64 = AppState.shared.appIcons[notification.package] {
-            if let image = Image(base64String: base64) {
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 25, height: 25)
-                    .padding(5)
-            } else {
-                Image(systemName: "app.badge")
-                    .resizable()
-            }
+        if let path = AppState.shared.appIcons[notification.package],
+           let image = Image(filePath: path) {
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 25, height: 25)
+                .padding(5)
         } else {
             Image(systemName: "app.badge")
                 .resizable()
         }
     }
+
 
 
 

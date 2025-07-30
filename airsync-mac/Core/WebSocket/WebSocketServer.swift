@@ -162,12 +162,26 @@ class WebSocketServer: ObservableObject {
 
         case .appIcons:
             if let dict = message.data.value as? [String: String] {
-                DispatchQueue.main.async {
+                DispatchQueue.global(qos: .background).async {
                     for (package, base64Icon) in dict {
-                        AppState.shared.appIcons[package] = base64Icon
+                        // Strip data URI if present
+                        var cleaned = base64Icon
+                        if let range = cleaned.range(of: "base64,") {
+                            cleaned = String(cleaned[range.upperBound...])
+                        }
+
+                        if let data = Data(base64Encoded: cleaned) {
+                            let fileURL = appIconsDirectory().appendingPathComponent("\(package).png")
+                            try? data.write(to: fileURL)
+
+                            DispatchQueue.main.async {
+                                AppState.shared.appIcons[package] = fileURL.path
+                            }
+                        }
                     }
                 }
             }
+
 
 
         }
