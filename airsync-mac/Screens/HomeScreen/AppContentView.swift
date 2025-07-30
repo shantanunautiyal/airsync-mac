@@ -26,7 +26,6 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
     @State private var selectedTab: TabIdentifier = .settings
-    @StateObject var server = SocketServer()
 
     var body: some View {
         VStack(spacing: 0) {

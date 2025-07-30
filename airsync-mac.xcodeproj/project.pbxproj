@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
+		B9D742FC2E39CF850053128A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = B9D742FB2E39CF850053128A /* Swifter */; };
 		B9F2B11F2E37ED95002078AF /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9D742FC2E39CF850053128A /* Swifter in Frameworks */,
 				B9F2B11F2E37ED95002078AF /* CocoaAsyncSocket in Frameworks */,
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 			);
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */,
+				B9D742FB2E39CF850053128A /* Swifter */,
 			);
 			productName = "airsync-mac";
 			productReference = B9673B572E35A2A1006D284A /* airsync-mac.app */;
@@ -106,6 +109,7 @@
 			packageReferences = (
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
 				B9F2B11D2E37ED95002078AF /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */,
+				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9673B582E35A2A1006D284A /* Products */;
@@ -382,6 +386,14 @@
 				minimumVersion = 26.10.0;
 			};
 		};
+		B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/httpswift/swifter";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
 		B9F2B11D2E37ED95002078AF /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/robbiehanson/CocoaAsyncSocket";
@@ -397,6 +409,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */;
 			productName = QRCode;
+		};
+		B9D742FB2E39CF850053128A /* Swifter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */;
+			productName = Swifter;
 		};
 		B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */ = {
 			isa = XCSwiftPackageProductDependency;

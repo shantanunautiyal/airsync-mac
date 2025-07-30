@@ -9,11 +9,10 @@ import SwiftUI
 
 @main
 struct airsync_macApp: App {
-    let socketServer = SocketServer()
-
     init() {
-        socketServer.start(port: 6996)
+        WebSocketServer.shared.start() // default port 6996
     }
+
     var body: some Scene {
         WindowGroup {
             HomeView()
@@ -23,7 +22,6 @@ struct airsync_macApp: App {
                 .toolbarBackgroundVisibility(
                     .hidden, for: .windowToolbar
                 )
-                .environmentObject(socketServer)
         }
     }
 }

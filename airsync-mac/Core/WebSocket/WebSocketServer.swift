@@ -6,12 +6,13 @@
 //
 
 import Foundation
-import CocoaAsyncSocket
-import Network
+import Swifter
 internal import Combine
 
-class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
-    private var serverSocket: GCDAsyncSocket!
+class WebSocketServer: ObservableObject {
+    static let shared = WebSocketServer()
+
+    private var server = HttpServer()
     @Published var localPort: UInt16?
     @Published var localIPAddress: String?
 
@@ -19,54 +20,55 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
     @Published var notifications: [Notification] = []
     @Published var deviceStatus: DeviceStatus?
 
+    private var activeSessions: [WebSocketSession] = []
 
-    override init() {
-        super.init()
-        serverSocket = GCDAsyncSocket(delegate: self, delegateQueue: .main)
+    init() {
+        setupWebSocket()
     }
 
-    func start(port: UInt16 = 6996) {
+    func start(port: UInt16 = Defaults.serverPort) {
         do {
-            try serverSocket.accept(onPort: port)
-            localPort = serverSocket.localPort
+            try server.start(port)
+            localPort = port
             localIPAddress = getWiFiAddress()
-            print("Socket server started on \(localIPAddress ?? "unknown"):\(localPort ?? 6996)")
+            print("WebSocket server started at ws://\(localIPAddress ?? "unknown"):\(port)/socket")
         } catch {
-            print("Error starting server: \(error)")
+            print("Failed to start WebSocket server: \(error)")
         }
     }
+
 
     func stop() {
-        serverSocket.disconnect()
+        server.stop()
+        activeSessions.removeAll()
     }
 
-    // MARK: - GCDAsyncSocketDelegate
+    private func setupWebSocket() {
+        server["/socket"] = websocket(text: { [weak self] session, text in
+            guard let self = self else { return }
+            print("WebSocket Received:\n\(text)")
 
-    func socket(_ sock: GCDAsyncSocket, didAcceptNewSocket newSocket: GCDAsyncSocket) {
-        print("Accepted connection from \(newSocket.connectedHost ?? "unknown")")
-        newSocket.readData(to: GCDAsyncSocket.lfData(), withTimeout: -1, tag: 0)
-    }
-
-    func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("RAW RECEIVED:\n\(jsonString)")
-
-            do {
-                let decoder = JSONDecoder()
-                let message = try decoder.decode(Message.self, from: data)
-
-                DispatchQueue.main.async {
-                    self.handleMessage(message)
+            if let data = text.data(using: .utf8) {
+                do {
+                    let message = try JSONDecoder().decode(Message.self, from: data)
+                    DispatchQueue.main.async {
+                        self.handleMessage(message)
+                    }
+                } catch {
+                    print("WebSocket JSON decode failed: \(error)")
                 }
-            } catch {
-                print("Failed to decode: \(error)")
             }
+        }, connected: { [weak self] session in
+            print("WebSocket connected")
+            self?.activeSessions.append(session)
+        },
+           disconnected: { [weak self] session in
+            print("WebSocket disconnected")
+            self?.activeSessions.removeAll(where: { $0 === session })
         }
+     )
 
-        sock.readData(to: GCDAsyncSocket.lfData(), withTimeout: -1, tag: 0)
     }
-
-
 
     // MARK: - Local IP
 
@@ -84,8 +86,7 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
 
                 if addrFamily == UInt8(AF_INET),
                    let name = String(validatingUTF8: interface.ifa_name),
-                   name == "en0" // Wi-Fi
-                {
+                   name == "en0" {
                     var addr = interface.ifa_addr.pointee
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     getnameinfo(&addr, socklen_t(interface.ifa_addr.pointee.sa_len),
@@ -100,7 +101,7 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
         freeifaddrs(ifaddr)
         return address
     }
-    
+
     func handleMessage(_ message: Message) {
         switch message.type {
         case .device:
@@ -131,7 +132,6 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
                let artist = music["artist"] as? String,
                let volume = music["volume"] as? Int,
                let isMuted = music["isMuted"] as? Bool {
-
                 AppState.shared.status = DeviceStatus(
                     battery: .init(level: level, isCharging: isCharging),
                     isPaired: paired,
@@ -141,14 +141,3 @@ class SocketServer: NSObject, GCDAsyncSocketDelegate, ObservableObject {
         }
     }
 }
-
-struct BaseMessage: Codable {
-    let type: String
-}
-
-struct TypedMessage<T: Codable>: Codable {
-    let type: String
-    let data: T
-}
-
-

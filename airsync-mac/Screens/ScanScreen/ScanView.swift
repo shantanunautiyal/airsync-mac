@@ -9,10 +9,9 @@ import SwiftUI
 
 struct ScanView: View {
     @ObservedObject var appState = AppState.shared
-    @EnvironmentObject var socketServer: SocketServer
 
     @State private var deviceName: String = ""
-    @State private var port: String = ""
+    @State private var port: String = "6996"
 
     var body: some View {
         NavigationStack {
@@ -55,7 +54,7 @@ struct ScanView: View {
 
                     // Info Section
                     VStack {
-                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: socketServer.localIPAddress ?? "Unavailable")
+                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
                         ConnectionInfoText(label: "Port", icon: "rectangle.connected.to.line.below", text: port)
                         ConnectionInfoText(label: "Key", icon: "key", text: "OIh7GG4")
                         ConnectionInfoText(label: "Plus features", icon: "plus.app", text: "Active")
@@ -64,14 +63,14 @@ struct ScanView: View {
 
                     // Save button
                     Button("Save Settings") {
-                        if let portNumber = UInt16(port) {
-                            appState.myDevice = Device(
-                                name: deviceName,
-                                ipAddress: socketServer.localIPAddress ?? "0.0.0.0",
-                                port: Int(portNumber)
-                            )
-                        }
+                        let portNumber = UInt16(port) ?? Defaults.serverPort
+                        appState.myDevice = Device(
+                            name: deviceName,
+                            ipAddress: getLocalIPAddress() ?? "N/A",
+                            port: Int(portNumber)
+                        )
                     }
+
 
                 }
                 .frame(minWidth: 300)
@@ -82,11 +81,11 @@ struct ScanView: View {
                     deviceName = device.name
                     port = String(device.port)
                 } else {
-                    // Default to current system name and default port
                     deviceName = Host.current().localizedName ?? "My Mac"
-                    port = String(socketServer.localPort ?? 5555)
+                    port = String(Defaults.serverPort)
                 }
             }
+
         }
     }
 

@@ -15,6 +15,7 @@ class AppState: ObservableObject {
     @Published var notifications: [Notification] = []
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
+    @Published var port: UInt16 = Defaults.serverPort
 
     func removeNotification(_ notif: Notification) {
         DispatchQueue.main.async {

@@ -1,5 +1,5 @@
 {
-  "originHash" : "7db604394ebbf4296b842a870e0dad222784170404f76e8d6aaa679175135286",
+  "originHash" : "b95e3481e87ec70e03264e8574a2a0a9d6b44fa02592e6b3d1d3992213a4dd70",
   "pins" : [
     {
       "identity" : "cocoaasyncsocket",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "2b1980b825f08a81ccc762b0c4d17fcde9d5e953",
         "version" : "2.0.2"
+      }
+    },
+    {
+      "identity" : "swifter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/httpswift/swifter",
+      "state" : {
+        "revision" : "9483a5d459b45c3ffd059f7b55f9638e268632fd",
+        "version" : "1.5.0"
       }
     },
     {

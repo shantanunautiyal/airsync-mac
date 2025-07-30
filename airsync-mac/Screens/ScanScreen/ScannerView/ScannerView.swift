@@ -11,7 +11,6 @@ internal import SwiftImageReadWrite
 
 struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
-    @EnvironmentObject var socketServer: SocketServer
     @State private var qrImage: CGImage?
 
     var body: some View {
@@ -49,10 +48,10 @@ struct ScannerView: View {
 
     private func generateQRAsync() {
         let text = generateQRText(
-            ip: socketServer.localIPAddress,
-            port: socketServer.localPort,
+            ip: getLocalIPAddress(),
+            port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),
             name: appState.myDevice?.name
-        ) ?? ";("
+        ) ?? "That doesn't look right"
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
