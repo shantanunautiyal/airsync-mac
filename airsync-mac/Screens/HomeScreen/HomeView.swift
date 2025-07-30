@@ -44,7 +44,7 @@ struct HomeView: View {
         }
         .navigationTitle(appState.device?.name ?? "AirSync")
         .sheet(isPresented: $isDisconnected) {
-            ScanView()
+            SettingsView()
         }
     }
 }

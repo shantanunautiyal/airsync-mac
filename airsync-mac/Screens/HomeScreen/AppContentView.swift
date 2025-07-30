@@ -109,7 +109,7 @@ struct AppContentView: View {
                     }
 
                 case .settings:
-                    ScanView()
+                    SettingsView()
                         .transition(.blurReplace)
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {

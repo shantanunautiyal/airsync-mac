@@ -14,8 +14,12 @@ class AppState: ObservableObject {
 
     private var clipboardCancellable: AnyCancellable?
     private var lastClipboardValue: String? = nil
+    private var shouldSkipSave = false
+
 
     init() {
+        self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
@@ -39,6 +43,24 @@ class AppState: ObservableObject {
     @Published var port: UInt16 = Defaults.serverPort
     @Published var appIcons: [String: String] = [:] // packageName: base64Icon
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
+
+    // Toggle licensing
+    let licenseCheck: Bool = true
+
+    @Published var isPlus: Bool {
+        didSet {
+            if !shouldSkipSave {
+                UserDefaults.standard.set(isPlus, forKey: "isPlus")
+            }
+        }
+    }
+
+    func setPlusTemporarily(_ value: Bool) {
+        shouldSkipSave = true
+        isPlus = value
+        shouldSkipSave = false
+    }
+
 
     // Remove notification by model instance and system notif center
     func removeNotification(_ notif: Notification) {

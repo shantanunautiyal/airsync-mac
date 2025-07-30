@@ -12,6 +12,7 @@ struct DeviceStatusView: View {
     @State private var showingVolumePopover = false
     @State private var tempVolume: Double = 100
     @State private var isDragging = false
+    @State private var showingPlusPopover = false
 
     var body: some View {
         ZStack {
@@ -28,11 +29,14 @@ struct DeviceStatusView: View {
                     systemImage: volumeIcon(for: appState.status?.music.volume ?? 100, isMuted: appState.status?.music.isMuted ?? false)
                 )
                 .onTapGesture {
-                    // Left click – show slider
-                    if let currentVolume = appState.status?.music.volume {
-                        tempVolume = Double(currentVolume)
+                    if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                        if let currentVolume = appState.status?.music.volume {
+                            tempVolume = Double(currentVolume)
+                        }
+                        showingVolumePopover.toggle()
+                    } else {
+                        showingPlusPopover = true
                     }
-                    showingVolumePopover.toggle()
                 }
                 .popover(isPresented: $showingVolumePopover, arrowEdge: .bottom) {
                     VStack {
@@ -57,6 +61,9 @@ struct DeviceStatusView: View {
                         .padding()
                     }
                     .frame(width: 200)
+                }
+                .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
+                    PlusFeaturePopover(message: "Control volume with AirSync+")
                 }
             }
         }

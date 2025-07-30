@@ -7,11 +7,15 @@
 
 import SwiftUI
 
-struct ScanView: View {
+struct SettingsView: View {
     @ObservedObject var appState = AppState.shared
 
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
+    @State private var licenseKey: String = ""
+    @State private var isCheckingLicense = false
+    @State private var licenseValid: Bool? = nil
+
 
     var body: some View {
         NavigationStack {
@@ -56,11 +60,10 @@ struct ScanView: View {
                     VStack {
                         ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
 
-                        VStack {
-                            HStack {
-                                Label("Server Port", systemImage: "rectangle.connected.to.line.below")
-                                Spacer()
-                            }
+                        HStack {
+                            Label("Server Port", systemImage: "rectangle.connected.to.line.below")
+                                .padding(.trailing, 20)
+                            Spacer()
                             TextField("Server Port", text: $port)
                                 .textFieldStyle(.roundedBorder)
                                 .onChange(of: port) { oldValue, newValue in
@@ -69,8 +72,12 @@ struct ScanView: View {
                                 }
                         }
 
-                        ConnectionInfoText(label: "Key", icon: "key", text: "OIh7GG4")
-                        ConnectionInfoText(label: "Plus features", icon: "plus.app", text: "Active")
+                        ConnectionInfoText(
+                            label: "Plus features",
+                            icon: "plus.app",
+                            text: appState.isPlus ? "Active" : "Not active"
+                        )
+
                     }
                     .padding()
 
@@ -90,6 +97,41 @@ struct ScanView: View {
                         UserDefaults.standard.set(port, forKey: "devicePort")
                     }
 
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("AirSync+ License", systemImage: "key")
+                            Spacer()
+                        }
+
+                        TextField("Enter license key", text: $licenseKey)
+                            .textFieldStyle(.roundedBorder)
+                            .disabled(isCheckingLicense)
+
+                        HStack {
+                            Button("Check License") {
+                                Task {
+                                    isCheckingLicense = true
+                                    licenseValid = nil
+                                    let result = try? await checkLicenseKeyValidity(key: licenseKey)
+                                    licenseValid = result ?? false
+                                    isCheckingLicense = false
+                                }
+                            }
+                            .disabled(licenseKey.isEmpty || isCheckingLicense)
+
+                            if isCheckingLicense {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else if let valid = licenseValid {
+                                Image(systemName: valid ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                                    .foregroundColor(valid ? .green : .red)
+                                    .transition(.scale)
+                            }
+                        }
+                    }
+                    .padding()
 
 
                 }
@@ -117,7 +159,7 @@ struct ScanView: View {
 }
 
 #Preview {
-    ScanView()
+    SettingsView()
 }
 
 

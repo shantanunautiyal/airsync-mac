@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B9638D9D2E3AA72B0018ED05 /* GumroadLicenseValidator in Frameworks */ = {isa = PBXBuildFile; productRef = B9638D9C2E3AA72B0018ED05 /* GumroadLicenseValidator */; };
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
 		B9D742FC2E39CF850053128A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = B9D742FB2E39CF850053128A /* Swifter */; };
 /* End PBXBuildFile section */
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9638D9D2E3AA72B0018ED05 /* GumroadLicenseValidator in Frameworks */,
 				B9D742FC2E39CF850053128A /* Swifter in Frameworks */,
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 			);
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9D742FB2E39CF850053128A /* Swifter */,
+				B9638D9C2E3AA72B0018ED05 /* GumroadLicenseValidator */,
 			);
 			productName = "airsync-mac";
 			productReference = B9673B572E35A2A1006D284A /* airsync-mac.app */;
@@ -106,6 +109,7 @@
 			packageReferences = (
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
 				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
+				B9638D9B2E3AA72B0018ED05 /* XCRemoteSwiftPackageReference "GumroadLicenseValidator" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9673B582E35A2A1006D284A /* Products */;
@@ -376,6 +380,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B9638D9B2E3AA72B0018ED05 /* XCRemoteSwiftPackageReference "GumroadLicenseValidator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dkasaj/GumroadLicenseValidator";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/dagronf/QRCode";
@@ -395,6 +407,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B9638D9C2E3AA72B0018ED05 /* GumroadLicenseValidator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B9638D9B2E3AA72B0018ED05 /* XCRemoteSwiftPackageReference "GumroadLicenseValidator" */;
+			productName = GumroadLicenseValidator;
+		};
 		B9C3181D2E37AA1D00367F16 /* QRCode */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */;
