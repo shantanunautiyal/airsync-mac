@@ -25,41 +25,77 @@ struct MediaPlayerView: View {
                     .padding(.bottom, 5)
 
                 HStack{
-                    GlassButtonView(
-                        label: "",
-                        systemImage: "backward.end",
-                        size: .small,
-                        action: {
-                            WebSocketServer.shared.skipPrevious()
-                        }
-                    )
-                    .labelStyle(.iconOnly)
+                    if #available(macOS 26.0, *) {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "backward.end",
+                            size: .small,
+                            action: {
+                                WebSocketServer.shared.skipPrevious()
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.glass)
+                    } else {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "backward.end",
+                            size: .small,
+                            action: {
+                                WebSocketServer.shared.skipPrevious()
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                    }
 
-                    GlassButtonView(
-                        label: "",
-                        systemImage: music.isPlaying ? "pause.fill" : "play.fill",
-                        action: {
+                    if #available(macOS 26.0, *) {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                            action: {
                                 WebSocketServer.shared.togglePlayPause()
-                        }
-                    )
-                    .labelStyle(.iconOnly)
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.glass)
+                    } else {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                            action: {
+                                WebSocketServer.shared.togglePlayPause()
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                    }
 
-                    GlassButtonView(
-                        label: "",
-                        systemImage: "forward.end",
-                        size: .small,
-                        action: {
-                            WebSocketServer.shared.skipNext()
-                        }
-                    )
-                    .labelStyle(.iconOnly)
+                    if #available(macOS 26.0, *) {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "forward.end",
+                            size: .small,
+                            action: {
+                                WebSocketServer.shared.skipNext()
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.glass)
+                    } else {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "forward.end",
+                            size: .small,
+                            action: {
+                                WebSocketServer.shared.skipNext()
+                            }
+                        )
+                        .labelStyle(.iconOnly)
+                    }
                 }
             }
         }
         .padding()
         .frame(maxWidth: 170)
-        .background(.clear)
-        .glassEffect(in: .rect(cornerRadius: 20))
     }
 }
 

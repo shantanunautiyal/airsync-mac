@@ -27,7 +27,6 @@ struct GlassButtonView: View {
                 Text(label)
             }
         }
-        .buttonStyle(.glass)
         .controlSize(size)
     }
 }

@@ -15,13 +15,17 @@ struct airsync_macApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .containerBackground(
-                    .ultraThinMaterial , for: .window
-                )
-                .toolbarBackgroundVisibility(
-                    .hidden, for: .windowToolbar
-                )
+            if #available(macOS 15.0, *) {
+                HomeView()
+                    .containerBackground(
+                        .ultraThinMaterial , for: .window
+                    )
+                    .toolbarBackgroundVisibility(
+                        .hidden, for: .windowToolbar
+                    )
+            } else {
+                HomeView()
+            }
         }
     }
 }

@@ -39,8 +39,6 @@ struct NotificationView: View {
             }
             .padding()
         }
-        .background(.clear)
-        .glassEffect(in: .rect(cornerRadius: 20))
         .swipeActions(edge: .leading) {
             Button(role: .destructive) {
                 //                store.delete(message)

@@ -16,10 +16,15 @@ struct SidebarView: View {
     var body: some View {
         VStack{
             if (appState.status != nil){
-                DeviceStatusView()
-                    .padding()
-                    .background(.clear)
-                    .glassEffect(in: .rect(cornerRadius: 20))
+                if #available(macOS 26.0, *) {
+                    DeviceStatusView()
+                        .padding()
+                        .background(.clear)
+                        .glassEffect(in: .rect(cornerRadius: 20))
+                } else {
+                    DeviceStatusView()
+                        .padding()
+                }
             }
 
             PhoneView()
@@ -29,11 +34,20 @@ struct SidebarView: View {
         .safeAreaInset(edge: .bottom) {
             VStack{
                 HStack{
-                    GlassButtonView(
-                        label: "Disconnect",
-                        systemImage: "xmark",
-                        action: appState.disconnectDevice
-                    )
+                    if #available(macOS 26.0, *) {
+                        GlassButtonView(
+                            label: "Disconnect",
+                            systemImage: "xmark",
+                            action: appState.disconnectDevice
+                        )
+                        .buttonStyle(.glass)
+                    } else {
+                        GlassButtonView(
+                            label: "Disconnect",
+                            systemImage: "xmark",
+                            action: appState.disconnectDevice
+                        )
+                    }
                 }
                 .padding(.bottom, 20)
             }

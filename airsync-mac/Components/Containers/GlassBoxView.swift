@@ -16,12 +16,20 @@ struct GlassBoxView: View {
     var radius: CGFloat = 16.0
 
     var body: some View {
-        Rectangle()
-            .fill(color)
-            .frame(width: width, height: height)
-            .frame(maxWidth: maxWidth, maxHeight: maxHeight)
-            .glassEffect(in: .rect(cornerRadius: radius))
-            .cornerRadius(radius)
+        if #available(macOS 26.0, *) {
+            Rectangle()
+                .fill(color)
+                .frame(width: width, height: height)
+                .frame(maxWidth: maxWidth, maxHeight: maxHeight)
+                .glassEffect(in: .rect(cornerRadius: radius))
+                .cornerRadius(radius)
+        } else {
+            Rectangle()
+                .fill(color)
+                .frame(width: width, height: height)
+                .frame(maxWidth: maxWidth, maxHeight: maxHeight)
+                .cornerRadius(radius)
+        }
     }
 }
 

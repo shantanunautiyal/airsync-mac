@@ -34,12 +34,23 @@ struct AppContentView: View {
                 case .notifications:
                     if appState.notifications.count > 0{
                         List(appState.notifications.prefix(20), id: \.id) { notif in
-                            NotificationView(
-                                notification: notif,
-                                deleteNotification: {
-                                    appState.removeNotification(notif)
-                                }
-                            )
+                            if #available(macOS 26.0, *) {
+                                NotificationView(
+                                    notification: notif,
+                                    deleteNotification: {
+                                        appState.removeNotification(notif)
+                                    }
+                                )
+                                .background(.clear)
+                                .glassEffect(in: .rect(cornerRadius: 20))
+                            } else {
+                                NotificationView(
+                                    notification: notif,
+                                    deleteNotification: {
+                                        appState.removeNotification(notif)
+                                    }
+                                )
+                            }
                         }
                         .scrollContentBackground(.hidden)
                         .background(.clear)

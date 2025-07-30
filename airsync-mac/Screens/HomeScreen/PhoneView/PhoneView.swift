@@ -59,7 +59,13 @@ struct ScreenView: View {
             Spacer()
 
             if let music = appState.status?.music {
-                MediaPlayerView(music: music)
+                if #available(macOS 26.0, *) {
+                    MediaPlayerView(music: music)
+                        .background(.clear)
+                        .glassEffect(in: .rect(cornerRadius: 20))
+                } else {
+                    MediaPlayerView(music: music)
+                }
             } else {
                 Spacer()
             }
