@@ -72,6 +72,7 @@ class AppState: ObservableObject {
                     self.notifications.removeAll()
                 }
             }
+            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         }
     }
 
