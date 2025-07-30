@@ -10,3 +10,4 @@
 
 ### Libraries used
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
+- [httpswift/swifter](https://github.com/httpswift/swifter)
