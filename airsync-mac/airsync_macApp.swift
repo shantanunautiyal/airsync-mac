@@ -10,8 +10,13 @@ import UserNotifications
 
 @main
 struct airsync_macApp: App {
+    let notificationDelegate = NotificationDelegate()
+
     init() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+        let center = UNUserNotificationCenter.current()
+        center.delegate = notificationDelegate
+
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
                 print("Notification permission error: \(error)")
             } else {
@@ -22,7 +27,12 @@ struct airsync_macApp: App {
         let devicePort = UInt16(AppState.shared.myDevice?.port ?? Int(Defaults.serverPort))
         WebSocketServer.shared.start(port: devicePort)
         loadCachedIcons()
+
+        Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+            AppState.shared.syncWithSystemNotifications()
+        }
     }
+
 
     var body: some Scene {
         WindowGroup {

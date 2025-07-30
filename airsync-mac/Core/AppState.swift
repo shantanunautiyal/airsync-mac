@@ -11,7 +11,7 @@ import UserNotifications
 
 class AppState: ObservableObject {
     static let shared = AppState()
-    
+
     init() {
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
@@ -23,10 +23,9 @@ class AppState: ObservableObject {
             ipAddress: getLocalIPAddress() ?? "N/A",
             port: port
         )
-        
-        postNativeNotification(appName: "Test App", title: "Hello", body: "This is a test notification", appIcon: nil)
-    }
 
+        postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
+    }
 
     @Published var device: Device? = nil
     @Published var notifications: [Notification] = []
@@ -35,21 +34,34 @@ class AppState: ObservableObject {
     @Published var port: UInt16 = Defaults.serverPort
     @Published var appIcons: [String: String] = [:] // packageName: base64Icon
 
-
+    // Remove notification by model instance and system notif center
     func removeNotification(_ notif: Notification) {
         DispatchQueue.main.async {
             withAnimation {
                 self.notifications.removeAll { $0.id == notif.id }
             }
             WebSocketServer.shared.dismissNotification(id: notif.nid)
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notif.nid])
         }
     }
+
+    func removeNotificationById(_ nid: String) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.notifications.removeAll { $0.nid == nid }
+            }
+            WebSocketServer.shared.dismissNotification(id: nid)
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [nid])
+        }
+    }
+
 
     func hideNotification(_ notif: Notification) {
         DispatchQueue.main.async {
             withAnimation {
                 self.notifications.removeAll { $0.id == notif.id }
             }
+            self.removeNotification(notif)
         }
     }
 
@@ -82,10 +94,13 @@ class AppState: ObservableObject {
             }
             // Trigger native macOS notification
             var appIcon: NSImage? = nil
-            if let iconPath = self.appIcons[notif.package] {
-                appIcon = NSImage(contentsOfFile: iconPath)
+            if let base64String = self.appIcons[notif.package],
+               let imageData = Data(base64Encoded: base64String),
+               let image = NSImage(data: imageData) {
+                appIcon = image
             }
             self.postNativeNotification(
+                id: notif.nid,
                 appName: notif.app,
                 title: notif.title,
                 body: notif.body,
@@ -94,9 +109,7 @@ class AppState: ObservableObject {
         }
     }
 
-
-
-    func postNativeNotification(appName: String, title: String, body: String, appIcon: NSImage? = nil) {
+    func postNativeNotification(id: String, appName: String, title: String, body: String, appIcon: NSImage? = nil) {
         let content = UNMutableNotificationContent()
 
         // Show "AppName - Title" as the notification title
@@ -116,9 +129,9 @@ class AppState: ObservableObject {
             }
         }
 
-        // Create a unique identifier for the notification
+        // Use notification id passed from caller
         let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
+            identifier: id,
             content: content,
             trigger: nil // deliver immediately
         )
@@ -149,8 +162,21 @@ class AppState: ObservableObject {
             return nil
         }
     }
-    
 
+    func syncWithSystemNotifications() {
+        UNUserNotificationCenter.current().getDeliveredNotifications { systemNotifs in
+            let systemNIDs = Set(systemNotifs.map { $0.request.identifier })
+
+            DispatchQueue.main.async {
+                let currentNIDs = Set(self.notifications.map { $0.nid })
+                let removedNIDs = currentNIDs.subtracting(systemNIDs)
+
+                for nid in removedNIDs {
+                    print("System notification \(nid) was dismissed manually.")
+                    self.removeNotificationById(nid)
+                }
+            }
+        }
+    }
 
 }
-
