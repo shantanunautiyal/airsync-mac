@@ -55,21 +55,41 @@ struct ScanView: View {
                     // Info Section
                     VStack {
                         ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
-                        ConnectionInfoText(label: "Port", icon: "rectangle.connected.to.line.below", text: port)
+
+                        VStack {
+                            HStack {
+                                Label("Server Port", systemImage: "rectangle.connected.to.line.below")
+                                Spacer()
+                            }
+                            TextField("Server Port", text: $port)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: port) { oldValue, newValue in
+                                    // Only allow digits
+                                    port = newValue.filter { "0123456789".contains($0) }
+                                }
+                        }
+
                         ConnectionInfoText(label: "Key", icon: "key", text: "OIh7GG4")
                         ConnectionInfoText(label: "Plus features", icon: "plus.app", text: "Active")
                     }
                     .padding()
 
-                    // Save button
+                    .padding()
+
                     Button("Save Settings") {
                         let portNumber = UInt16(port) ?? Defaults.serverPort
+
                         appState.myDevice = Device(
                             name: deviceName,
                             ipAddress: getLocalIPAddress() ?? "N/A",
                             port: Int(portNumber)
                         )
+
+                        // Save to UserDefaults
+                        UserDefaults.standard.set(deviceName, forKey: "deviceName")
+                        UserDefaults.standard.set(port, forKey: "devicePort")
                     }
+
 
 
                 }
@@ -81,10 +101,14 @@ struct ScanView: View {
                     deviceName = device.name
                     port = String(device.port)
                 } else {
-                    deviceName = Host.current().localizedName ?? "My Mac"
-                    port = String(Defaults.serverPort)
+                    // Load from saved values first
+                    deviceName = UserDefaults.standard.string(forKey: "deviceName")
+                    ?? (Host.current().localizedName ?? "My Mac")
+                    port = UserDefaults.standard.string(forKey: "devicePort")
+                    ?? String(Defaults.serverPort)
                 }
             }
+
 
         }
     }
