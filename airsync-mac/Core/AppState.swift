@@ -95,10 +95,8 @@ class AppState: ObservableObject {
             }
             // Trigger native macOS notification
             var appIcon: NSImage? = nil
-            if let base64String = self.appIcons[notif.package],
-               let imageData = Data(base64Encoded: base64String),
-               let image = NSImage(data: imageData) {
-                appIcon = image
+            if let iconPath = self.appIcons[notif.package] {
+                appIcon = NSImage(contentsOfFile: iconPath)
             }
             self.postNativeNotification(
                 id: notif.nid,
