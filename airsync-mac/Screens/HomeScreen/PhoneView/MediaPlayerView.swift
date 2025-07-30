@@ -28,20 +28,29 @@ struct MediaPlayerView: View {
                     GlassButtonView(
                         label: "",
                         systemImage: "backward.end",
-                        size: .small
+                        size: .small,
+                        action: {
+                            WebSocketServer.shared.skipPrevious()
+                        }
                     )
                     .labelStyle(.iconOnly)
 
                     GlassButtonView(
                         label: "",
-                        systemImage: "play.fill"
+                        systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                        action: {
+                                WebSocketServer.shared.togglePlayPause()
+                        }
                     )
                     .labelStyle(.iconOnly)
 
                     GlassButtonView(
                         label: "",
                         systemImage: "forward.end",
-                        size: .small
+                        size: .small,
+                        action: {
+                            WebSocketServer.shared.skipNext()
+                        }
                     )
                     .labelStyle(.iconOnly)
                 }

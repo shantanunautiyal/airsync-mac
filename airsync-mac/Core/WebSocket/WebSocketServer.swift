@@ -1,5 +1,5 @@
 //
-//  SocketServer.swift
+//  WebSocketServer.swift
 //  airsync-mac
 //
 //  Created by Sameera Sandakelum on 2025-07-28.
@@ -13,14 +13,14 @@ class WebSocketServer: ObservableObject {
     static let shared = WebSocketServer()
 
     private var server = HttpServer()
+    private var activeSessions: [WebSocketSession] = []
+
     @Published var localPort: UInt16?
     @Published var localIPAddress: String?
 
     @Published var connectedDevice: Device?
     @Published var notifications: [Notification] = []
     @Published var deviceStatus: DeviceStatus?
-
-    private var activeSessions: [WebSocketSession] = []
 
     init() {
         setupWebSocket()
@@ -37,37 +37,37 @@ class WebSocketServer: ObservableObject {
         }
     }
 
-
     func stop() {
         server.stop()
         activeSessions.removeAll()
     }
 
     private func setupWebSocket() {
-        server["/socket"] = websocket(text: { [weak self] session, text in
-            guard let self = self else { return }
-            print("WebSocket Received:\n\(text)")
+        server["/socket"] = websocket(
+            text: { [weak self] session, text in
+                guard let self = self else { return }
+                print("WebSocket Received:\n\(text)")
 
-            if let data = text.data(using: .utf8) {
-                do {
-                    let message = try JSONDecoder().decode(Message.self, from: data)
-                    DispatchQueue.main.async {
-                        self.handleMessage(message)
+                if let data = text.data(using: .utf8) {
+                    do {
+                        let message = try JSONDecoder().decode(Message.self, from: data)
+                        DispatchQueue.main.async {
+                            self.handleMessage(message)
+                        }
+                    } catch {
+                        print("WebSocket JSON decode failed: \(error)")
                     }
-                } catch {
-                    print("WebSocket JSON decode failed: \(error)")
                 }
+            },
+            connected: { [weak self] session in
+                print("WebSocket connected")
+                self?.activeSessions.append(session)
+            },
+            disconnected: { [weak self] session in
+                print("WebSocket disconnected")
+                self?.activeSessions.removeAll(where: { $0 === session })
             }
-        }, connected: { [weak self] session in
-            print("WebSocket connected")
-            self?.activeSessions.append(session)
-        },
-           disconnected: { [weak self] session in
-            print("WebSocket disconnected")
-            self?.activeSessions.removeAll(where: { $0 === session })
-        }
-     )
-
+        )
     }
 
     // MARK: - Local IP
@@ -102,6 +102,8 @@ class WebSocketServer: ObservableObject {
         return address
     }
 
+    // MARK: - Message Handling
+
     func handleMessage(_ message: Message) {
         switch message.type {
         case .device:
@@ -114,10 +116,14 @@ class WebSocketServer: ObservableObject {
 
         case .notification:
             if let dict = message.data.value as? [String: Any],
+               let nid = dict["id"] as? String,
                let title = dict["title"] as? String,
                let body = dict["body"] as? String,
                let app = dict["app"] as? String {
-                AppState.shared.notifications.insert(Notification(title: title, body: body, app: app), at: 0)
+                let notif = Notification(title: title, body: body, app: app, nid: nid)
+                DispatchQueue.main.async {
+                    AppState.shared.notifications.insert(notif, at: 0)
+                }
             }
 
         case .status:
@@ -138,6 +144,114 @@ class WebSocketServer: ObservableObject {
                     music: .init(isPlaying: playing, title: title, artist: artist, volume: volume, isMuted: isMuted)
                 )
             }
+
+        case .dismissalResponse:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let success = dict["success"] as? Bool {
+                print("Dismissal \(success ? "succeeded" : "failed") for notification id: \(id)")
+            }
+
+        case .mediaControlResponse:
+            if let dict = message.data.value as? [String: Any],
+               let action = dict["action"] as? String,
+               let success = dict["success"] as? Bool {
+                print("Media control \(action) \(success ? "succeeded" : "failed")")
+            }
+
         }
+    }
+
+    // MARK: - Sending Helpers
+
+    private func broadcast(message: String) {
+        activeSessions.forEach { $0.writeText(message) }
+    }
+
+    private func sendToFirstAvailable(message: String) {
+        activeSessions.first?.writeText(message)
+    }
+
+    // MARK: - Notification Control
+
+    func dismissNotification(id: String) {
+        let message = """
+        {
+            "type": "dismissNotification",
+            "data": {
+                "id": "\(id)"
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    // MARK: - Media Controls
+
+    func togglePlayPause() {
+        sendMediaAction("playPause")
+    }
+
+    func skipNext() {
+        sendMediaAction("next")
+    }
+
+    func skipPrevious() {
+        sendMediaAction("previous")
+    }
+
+    func stopMedia() {
+        sendMediaAction("stop")
+    }
+
+    private func sendMediaAction(_ action: String) {
+        let message = """
+        {
+            "type": "mediaControl",
+            "data": {
+                "action": "\(action)"
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    // MARK: - Volume Controls
+
+    func volumeUp() {
+        sendVolumeAction("volumeUp")
+    }
+
+    func volumeDown() {
+        sendVolumeAction("volumeDown")
+    }
+
+    func toggleMute() {
+        sendVolumeAction("mute")
+    }
+
+    func setVolume(_ volume: Int) {
+        let message = """
+        {
+            "type": "volumeControl",
+            "data": {
+                "action": "setVolume",
+                "volume": \(volume)
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    private func sendVolumeAction(_ action: String) {
+        let message = """
+        {
+            "type": "volumeControl",
+            "data": {
+                "action": "\(action)"
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
     }
 }

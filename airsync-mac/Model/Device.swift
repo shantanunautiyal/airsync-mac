@@ -22,7 +22,12 @@ struct Device: Codable, Hashable, Identifiable {
 struct MockData{
     static let sampleDevice = Device(name: "Test Device", ipAddress: "192.168.1.100", port: 8080)
 
-    static let sampleNotificaiton = Notification(title: "Sample title", body: "Sample text body", app: "AirSync")
+    static let sampleNotificaiton = Notification(
+        title: "Sample title",
+        body: "Sample text body",
+        app: "AirSync",
+        nid: "23987423984789234"
+    )
 
     static let sampleMusic: DeviceStatus.Music = .init(
         isPlaying: true,

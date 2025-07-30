@@ -12,9 +12,10 @@ struct Notification: Codable, Identifiable, Equatable {
     let title: String
     let body: String
     let app: String
+    let nid: String
 
     private enum CodingKeys: String, CodingKey {
-        case title, body, app
+        case title, body, app, nid
         // id is omitted — won't be decoded or encoded
     }
 }

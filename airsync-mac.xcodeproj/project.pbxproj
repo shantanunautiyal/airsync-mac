@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
 		B9D742FC2E39CF850053128A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = B9D742FB2E39CF850053128A /* Swifter */; };
-		B9F2B11F2E37ED95002078AF /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +29,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B9D742FC2E39CF850053128A /* Swifter in Frameworks */,
-				B9F2B11F2E37ED95002078AF /* CocoaAsyncSocket in Frameworks */,
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -75,7 +73,6 @@
 			name = "airsync-mac";
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
-				B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */,
 				B9D742FB2E39CF850053128A /* Swifter */,
 			);
 			productName = "airsync-mac";
@@ -108,7 +105,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
-				B9F2B11D2E37ED95002078AF /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */,
 				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -298,7 +294,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -342,7 +338,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -394,14 +390,6 @@
 				minimumVersion = 1.5.0;
 			};
 		};
-		B9F2B11D2E37ED95002078AF /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/robbiehanson/CocoaAsyncSocket";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.6.5;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -414,11 +402,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */;
 			productName = Swifter;
-		};
-		B9F2B11E2E37ED95002078AF /* CocoaAsyncSocket */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B9F2B11D2E37ED95002078AF /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */;
-			productName = CocoaAsyncSocket;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

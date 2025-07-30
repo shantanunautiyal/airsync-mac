@@ -22,8 +22,10 @@ class AppState: ObservableObject {
             withAnimation {
                 self.notifications.removeAll { $0.id == notif.id }
             }
+            WebSocketServer.shared.dismissNotification(id: notif.nid)
         }
     }
+
 
     func clearNotifications() {
         DispatchQueue.main.async {

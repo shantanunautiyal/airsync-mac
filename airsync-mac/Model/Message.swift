@@ -10,6 +10,8 @@ enum MessageType: String, Codable {
     case device
     case notification
     case status
+    case dismissalResponse
+    case mediaControlResponse
 }
 
 struct Message: Codable {

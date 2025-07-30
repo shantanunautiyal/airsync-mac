@@ -19,6 +19,8 @@ struct GlassButtonView: View {
         Button(action: action) {
             if let systemImage {
                 Label(label, systemImage: systemImage)
+                    .transition(.identity)
+                    .animation(.easeInOut(duration: 0.2), value: systemImage)
             } else if let image {
                 Label(label, image: image)
             } else {
