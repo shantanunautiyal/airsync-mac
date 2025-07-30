@@ -13,35 +13,27 @@ struct NotificationView: View {
     let deleteNotification: () -> Void
 
     var body: some View {
-        ZStack{
-            HStack(alignment: .top){
-                Image(systemName: "app.badge")
-                    .resizable()
+        ZStack {
+            HStack(alignment: .top) {
+                appIconView()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 25, height: 25)
                     .padding(5)
 
-                VStack{
-                    HStack{
-                        Text(notification.app + " - " + notification.title)
-                            .font(.headline)
+                VStack(alignment: .leading) {
+                    Text(notification.app + " - " + notification.title)
+                        .font(.headline)
 
-                        Spacer()
-                    }
-
-                    HStack {
-                        Text(String(notification.body))
+                    Text(notification.body)
                         .font(.body)
-
-                        Spacer()
-                    }
                 }
+
+                Spacer()
             }
             .padding()
         }
         .swipeActions(edge: .leading) {
             Button(role: .destructive) {
-                //                store.delete(message)
                 deleteNotification()
             } label: {
                 Label("Dismiss", systemImage: "trash")
@@ -49,7 +41,6 @@ struct NotificationView: View {
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
-                //                store.delete(message)
                 deleteNotification()
             } label: {
                 Label("Dismiss", systemImage: "trash")
@@ -57,6 +48,28 @@ struct NotificationView: View {
         }
         .listRowSeparator(.hidden)
     }
+
+    @ViewBuilder
+    private func appIconView() -> some View {
+        if let base64 = AppState.shared.appIcons[notification.package] {
+            if let image = Image(base64String: base64) {
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 25, height: 25)
+                    .padding(5)
+            } else {
+                Image(systemName: "app.badge")
+                    .resizable()
+            }
+        } else {
+            Image(systemName: "app.badge")
+                .resizable()
+        }
+    }
+
+
+
 }
 
 #Preview {

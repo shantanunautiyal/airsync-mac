@@ -12,6 +12,7 @@ enum MessageType: String, Codable {
     case status
     case dismissalResponse
     case mediaControlResponse
+    case appIcons
 }
 
 struct Message: Codable {

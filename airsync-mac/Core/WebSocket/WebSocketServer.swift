@@ -160,6 +160,16 @@ class WebSocketServer: ObservableObject {
                 print("Media control \(action) \(success ? "succeeded" : "failed")")
             }
 
+        case .appIcons:
+            if let dict = message.data.value as? [String: String] {
+                DispatchQueue.main.async {
+                    for (package, base64Icon) in dict {
+                        AppState.shared.appIcons[package] = base64Icon
+                    }
+                }
+            }
+
+
         }
     }
 
