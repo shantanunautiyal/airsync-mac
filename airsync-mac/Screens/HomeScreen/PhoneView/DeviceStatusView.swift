@@ -9,11 +9,12 @@ import SwiftUI
 
 struct DeviceStatusView: View {
     @ObservedObject var appState = AppState.shared
+    @State private var showingVolumePopover = false
+    @State private var tempVolume: Double = 100
+    @State private var isDragging = false
 
     var body: some View {
         ZStack {
-//            GlassBoxView()
-
             HStack(spacing: 16) {
                 // Battery
                 Label(
@@ -21,35 +22,61 @@ struct DeviceStatusView: View {
                     systemImage: batteryIcon(for: appState.status?.battery.level ?? 100, isCharging: appState.status?.battery.isCharging ?? false)
                 )
 
-                // Volume
+                // Volume Button with left/right click handling
                 Label(
                     "\(appState.status?.music.volume ?? 100)%",
                     systemImage: volumeIcon(for: appState.status?.music.volume ?? 100, isMuted: appState.status?.music.isMuted ?? false)
                 )
+                .onTapGesture {
+                    // Left click – show slider
+                    if let currentVolume = appState.status?.music.volume {
+                        tempVolume = Double(currentVolume)
+                    }
+                    showingVolumePopover.toggle()
+                }
+                .popover(isPresented: $showingVolumePopover, arrowEdge: .bottom) {
+                    VStack {
+                        HStack {
+                            Image(systemName: "speaker.fill")
+
+                            Slider(
+                                value: $tempVolume,
+                                in: 0...100,
+                                step: 1,
+                                onEditingChanged: { editing in
+                                    if !editing {
+                                        WebSocketServer.shared.setVolume(Int(tempVolume))
+                                    }
+                                    isDragging = editing
+                                }
+                            )
+                            .focusable(false)
+
+                            Image(systemName: "speaker.wave.3.fill")
+                        }
+                        .padding()
+                    }
+                    .frame(width: 200)
+                }
             }
         }
     }
 
-    // Helper for battery icon
+    // Battery icon helper
     private func batteryIcon(for level: Int, isCharging: Bool) -> String {
         if isCharging {
             return "battery.100.bolt"
         }
         switch level {
-        case 0...10:
-            return "battery.0"
-        case 11...25:
-            return "battery.25"
-        case 26...50:
-            return "battery.50"
-        case 51...75:
-            return "battery.75"
-        default:
-            return "battery.100"
+        case 0...10: return "battery.0"
+        case 11...25: return "battery.25"
+        case 26...50: return "battery.50"
+        case 51...75: return "battery.75"
+        default: return "battery.100"
         }
     }
 
-    // Helper for volume icon
+    // Volume icon helper
     private func volumeIcon(for volume: Int, isMuted: Bool) -> String {
         if isMuted || volume == 0 {
             return "speaker.slash"
@@ -62,7 +89,6 @@ struct DeviceStatusView: View {
         }
     }
 }
-
 
 #Preview {
     DeviceStatusView()
