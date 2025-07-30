@@ -12,11 +12,16 @@ import UserNotifications
 class AppState: ObservableObject {
     static let shared = AppState()
 
+    private var clipboardCancellable: AnyCancellable?
+    private var lastClipboardValue: String? = nil
+
     init() {
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
         let port = Int(portString) ?? Int(Defaults.serverPort)
+
+        startClipboardMonitoring()
 
         self.myDevice = Device(
             name: name,
@@ -176,6 +181,41 @@ class AppState: ObservableObject {
                 }
             }
         }
+    }
+
+    private func startClipboardMonitoring() {
+        clipboardCancellable = Timer
+            .publish(every: 1.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { _ in
+                let pasteboard = NSPasteboard.general
+                if let copiedString = pasteboard.string(forType: .string),
+                   copiedString != self.lastClipboardValue {
+                    self.lastClipboardValue = copiedString
+                    self.sendClipboardToAndroid(text: copiedString)
+                    print("Clipboard updated :" + copiedString)
+                }
+            }
+    }
+
+    func sendClipboardToAndroid(text: String) {
+        let message = """
+    {
+        "type": "clipboardUpdate",
+        "data": {
+            "text": "\(text.replacingOccurrences(of: "\"", with: "\\\""))"
+        }
+    }
+    """
+        WebSocketServer.shared.sendClipboardUpdate(message)
+    }
+
+    func updateClipboardFromAndroid(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        self.lastClipboardValue = text
+        self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
     }
 
 }

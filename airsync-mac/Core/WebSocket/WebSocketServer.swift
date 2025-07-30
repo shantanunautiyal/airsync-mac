@@ -194,6 +194,13 @@ class WebSocketServer: ObservableObject {
                 }
             }
 
+        case .clipboardUpdate:
+            if let dict = message.data.value as? [String: Any],
+               let text = dict["text"] as? String {
+                AppState.shared.updateClipboardFromAndroid(text)
+            }
+
+
 
 
         }
@@ -293,4 +300,9 @@ class WebSocketServer: ObservableObject {
         """
         sendToFirstAvailable(message: message)
     }
+
+    func sendClipboardUpdate(_ message: String) {
+        sendToFirstAvailable(message: message)
+    }
+
 }
