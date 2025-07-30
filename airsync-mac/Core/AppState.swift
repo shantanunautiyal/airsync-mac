@@ -42,6 +42,13 @@ class AppState: ObservableObject {
         }
     }
 
+    func hideNotification(_ notif: Notification) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.notifications.removeAll { $0.id == notif.id }
+            }
+        }
+    }
 
     func clearNotifications() {
         DispatchQueue.main.async {
@@ -54,12 +61,17 @@ class AppState: ObservableObject {
     }
 
     func disconnectDevice() {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
+            // Send request to remote device to disconnect
+            WebSocketServer.shared.sendDisconnectRequest()
+
+            // Then locally reset state
             self.device = nil
             self.notifications.removeAll()
             self.status = nil
         }
     }
+
 
 }
 

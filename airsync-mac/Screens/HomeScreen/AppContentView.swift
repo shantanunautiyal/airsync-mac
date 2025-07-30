@@ -39,7 +39,11 @@ struct AppContentView: View {
                                     notification: notif,
                                     deleteNotification: {
                                         appState.removeNotification(notif)
-                                    }
+                                    },
+                                    hideNotification:
+                                        {
+                                            appState.hideNotification(notif)
+                                        }
                                 )
                                 .background(.clear)
                                 .glassEffect(in: .rect(cornerRadius: 20))
@@ -48,7 +52,11 @@ struct AppContentView: View {
                                     notification: notif,
                                     deleteNotification: {
                                         appState.removeNotification(notif)
-                                    }
+                                    },
+                                    hideNotification:
+                                        {
+                                            appState.hideNotification(notif)
+                                        }
                                 )
                             }
                         }

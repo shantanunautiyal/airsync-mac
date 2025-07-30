@@ -11,6 +11,7 @@ struct NotificationView: View {
 
     let notification: Notification
     let deleteNotification: () -> Void
+    let hideNotification: () -> Void
 
     var body: some View {
         ZStack {
@@ -33,10 +34,10 @@ struct NotificationView: View {
             .padding()
         }
         .swipeActions(edge: .leading) {
-            Button(role: .destructive) {
-                deleteNotification()
+            Button(role: .cancel) {
+                hideNotification()
             } label: {
-                Label("Dismiss", systemImage: "trash")
+                Label("Hide", systemImage: "xmark")
             }
         }
         .swipeActions(edge: .trailing) {
@@ -72,6 +73,7 @@ struct NotificationView: View {
 #Preview {
     NotificationView(
         notification: MockData.sampleNotificaiton,
-        deleteNotification: {}
+        deleteNotification: {},
+        hideNotification: {}
     )
 }

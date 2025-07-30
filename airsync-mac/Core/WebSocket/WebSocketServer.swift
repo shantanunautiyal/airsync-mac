@@ -42,6 +42,17 @@ class WebSocketServer: ObservableObject {
         activeSessions.removeAll()
     }
 
+    func sendDisconnectRequest() {
+        let message = """
+    {
+        "type": "disconnectRequest",
+        "data": {}
+    }
+    """
+        sendToFirstAvailable(message: message)
+    }
+
+
     private func setupWebSocket() {
         server["/socket"] = websocket(
             text: { [weak self] session, text in
@@ -185,6 +196,8 @@ class WebSocketServer: ObservableObject {
 
 
         }
+
+        
     }
 
     // MARK: - Sending Helpers
