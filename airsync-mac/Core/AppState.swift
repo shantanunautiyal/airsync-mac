@@ -38,6 +38,7 @@ class AppState: ObservableObject {
     @Published var myDevice: Device? = nil
     @Published var port: UInt16 = Defaults.serverPort
     @Published var appIcons: [String: String] = [:] // packageName: base64Icon
+    @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
 
     // Remove notification by model instance and system notif center
     func removeNotification(_ notif: Notification) {
@@ -217,5 +218,22 @@ class AppState: ObservableObject {
         self.lastClipboardValue = text
         self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
     }
+
+    func wallpaperCacheDirectory() -> URL {
+        let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("wallpapers", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir
+    }
+    
+    var currentWallpaperPath: String? {
+        guard let device = myDevice else { return nil }
+        let key = "\(device.name)-\(device.ipAddress)"
+        return deviceWallpapers[key]
+    }
+
+
 
 }

@@ -26,11 +26,14 @@ struct airsync_macApp: App {
 
         let devicePort = UInt16(AppState.shared.myDevice?.port ?? Int(Defaults.serverPort))
         WebSocketServer.shared.start(port: devicePort)
-        loadCachedIcons()
+
 
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
             AppState.shared.syncWithSystemNotifications()
         }
+
+        loadCachedIcons()
+        loadCachedWallpapers()
     }
 
 

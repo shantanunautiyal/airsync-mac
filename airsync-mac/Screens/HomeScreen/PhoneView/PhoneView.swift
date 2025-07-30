@@ -8,8 +8,12 @@
 import SwiftUI
 
 struct PhoneView: View {
+    var wallpaperPath: String? {
+        AppState.shared.currentWallpaperPath
+    }
+
     var body: some View {
-        ZStack{
+        ZStack {
             GlassBoxView(
                 color: .gray.opacity(0.2),
                 width: 190,
@@ -17,17 +21,26 @@ struct PhoneView: View {
                 radius: 25
             )
 
-            Image("wallpaper")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 180, height: 400)
-                .cornerRadius(20)
+            Group {
+                if let path = wallpaperPath,
+                   let nsImage = NSImage(contentsOfFile: path) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                } else {
+                    Image("wallpaper")
+                        .resizable()
+                }
+            }
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 180, height: 400)
+            .cornerRadius(20)
 
             ScreenView()
-
         }
     }
 }
+
+
 
 #Preview {
     PhoneView()

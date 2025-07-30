@@ -15,17 +15,33 @@ extension Image {
     }
 }
 
+extension String {
+    func stripBase64Prefix() -> String {
+        if let range = self.range(of: "base64,") {
+            return String(self[range.upperBound...])
+        }
+        return self
+    }
+}
 
-func appIconsDirectory() -> URL {
+
+// General-purpose subdirectory helper
+func appCacheDirectory(sub folder: String) -> URL {
     let manager = FileManager.default
-    let url = manager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        .appendingPathComponent("airsync-mac/AppIcons")
+    let baseURL = manager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("airsync-mac")
+        .appendingPathComponent(folder)
 
-    if !manager.fileExists(atPath: url.path) {
-        try? manager.createDirectory(at: url, withIntermediateDirectories: true)
+    if !manager.fileExists(atPath: baseURL.path) {
+        try? manager.createDirectory(at: baseURL, withIntermediateDirectories: true)
     }
 
-    return url
+    return baseURL
+}
+
+// Icons
+func appIconsDirectory() -> URL {
+    return appCacheDirectory(sub: "AppIcons")
 }
 
 func loadCachedIcons() {
@@ -37,3 +53,19 @@ func loadCachedIcons() {
         AppState.shared.appIcons[package] = file.path
     }
 }
+
+// Wallpapers
+func wallpaperDirectory() -> URL {
+    return appCacheDirectory(sub: "Wallpapers")
+}
+
+func loadCachedWallpapers() {
+    let dir = wallpaperDirectory()
+    let contents = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
+
+    for file in contents where file.pathExtension == "png" {
+        let key = file.deletingPathExtension().lastPathComponent
+        AppState.shared.deviceWallpapers[key] = file.path
+    }
+}
+
