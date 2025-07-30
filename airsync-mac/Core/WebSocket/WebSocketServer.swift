@@ -134,7 +134,8 @@ class WebSocketServer: ObservableObject {
                let package = dict["package"] as? String{
                 let notif = Notification(title: title, body: body, app: app, nid: nid, package: package)
                 DispatchQueue.main.async {
-                    AppState.shared.notifications.insert(notif, at: 0)
+//                    AppState.shared.notifications.insert(notif, at: 0)
+                    AppState.shared.addNotification(notif)
                 }
             }
 

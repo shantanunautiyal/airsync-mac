@@ -6,10 +6,19 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct airsync_macApp: App {
     init() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("Notification permission error: \(error)")
+            } else {
+                print("Notification permission granted: \(granted)")
+            }
+        }
+
         let devicePort = UInt16(AppState.shared.myDevice?.port ?? Int(Defaults.serverPort))
         WebSocketServer.shared.start(port: devicePort)
         loadCachedIcons()
