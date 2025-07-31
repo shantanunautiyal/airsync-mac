@@ -31,17 +31,17 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
     }
 }
 
-
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
     @State private var selectedTab: TabIdentifier = .settings
+    @State private var showAboutSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
                 switch selectedTab {
                 case .notifications:
-                    if appState.notifications.count > 0{
+                    if appState.notifications.count > 0 {
                         List(appState.notifications.prefix(20), id: \.id) { notif in
                             if #available(macOS 26.0, *) {
                                 NotificationView(
@@ -49,10 +49,9 @@ struct AppContentView: View {
                                     deleteNotification: {
                                         appState.removeNotification(notif)
                                     },
-                                    hideNotification:
-                                        {
-                                            appState.hideNotification(notif)
-                                        }
+                                    hideNotification: {
+                                        appState.hideNotification(notif)
+                                    }
                                 )
                                 .background(.clear)
                                 .glassEffect(in: .rect(cornerRadius: 20))
@@ -62,10 +61,9 @@ struct AppContentView: View {
                                     deleteNotification: {
                                         appState.removeNotification(notif)
                                     },
-                                    hideNotification:
-                                        {
-                                            appState.hideNotification(notif)
-                                        }
+                                    hideNotification: {
+                                        appState.hideNotification(notif)
+                                    }
                                 )
                             }
                         }
@@ -73,16 +71,16 @@ struct AppContentView: View {
                         .background(.clear)
                         .transition(.blurReplace)
                         .toolbar {
-                                ToolbarItem(placement: .primaryAction) {
-                                    Button {
-                                        appState.clearNotifications()
-                                    } label: {
-                                        Label("Clear", systemImage: "wind")
-                                    }
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    appState.clearNotifications()
+                                } label: {
+                                    Label("Clear", systemImage: "wind")
                                 }
+                            }
                         }
                     } else {
-                        VStack{
+                        VStack {
                             Spacer()
                             Text("└(=^‥^=)┐")
                                 .font(.title)
@@ -123,7 +121,7 @@ struct AppContentView: View {
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
                                 Button {
-                                    // About
+                                    showAboutSheet = true
                                 } label: {
                                     Label("About", systemImage: "info")
                                 }
@@ -141,10 +139,8 @@ struct AppContentView: View {
                 selectedTab = .notifications
             }
         }
-
-
         .toolbar {
-            ToolbarItem(placement: .secondaryAction)  {
+            ToolbarItem(placement: .secondaryAction) {
                 Picker("Tab", selection: $selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
                         Label(tab.rawValue, systemImage: tab.icon)
@@ -153,13 +149,16 @@ struct AppContentView: View {
                     }
                 }
                 .pickerStyle(.palette)
-
                 Spacer()
             }
         }
+        .sheet(isPresented: $showAboutSheet) {
+            AboutView(
+                onClose: { showAboutSheet = false }
+            )
+        }
     }
 }
-
 
 #Preview {
     AppContentView()
