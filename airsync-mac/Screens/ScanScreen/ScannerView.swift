@@ -13,8 +13,27 @@ struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
     @State private var qrImage: CGImage?
 
+    private func statusInfo(for status: WebSocketStatus) -> (text: String, icon: String, color: Color) {
+        switch status {
+        case .stopped:
+            return ("Stopped", "xmark.circle", .gray)
+        case .starting:
+            return ("Starting...", "clock", .orange)
+        case .started:
+            return ("Ready", "checkmark.circle", .green)
+        case .failed(let error):
+            return ("Failed: \(error)", "exclamationmark.triangle", .red)
+        }
+    }
+
     var body: some View {
+
+        let info = statusInfo(for: appState.webSocketStatus)
+
         VStack {
+            Text("Scan to connect")
+                .padding()
+
             Spacer()
 
             if let qrImage = qrImage {
@@ -30,13 +49,35 @@ struct ScannerView: View {
                             .fill(.clear)
                             .blur(radius: 1)
                     )
-                Text("Scan to connect")
             } else {
                 ProgressView("Generating QR…")
                     .frame(width: 100, height: 100)
             }
 
             Spacer()
+
+            if #available(macOS 26.0, *) {
+                Label {
+                    Text(info.text)
+                        .foregroundColor(info.color)
+                } icon: {
+                    Image(systemName: info.icon)
+                        .foregroundColor(info.color)
+                }
+                .padding()
+                .background(.clear)
+                .glassEffect(in: .rect(cornerRadius: 20))
+                .padding()
+            } else {
+                Label {
+                    Text(info.text)
+                        .foregroundColor(info.color)
+                } icon: {
+                    Image(systemName: info.icon)
+                        .foregroundColor(info.color)
+                }
+                .padding()
+            }
         }
         .onAppear {
             generateQRAsync()
@@ -44,9 +85,16 @@ struct ScannerView: View {
         .onTapGesture {
             generateQRAsync()
         }
+        .onChange(of: appState.shouldRefreshQR) { _, newValue in
+            if newValue {
+                generateQRAsync()
+                appState.shouldRefreshQR = false
+            }
+        }
+
     }
 
-    private func generateQRAsync() {
+     func generateQRAsync() {
         let text = generateQRText(
             ip: getLocalIPAddress(),
             port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),

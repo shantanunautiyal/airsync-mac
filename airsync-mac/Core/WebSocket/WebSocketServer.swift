@@ -9,6 +9,13 @@ import Foundation
 import Swifter
 internal import Combine
 
+enum WebSocketStatus {
+    case stopped
+    case starting
+    case started(port: UInt16, ip: String?)
+    case failed(error: String)
+}
+
 class WebSocketServer: ObservableObject {
     static let shared = WebSocketServer()
 
@@ -27,20 +34,35 @@ class WebSocketServer: ObservableObject {
     }
 
     func start(port: UInt16 = Defaults.serverPort) {
+        DispatchQueue.main.async {
+            AppState.shared.webSocketStatus = .starting
+        }
         do {
             try server.start(port)
-            localPort = port
-            localIPAddress = getWiFiAddress()
-            print("WebSocket server started at ws://\(localIPAddress ?? "unknown"):\(port)/socket")
+            let ip = getWiFiAddress()
+            DispatchQueue.main.async {
+                self.localPort = port
+                self.localIPAddress = ip
+                AppState.shared.webSocketStatus = .started(port: port, ip: ip)
+            }
+            print("WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket")
         } catch {
+            DispatchQueue.main.async {
+                AppState.shared.webSocketStatus = .failed(error: "\(error)")
+            }
             print("Failed to start WebSocket server: \(error)")
         }
     }
 
+
     func stop() {
         server.stop()
         activeSessions.removeAll()
+        DispatchQueue.main.async {
+            AppState.shared.webSocketStatus = .stopped
+        }
     }
+
 
     func sendDisconnectRequest() {
         let message = """

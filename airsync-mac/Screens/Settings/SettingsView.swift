@@ -38,19 +38,21 @@ struct SettingsView: View {
                             Spacer()
                             Toggle("", isOn: .constant(false))
                                 .toggleStyle(.switch)
+                                .disabled(true)
                         }
 
                         HStack{
                             Label("Sync device status", systemImage: "battery.75percent")
                             Spacer()
-                            Toggle("", isOn: .constant(true))
+                            Toggle("", isOn: .constant(false))
                                 .toggleStyle(.switch)
+                                .disabled(true)
                         }
 
                         HStack{
                             Label("Sync clipoboard", systemImage: "clipboard")
                             Spacer()
-                            Toggle("", isOn: .constant(true))
+                            Toggle("", isOn: $appState.isClipboardSyncEnabled)
                                 .toggleStyle(.switch)
                         }
                     }
@@ -84,17 +86,24 @@ struct SettingsView: View {
                         Spacer()
                         Button("Save Settings") {
                             let portNumber = UInt16(port) ?? Defaults.serverPort
+                            let ipAddress = getLocalIPAddress() ?? "N/A"
 
                             appState.myDevice = Device(
                                 name: deviceName,
-                                ipAddress: getLocalIPAddress() ?? "N/A",
+                                ipAddress: ipAddress,
                                 port: Int(portNumber)
                             )
 
-                            // Save to UserDefaults
                             UserDefaults.standard.set(deviceName, forKey: "deviceName")
                             UserDefaults.standard.set(port, forKey: "devicePort")
+
+                            WebSocketServer.shared.stop()
+                            WebSocketServer.shared.start(port: portNumber)
+
+                            appState.shouldRefreshQR = true
                         }
+
+
                     }
                     .padding()
 

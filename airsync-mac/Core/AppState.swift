@@ -25,7 +25,10 @@ class AppState: ObservableObject {
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
         let port = Int(portString) ?? Int(Defaults.serverPort)
 
-        startClipboardMonitoring()
+        self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
+        if isClipboardSyncEnabled {
+            startClipboardMonitoring()
+        }
 
         self.myDevice = Device(
             name: name,
@@ -43,6 +46,18 @@ class AppState: ObservableObject {
     @Published var port: UInt16 = Defaults.serverPort
     @Published var appIcons: [String: String] = [:] // packageName: base64Icon
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
+    @Published var isClipboardSyncEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isClipboardSyncEnabled, forKey: "isClipboardSyncEnabled")
+            if isClipboardSyncEnabled {
+                startClipboardMonitoring()
+            } else {
+                stopClipboardMonitoring()
+            }
+        }
+    }
+    @Published var shouldRefreshQR: Bool = false
+    @Published var webSocketStatus: WebSocketStatus = .stopped
 
     // Toggle licensing
     let licenseCheck: Bool = true
@@ -207,6 +222,7 @@ class AppState: ObservableObject {
     }
 
     private func startClipboardMonitoring() {
+        guard isClipboardSyncEnabled else { return }
         clipboardCancellable = Timer
             .publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
@@ -240,6 +256,12 @@ class AppState: ObservableObject {
         self.lastClipboardValue = text
         self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
     }
+
+    private func stopClipboardMonitoring() {
+        clipboardCancellable?.cancel()
+        clipboardCancellable = nil
+    }
+
 
     func wallpaperCacheDirectory() -> URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
