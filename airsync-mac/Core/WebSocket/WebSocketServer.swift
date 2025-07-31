@@ -75,11 +75,21 @@ class WebSocketServer: ObservableObject {
                 self?.activeSessions.append(session)
             },
             disconnected: { [weak self] session in
+                guard let self = self else { return }
                 print("WebSocket disconnected")
-                self?.activeSessions.removeAll(where: { $0 === session })
+
+                self.activeSessions.removeAll(where: { $0 === session })
+
+                // Only call disconnectDevice if no other sessions remain
+                if self.activeSessions.isEmpty {
+                    DispatchQueue.main.async {
+                        AppState.shared.disconnectDevice()
+                    }
+                }
             }
         )
     }
+
 
     // MARK: - Local IP
 
