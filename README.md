@@ -12,3 +12,12 @@
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
 - [httpswift/swifter](https://github.com/httpswift/swifter)
 - [dkasaj/GumroadLicenseValidator](https://github.com/dkasaj/GumroadLicenseValidator)
+
+
+<a href="https://star-history.com/#sameerasw/airsync-mac&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=sameerasw/airsync-mac&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=sameerasw/airsync-mac&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=sameerasw/airsync-mac&type=Date" />
+ </picture>
+</a>
