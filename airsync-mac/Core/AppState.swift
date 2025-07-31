@@ -15,10 +15,12 @@ class AppState: ObservableObject {
     private var clipboardCancellable: AnyCancellable?
     private var lastClipboardValue: String? = nil
     private var shouldSkipSave = false
+    private let licenseDetailsKey = "licenseDetails"
 
 
     init() {
         self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+
 
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
@@ -35,6 +37,7 @@ class AppState: ObservableObject {
             ipAddress: getLocalIPAddress() ?? "N/A",
             port: port
         )
+        self.licenseDetails = loadLicenseDetailsFromUserDefaults()
 
         postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
     }
@@ -59,7 +62,12 @@ class AppState: ObservableObject {
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
 
-    @Published var licenseDetails: LicenseDetails? = nil
+    @Published var licenseDetails: LicenseDetails? {
+        didSet {
+            saveLicenseDetailsToUserDefaults()
+        }
+    }
+
 
     // Toggle licensing
     let licenseCheck: Bool = true
@@ -280,6 +288,32 @@ class AppState: ObservableObject {
         return deviceWallpapers[key]
     }
 
+    private func saveLicenseDetailsToUserDefaults() {
+        guard let details = licenseDetails else {
+            UserDefaults.standard.removeObject(forKey: licenseDetailsKey)
+            return
+        }
+
+        do {
+            let data = try JSONEncoder().encode(details)
+            UserDefaults.standard.set(data, forKey: licenseDetailsKey)
+        } catch {
+            print("Failed to encode license details: \(error)")
+        }
+    }
+
+    private func loadLicenseDetailsFromUserDefaults() -> LicenseDetails? {
+        guard let data = UserDefaults.standard.data(forKey: licenseDetailsKey) else {
+            return nil
+        }
+
+        do {
+            return try JSONDecoder().decode(LicenseDetails.self, from: data)
+        } catch {
+            print("Failed to decode license details: \(error)")
+            return nil
+        }
+    }
 
 
 }
