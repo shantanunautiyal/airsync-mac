@@ -17,6 +17,8 @@ struct SettingsView: View {
     @State private var licenseValid: Bool? = nil
 
     @State private var isExpanded: Bool = false
+    @State private var isLicenseVisible = false
+
 
 
     var body: some View {
@@ -231,6 +233,78 @@ struct SettingsView: View {
                             Spacer()
                         }
 
+                            if let details = appState.licenseDetails {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("License Info")
+                                        .font(.headline)
+                                        .padding(.bottom, 4)
+
+                                    Divider()
+                                    
+                                    HStack {
+                                        Label("Email", systemImage: "envelope")
+                                        Spacer()
+                                        Text(details.email)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    HStack {
+                                        Label("Product", systemImage: "shippingbox")
+                                        Spacer()
+                                        Text(details.productName)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    HStack {
+                                        Label("Order #", systemImage: "number")
+                                        Spacer()
+                                        Text("\(details.orderNumber)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    HStack {
+                                        Label("Purchaser ID", systemImage: "person.fill")
+                                        Spacer()
+                                        Text(details.purchaserID)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    HStack {
+                                        Label("License Key", systemImage: "key")
+                                        Spacer()
+                                        Group {
+                                            if isLicenseVisible {
+                                                Text(details.key)
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                    .textSelection(.enabled)
+                                            } else {
+                                                Text(String(repeating: "•", count: max(6, min(details.key.count, 12))))
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        .onTapGesture {
+                                            withAnimation {
+                                                isLicenseVisible.toggle()
+                                            }
+                                        }
+                                    }
+
+                                }
+                                .padding()
+                                .background(Color.secondary.opacity(0.05))
+                                .cornerRadius(10)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                                .animation(.easeInOut(duration: 0.3), value: appState.licenseDetails)
+                            }
+
+                        }
+
 
                         DisclosureGroup(isExpanded: $isExpanded) {
                             Text(
@@ -281,7 +355,6 @@ Enjoy the app!
             }
 
 
-        }
 }
 
 #Preview {

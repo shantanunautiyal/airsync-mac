@@ -59,6 +59,8 @@ class AppState: ObservableObject {
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
 
+    @Published var licenseDetails: LicenseDetails? = nil
+
     // Toggle licensing
     let licenseCheck: Bool = true
 
