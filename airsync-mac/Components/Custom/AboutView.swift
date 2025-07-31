@@ -123,12 +123,27 @@ struct AboutView: View {
 
             HStack {
                 Spacer()
-                    Button {
-                        if let url = URL(string: "https://www.sameerasw.com") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    } label: {
-                        Label("My Website", systemImage: "link")
+                    if #available(macOS 26.0, *) {
+                        GlassButtonView(
+                            label: "My Website",
+                            systemImage: "link",
+                            action: {
+                                if let url = URL(string: "https://www.sameerasw.com") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                        )
+                        .buttonStyle(.glass)
+                    } else {
+                        GlassButtonView(
+                            label: "My Website",
+                            systemImage: "link",
+                            action: {
+                                if let url = URL(string: "https://www.sameerasw.com") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                        )
                     }
 
                 Button("OK") {
