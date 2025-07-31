@@ -15,13 +15,13 @@
 
     <!-- Latest version -->
     <item>
-      <title>Version 2.0.0 BETA</title>
-      <sparkle:releaseNotesLink>https://github.com/sameerasw/airsync-mac/releases/tag/v2.0.0-BETA-01</sparkle:releaseNotesLink>
+      <title>Version 2.0.1 BETA</title>
+      <sparkle:releaseNotesLink>https://github.com/sameerasw/airsync-mac/releases/tag/v2.0.1-BETA</sparkle:releaseNotesLink>
       <pubDate>Fri, 1 Aug 2025 01:00:00 +0000</pubDate>
       <enclosure
-        url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.0-BETA-01/AirSync.dmg"
+        url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.1-BETA/AirSync.dmg"
         sparkle:version="100"
-        sparkle:shortVersionString="2.0.0"
+        sparkle:shortVersionString="2.0.1"
         type="application/octet-stream"
         length="12345678" />
       <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
