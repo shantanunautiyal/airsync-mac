@@ -1,6 +1,6 @@
 # AirSync 2.0 macOS app written in Swift
 
-> WIP
+### During beta testing, You can use the code ```i-am-a-tester``` to try out and test AirSync+ features. Also these + features are subject to change and currently they are limited because to test if the workflow works.
 
 ![CleanShot 2025-07-28 at 5  49 29@2x Large](https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42)
 
