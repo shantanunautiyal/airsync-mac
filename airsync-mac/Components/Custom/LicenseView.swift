@@ -48,7 +48,7 @@ END OF ADDITIONAL TERMS
 
 """)
 
-            ExpandableLicenseSection(title: "Library: AirSync+ Commercial Eula", content: """
+            ExpandableLicenseSection(title: "AirSync+ Commercial Eula", content: """
 Commercial End User License Agreement (EULA)
 ============================================
 

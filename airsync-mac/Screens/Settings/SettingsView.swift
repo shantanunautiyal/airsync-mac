@@ -16,6 +16,8 @@ struct SettingsView: View {
     @State private var isCheckingLicense = false
     @State private var licenseValid: Bool? = nil
 
+    @State private var isExpanded: Bool = false
+
 
     var body: some View {
         NavigationStack {
@@ -84,23 +86,62 @@ struct SettingsView: View {
                     .padding()
                     HStack{
                         Spacer()
-                        Button("Save Settings") {
-                            let portNumber = UInt16(port) ?? Defaults.serverPort
-                            let ipAddress = getLocalIPAddress() ?? "N/A"
 
-                            appState.myDevice = Device(
-                                name: deviceName,
-                                ipAddress: ipAddress,
-                                port: Int(portNumber)
-                            )
+                        if #available(macOS 26.0, *) {
+                            Button(
+                                "Save and Restart the Server",
+                                systemImage: "square.and.arrow.down.badge.checkmark"
+                            ) {
+                                let portNumber = UInt16(
+                                    port
+                                ) ?? Defaults.serverPort
+                                let ipAddress = getLocalIPAddress() ?? "N/A"
+    
+                                appState.myDevice = Device(
+                                    name: deviceName,
+                                    ipAddress: ipAddress,
+                                    port: Int(portNumber)
+                                )
+    
+                                UserDefaults.standard
+                                    .set(deviceName, forKey: "deviceName")
+                                UserDefaults.standard
+                                    .set(port, forKey: "devicePort")
+    
+                                WebSocketServer.shared.stop()
+                                WebSocketServer.shared.start(port: portNumber)
+    
+                                appState.shouldRefreshQR = true
+                            }
+                            .controlSize(.large)
+                            .buttonStyle(.glass)
+                        } else {
+                            Button(
+                                "Save and Restart the Server",
+                                systemImage: "square.and.arrow.down.badge.checkmark"
+                            ) {
+                                let portNumber = UInt16(
+                                    port
+                                ) ?? Defaults.serverPort
+                                let ipAddress = getLocalIPAddress() ?? "N/A"
 
-                            UserDefaults.standard.set(deviceName, forKey: "deviceName")
-                            UserDefaults.standard.set(port, forKey: "devicePort")
+                                appState.myDevice = Device(
+                                    name: deviceName,
+                                    ipAddress: ipAddress,
+                                    port: Int(portNumber)
+                                )
 
-                            WebSocketServer.shared.stop()
-                            WebSocketServer.shared.start(port: portNumber)
+                                UserDefaults.standard
+                                    .set(deviceName, forKey: "deviceName")
+                                UserDefaults.standard
+                                    .set(port, forKey: "devicePort")
 
-                            appState.shouldRefreshQR = true
+                                WebSocketServer.shared.stop()
+                                WebSocketServer.shared.start(port: portNumber)
+
+                                appState.shouldRefreshQR = true
+                            }
+                            .controlSize(.large)
                         }
 
                     }
@@ -110,25 +151,50 @@ struct SettingsView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Label("AirSync+ License", systemImage: "key")
+                            Label("AirSync+", systemImage: "key")
                             Spacer()
                         }
+                        .padding()
 
                         TextField("Enter license key", text: $licenseKey)
                             .textFieldStyle(.roundedBorder)
                             .disabled(isCheckingLicense)
 
-                        HStack {
-                            Button("Check License") {
-                                Task {
-                                    isCheckingLicense = true
-                                    licenseValid = nil
-                                    let result = try? await checkLicenseKeyValidity(key: licenseKey)
-                                    licenseValid = result ?? false
-                                    isCheckingLicense = false
+                        HStack{
+                            if #available(macOS 26.0, *) {
+                                Button("Check License") {
+                                    Task {
+                                        isCheckingLicense = true
+                                        licenseValid = nil
+                                        let result = try? await checkLicenseKeyValidity(
+                                            key: licenseKey
+                                        )
+                                        licenseValid = result ?? false
+                                        isCheckingLicense = false
+                                    }
                                 }
+                                .disabled(
+                                    licenseKey.isEmpty || isCheckingLicense
+                                )
+                                .buttonStyle(.glass)
+                                .controlSize(.large)
+                            } else {
+                                Button("Check License") {
+                                    Task {
+                                        isCheckingLicense = true
+                                        licenseValid = nil
+                                        let result = try? await checkLicenseKeyValidity(
+                                            key: licenseKey
+                                        )
+                                        licenseValid = result ?? false
+                                        isCheckingLicense = false
+                                    }
+                                }
+                                .disabled(
+                                    licenseKey.isEmpty || isCheckingLicense
+                                )
                             }
-                            .disabled(licenseKey.isEmpty || isCheckingLicense)
+
 
                             if isCheckingLicense {
                                 ProgressView()
@@ -138,6 +204,60 @@ struct SettingsView: View {
                                     .foregroundColor(valid ? .green : .red)
                                     .transition(.scale)
                             }
+
+                            if #available(macOS 26.0, *) {
+                                GlassButtonView(
+                                    label: "Get AirSync+",
+                                    systemImage: "link",
+                                    action: {
+                                        if let url = URL(string: "https://store.sameerasw.com") {
+                                            NSWorkspace.shared.open(url)
+                                        }
+                                    }
+                                )
+                                .buttonStyle(.glass)
+                            } else {
+                                GlassButtonView(
+                                    label: "Get AirSync+",
+                                    systemImage: "link",
+                                    action: {
+                                        if let url = URL(string: "https://store.sameerasw.com") {
+                                            NSWorkspace.shared.open(url)
+                                        }
+                                    }
+                                )
+                            }
+
+                            Spacer()
+                        }
+
+
+                        DisclosureGroup(isExpanded: $isExpanded) {
+                            Text(
+                            """
+It’s not a subscription, Just a small one-time purchase to support the developer (that's me!). Think of it as a little donation to keep this project alive and evolving.
+That said, I know not everyone who wants the full experience can afford it. If that’s you, please don’t hesitate to reach out. 😊
+
+The source code is available on GitHub, and you're more than welcome to build with all Plus features free—for personal use which also opens for contributions which is a win win!.
+As a thank-you for supporting the app, AirSync+ unlocks some nice extras: media controls, synced widgets, low battery alerts, wireless ADB, and more to come as I keep adding new features.
+
+Enjoy the app!
+(っ◕‿◕)っ
+"""
+                            )
+                                .font(.footnote)
+                                .multilineTextAlignment(.leading)
+                                .padding()
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(8)
+                        } label: {
+                            Text("Why plus?")
+                                .font(.subheadline)
+                                .bold()
+                        }
+                        .padding(.horizontal)
+                        .focusEffectDisabled()
+
                         }
                     }
                     .padding()
@@ -162,9 +282,6 @@ struct SettingsView: View {
 
 
         }
-    }
-
-    
 }
 
 #Preview {

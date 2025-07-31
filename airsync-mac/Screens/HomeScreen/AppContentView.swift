@@ -149,7 +149,14 @@ struct AppContentView: View {
                     }
                 }
                 .pickerStyle(.palette)
-                Spacer()
+            }
+
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Feedback", systemImage: "exclamationmark.bubble"){
+                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac/issues/new/choose") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
             }
         }
         .sheet(isPresented: $showAboutSheet) {

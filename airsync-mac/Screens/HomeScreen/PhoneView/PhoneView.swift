@@ -21,19 +21,19 @@ struct PhoneView: View {
                 radius: 25
             )
 
-            Group {
-                if let path = wallpaperPath,
-                   let nsImage = NSImage(contentsOfFile: path) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                } else {
-                    Image("wallpaper")
-                        .resizable()
-                }
-            }
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 180, height: 400)
-            .cornerRadius(20)
+//            Group {
+//                if let path = wallpaperPath,
+//                   let nsImage = NSImage(contentsOfFile: path) {
+//                    Image(nsImage: nsImage)
+//                        .resizable()
+//                } else {
+//                    Image("wallpaper")
+//                        .resizable()
+//                }
+//            }
+//            .aspectRatio(contentMode: .fill)
+//            .frame(width: 180, height: 400)
+//            .cornerRadius(20)
 
             ScreenView()
         }
