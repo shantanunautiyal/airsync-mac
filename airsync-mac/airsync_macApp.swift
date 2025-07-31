@@ -7,10 +7,20 @@
 
 import SwiftUI
 import UserNotifications
+import Sparkle
+
 
 @main
 struct airsync_macApp: App {
     let notificationDelegate = NotificationDelegate()
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
+
+
+    
 
     init() {
         let center = UNUserNotificationCenter.current()
@@ -41,15 +51,17 @@ struct airsync_macApp: App {
         WindowGroup {
             if #available(macOS 15.0, *) {
                 HomeView()
-                    .containerBackground(
-                        .ultraThinMaterial , for: .window
-                    )
-                    .toolbarBackgroundVisibility(
-                        .hidden, for: .windowToolbar
-                    )
+                    .containerBackground(.ultraThinMaterial, for: .window)
+                    .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             } else {
                 HomeView()
             }
         }
+        .commands {
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
+        }
     }
+
 }

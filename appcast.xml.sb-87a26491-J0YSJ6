@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss
+    version="2.0"
+    xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+  <channel>
+    <title>AirSync Mac Updates</title>
+    <link>https://github.com/sameerasw/airsync-mac/releases</link>
+    <description>Updates for AirSync Mac app</description>
+    <language>en</language>
+    <pubDate>Wed, 31 Jul 2025 10:00:00 +0000</pubDate>
+    <lastBuildDate>Wed, 31 Jul 2025 10:00:00 +0000</lastBuildDate>
+    <ttl>1800</ttl>
+
+    <!-- Latest version -->
+    <item>
+      <title>Version 1.0.0</title>
+      <sparkle:releaseNotesLink>https://github.com/sameerasw/airsync-mac/releases/tag/v1.0.0</sparkle:releaseNotesLink>
+      <pubDate>Wed, 31 Jul 2025 10:00:00 +0000</pubDate>
+      <enclosure
+        url="https://github.com/sameerasw/airsync-mac/releases/download/v1.0.0/AirSync-mac-v1.0.0.zip"
+        sparkle:version="100"
+        sparkle:shortVersionString="1.0.0"
+        type="application/octet-stream"
+        length="12345678" />
+      <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+    </item>
+
+  </channel>
+</rss>

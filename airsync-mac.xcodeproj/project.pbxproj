@@ -16,9 +16,22 @@
 		B9673B572E35A2A1006D284A /* airsync-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "airsync-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "airsync-mac" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B9673B562E35A2A1006D284A /* airsync-mac */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B9673B592E35A2A1006D284A /* airsync-mac */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "airsync-mac" target */,
+			);
 			path = "airsync-mac";
 			sourceTree = "<group>";
 		};
@@ -291,6 +304,7 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "airsync-mac/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "AirSync-debug";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -336,7 +350,8 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
+				INFOPLIST_FILE = "airsync-mac/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "AirSync-debug";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
