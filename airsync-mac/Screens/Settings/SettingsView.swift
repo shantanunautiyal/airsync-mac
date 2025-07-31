@@ -19,7 +19,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            HStack {
+            ScrollView {
                 VStack {
                     // Name Field
                     VStack {
@@ -80,22 +80,23 @@ struct SettingsView: View {
 
                     }
                     .padding()
+                    HStack{
+                        Spacer()
+                        Button("Save Settings") {
+                            let portNumber = UInt16(port) ?? Defaults.serverPort
 
-                    .padding()
+                            appState.myDevice = Device(
+                                name: deviceName,
+                                ipAddress: getLocalIPAddress() ?? "N/A",
+                                port: Int(portNumber)
+                            )
 
-                    Button("Save Settings") {
-                        let portNumber = UInt16(port) ?? Defaults.serverPort
-
-                        appState.myDevice = Device(
-                            name: deviceName,
-                            ipAddress: getLocalIPAddress() ?? "N/A",
-                            port: Int(portNumber)
-                        )
-
-                        // Save to UserDefaults
-                        UserDefaults.standard.set(deviceName, forKey: "deviceName")
-                        UserDefaults.standard.set(port, forKey: "devicePort")
+                            // Save to UserDefaults
+                            UserDefaults.standard.set(deviceName, forKey: "deviceName")
+                            UserDefaults.standard.set(port, forKey: "devicePort")
+                        }
                     }
+                    .padding()
 
                     Divider()
 
@@ -136,18 +137,18 @@ struct SettingsView: View {
 
                 }
                 .frame(minWidth: 300)
-            }
-            .padding()
-            .onAppear {
-                if let device = appState.myDevice {
-                    deviceName = device.name
-                    port = String(device.port)
-                } else {
-                    // Load from saved values first
-                    deviceName = UserDefaults.standard.string(forKey: "deviceName")
-                    ?? (Host.current().localizedName ?? "My Mac")
-                    port = UserDefaults.standard.string(forKey: "devicePort")
-                    ?? String(Defaults.serverPort)
+                .padding()
+                .onAppear {
+                    if let device = appState.myDevice {
+                        deviceName = device.name
+                        port = String(device.port)
+                    } else {
+                        // Load from saved values first
+                        deviceName = UserDefaults.standard.string(forKey: "deviceName")
+                        ?? (Host.current().localizedName ?? "My Mac")
+                        port = UserDefaults.standard.string(forKey: "devicePort")
+                        ?? String(Defaults.serverPort)
+                    }
                 }
             }
 
