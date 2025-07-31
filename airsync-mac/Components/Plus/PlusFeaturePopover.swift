@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PlusFeaturePopover: View {
     var message: String = "Available with AirSync+"
-    var onUpgradeTapped: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -21,12 +20,12 @@ struct PlusFeaturePopover: View {
                 Spacer()
                 if #available(macOS 26.0, *) {
                     Button("See more") {
-                        onUpgradeTapped()
+                        AppState.shared.selectedTab = .settings
                     }
                     .buttonStyle(.glass)
                 } else {
                     Button("See more") {
-                        onUpgradeTapped()
+                        AppState.shared.selectedTab = .settings
                     }
                     .buttonStyle(.borderedProminent)
                 }

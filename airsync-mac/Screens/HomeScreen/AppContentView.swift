@@ -33,13 +33,12 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
-    @State private var selectedTab: TabIdentifier = .settings
     @State private var showAboutSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                switch selectedTab {
+                switch AppState.shared.selectedTab {
                 case .notifications:
                     if appState.notifications.count > 0 {
                         List(appState.notifications.prefix(20), id: \.id) { notif in
@@ -129,19 +128,19 @@ struct AppContentView: View {
                         }
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: selectedTab)
+            .animation(.easeInOut(duration: 0.3), value: AppState.shared.selectedTab)
             .frame(minWidth: 550)
         }
         .onChange(of: appState.device) {
             if appState.device == nil {
-                selectedTab = .settings
+                AppState.shared.selectedTab = .settings
             } else {
-                selectedTab = .notifications
+                AppState.shared.selectedTab = .notifications
             }
         }
         .toolbar {
             ToolbarItem(placement: .secondaryAction) {
-                Picker("Tab", selection: $selectedTab) {
+                Picker("Tab", selection: $appState.selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
                         Label(tab.rawValue, systemImage: tab.icon)
                             .labelStyle(.iconOnly)

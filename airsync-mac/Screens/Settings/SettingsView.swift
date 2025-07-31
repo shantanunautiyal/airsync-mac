@@ -212,7 +212,7 @@ struct SettingsView: View {
                                     label: "Get AirSync+",
                                     systemImage: "link",
                                     action: {
-                                        if let url = URL(string: "https://store.sameerasw.com") {
+                                        if let url = URL(string: "https://airsync.sameerasw.com") {
                                             NSWorkspace.shared.open(url)
                                         }
                                     }
@@ -223,7 +223,7 @@ struct SettingsView: View {
                                     label: "Get AirSync+",
                                     systemImage: "link",
                                     action: {
-                                        if let url = URL(string: "https://store.sameerasw.com") {
+                                        if let url = URL(string: "https://airsync.sameerasw.com") {
                                             NSWorkspace.shared.open(url)
                                         }
                                     }

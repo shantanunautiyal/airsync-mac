@@ -61,6 +61,7 @@ class AppState: ObservableObject {
     }
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
+    @Published var selectedTab: TabIdentifier = .settings
 
     @Published var licenseDetails: LicenseDetails? {
         didSet {
