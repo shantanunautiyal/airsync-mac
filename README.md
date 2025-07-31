@@ -8,6 +8,20 @@
 
 ![CleanShot 2025-07-28 at 5  50 12@2x Large](https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439)
 
+## Installation and Troubleshooting
+
+Make sure to allow network access
+![CleanShot 2025-08-01 at 1  10 37@2x Large](https://github.com/user-attachments/assets/187e5cb5-15fd-43ea-8550-9771c84b340e)
+
+You may need to run the below in terminal to quarantine the app.
+```
+xattr -r -d com.apple.quarantine /path/to/AirSync.app
+```
+
+Or maybe you will need to right/ Ctrl click the app and pick open from the context menu.
+
+| If someone doing a new installation can take screenshots of these steps woudld be helpful as I can not replicate them locally on my development mac.
+
 ### Libraries used
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
 - [httpswift/swifter](https://github.com/httpswift/swifter)
