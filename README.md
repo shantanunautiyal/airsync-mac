@@ -142,7 +142,6 @@ The list goes on, You are welcome to open feature requests and inspire me for ne
 ### Libraries used
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
 - [httpswift/swifter](https://github.com/httpswift/swifter)
-- [dkasaj/GumroadLicenseValidator](https://github.com/dkasaj/GumroadLicenseValidator)
 
 
 <a href="https://star-history.com/#sameerasw/airsync-mac&Date">
