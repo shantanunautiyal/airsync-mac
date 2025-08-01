@@ -29,6 +29,7 @@ class AppState: ObservableObject {
         let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
         self.mirroringPlus = UserDefaults.standard.bool(forKey: "mirroringPlus")
+        self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         if isClipboardSyncEnabled {
@@ -84,6 +85,12 @@ class AppState: ObservableObject {
     @Published var mirroringPlus: Bool {
         didSet {
             UserDefaults.standard.set(mirroringPlus, forKey: "mirroringPlus")
+        }
+    }
+
+    @Published var adbEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(adbEnabled, forKey: "adbEnabled")
         }
     }
 
