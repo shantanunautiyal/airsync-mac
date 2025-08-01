@@ -28,7 +28,7 @@ class AppState: ObservableObject {
         let port = Int(portString) ?? Int(Defaults.serverPort)
         let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
-
+        self.mirroringPlus = UserDefaults.standard.bool(forKey: "mirroringPlus")
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         if isClipboardSyncEnabled {
@@ -81,8 +81,11 @@ class AppState: ObservableObject {
     }
     @Published var adbConnectionResult: String? = nil
 
-
-
+    @Published var mirroringPlus: Bool {
+        didSet {
+            UserDefaults.standard.set(mirroringPlus, forKey: "mirroringPlus")
+        }
+    }
 
     // Toggle licensing
     let licenseCheck: Bool = true
@@ -190,7 +193,7 @@ class AppState: ObservableObject {
         content.body = body
         content.sound = .default
 
-        if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected {
+        if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected, mirroringPlus {
             content.categoryIdentifier = "DEFAULT_CATEGORY"
             content.userInfo["package"] = pkg
         }

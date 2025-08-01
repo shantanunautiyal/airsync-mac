@@ -55,7 +55,7 @@ struct AppContentView: View {
                                 .background(.clear)
                                 .glassEffect(in: .rect(cornerRadius: 20))
                                     .onTapGesture {
-                                        if appState.device != nil && appState.adbConnected && notif.package != "" && notif.package != "com.sameerasw.airsync" {
+                                        if appState.device != nil && appState.adbConnected && notif.package != "" && notif.package != "com.sameerasw.airsync" && appState.mirroringPlus {
                                         ADBConnector
                                             .startScrcpy(
                                                 ip: appState.device?.ipAddress ?? "",

@@ -20,6 +20,7 @@ struct SettingsView: View {
 
     @State private var isExpanded: Bool = false
     @State private var isLicenseVisible = false
+    @State private var showingPlusPopover = false
 
 
 
@@ -142,6 +143,33 @@ struct SettingsView: View {
                         }
                         .padding()
 
+
+                        HStack {
+                            Label("Mirroring+", systemImage: "apps.iphone.badge.plus")
+                            Spacer()
+
+                            ZStack {
+                                Toggle("Mirror apps from notifications", isOn: $appState.mirroringPlus)
+                                    .toggleStyle(.switch)
+                                    .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
+                                    .labelsHidden()
+
+                                // Transparent overlay to catch taps even when disabled
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        if !AppState.shared.isPlus && AppState.shared.licenseCheck {
+                                            showingPlusPopover = true
+                                        }
+                                    }
+                            }
+                            .frame(width: 50)
+                            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
+                                PlusFeaturePopover(message: "Mirror Apps with AirSync+")
+                            }
+                        }
+
                         if let result = appState.adbConnectionResult {
                             VStack(alignment: .leading, spacing: 4) {
                                 ExpandableLicenseSection(title: "ADB Console", content: result)
@@ -166,6 +194,7 @@ struct SettingsView: View {
                             Toggle("", isOn: $appState.isClipboardSyncEnabled)
                                 .toggleStyle(.switch)
                         }
+
                     }
                     .padding()
 
