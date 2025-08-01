@@ -13,16 +13,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		B9673B572E35A2A1006D284A /* airsync-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "airsync-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9673B572E35A2A1006D284A /* AirSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "airsync-mac" target */ = {
+		B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "AirSync" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = B9673B562E35A2A1006D284A /* airsync-mac */;
+			target = B9673B562E35A2A1006D284A /* AirSync */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -30,7 +30,7 @@
 		B9673B592E35A2A1006D284A /* airsync-mac */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "airsync-mac" target */,
+				B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "AirSync" target */,
 			);
 			path = "airsync-mac";
 			sourceTree = "<group>";
@@ -62,7 +62,7 @@
 		B9673B582E35A2A1006D284A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B9673B572E35A2A1006D284A /* airsync-mac.app */,
+				B9673B572E35A2A1006D284A /* AirSync.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,9 +70,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B9673B562E35A2A1006D284A /* airsync-mac */ = {
+		B9673B562E35A2A1006D284A /* AirSync */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B9673B622E35A2A3006D284A /* Build configuration list for PBXNativeTarget "airsync-mac" */;
+			buildConfigurationList = B9673B622E35A2A3006D284A /* Build configuration list for PBXNativeTarget "AirSync" */;
 			buildPhases = (
 				B9673B532E35A2A1006D284A /* Sources */,
 				B9673B542E35A2A1006D284A /* Frameworks */,
@@ -85,14 +85,14 @@
 			fileSystemSynchronizedGroups = (
 				B9673B592E35A2A1006D284A /* airsync-mac */,
 			);
-			name = "airsync-mac";
+			name = AirSync;
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9D742FB2E39CF850053128A /* Swifter */,
 				B933ED2D2E3BE5CE007393CB /* Sparkle */,
 			);
 			productName = "airsync-mac";
-			productReference = B9673B572E35A2A1006D284A /* airsync-mac.app */;
+			productReference = B9673B572E35A2A1006D284A /* AirSync.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -110,7 +110,7 @@
 					};
 				};
 			};
-			buildConfigurationList = B9673B522E35A2A1006D284A /* Build configuration list for PBXProject "airsync-mac" */;
+			buildConfigurationList = B9673B522E35A2A1006D284A /* Build configuration list for PBXProject "AirSync" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -129,7 +129,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B9673B562E35A2A1006D284A /* airsync-mac */,
+				B9673B562E35A2A1006D284A /* AirSync */,
 			);
 		};
 /* End PBXProject section */
@@ -305,7 +305,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "airsync-mac/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AirSync-debug";
+				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -313,7 +313,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -351,7 +351,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "airsync-mac/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AirSync-debug";
+				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -359,7 +359,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -374,7 +374,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B9673B522E35A2A1006D284A /* Build configuration list for PBXProject "airsync-mac" */ = {
+		B9673B522E35A2A1006D284A /* Build configuration list for PBXProject "AirSync" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B9673B602E35A2A3006D284A /* Debug */,
@@ -383,7 +383,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B9673B622E35A2A3006D284A /* Build configuration list for PBXNativeTarget "airsync-mac" */ = {
+		B9673B622E35A2A3006D284A /* Build configuration list for PBXNativeTarget "AirSync" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B9673B632E35A2A3006D284A /* Debug */,

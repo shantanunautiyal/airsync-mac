@@ -153,8 +153,14 @@ class WebSocketServer: ObservableObject {
             if let dict = message.data.value as? [String: Any],
                let name = dict["name"] as? String,
                let ip = dict["ipAddress"] as? String,
-               let port = dict["port"] as? Int {
-                AppState.shared.device = Device(name: name, ipAddress: ip, port: port)
+               let port = dict["port"] as? Int,
+               let adbPort = dict["adbPort"] as? Int{
+                AppState.shared.device = Device(
+                    name: name,
+                    ipAddress: ip,
+                    port: port,
+                    adbPort: adbPort
+                )
             }
 
         case .notification:

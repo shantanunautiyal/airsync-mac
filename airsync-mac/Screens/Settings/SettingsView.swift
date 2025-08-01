@@ -309,7 +309,7 @@ struct SettingsView: View {
                         DisclosureGroup(isExpanded: $isExpanded) {
                             Text(
                             """
-It’s not a subscription, Just a small one-time purchase to support the developer (that's me!). Think of it as a little donation to keep this project alive and evolving.
+Keeps me inspired to continue and maybe even to publish to the Apple app store and google play store. Think of it as a little donation to keep this project alive and evolving.
 That said, I know not everyone who wants the full experience can afford it. If that’s you, please don’t hesitate to reach out. 😊
 
 The source code is available on GitHub, and you're more than welcome to build with all Plus features free—for personal use which also opens for contributions which is a win win!.

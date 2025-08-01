@@ -20,7 +20,7 @@ func checkLicenseKeyValidity(key: String) async throws -> Bool {
         return true
     }
 
-    let productID = "3HkBPf4ovp7KiVISJS6N5A=="
+    let productID = "smrIThhDxoQI33gQm3wwxw=="
     let url = URL(string: "https://api.gumroad.com/v2/licenses/verify")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
