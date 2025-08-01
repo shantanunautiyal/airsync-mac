@@ -8,6 +8,8 @@
 
 ![CleanShot 2025-07-28 at 5  50 12@2x Large](https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439)
 
+## [Wireless ADB setup](https://github.com/sameerasw/airsync-android/blob/main/README.md#adb-setup)
+
 ## Installation and Troubleshooting
 
 Make sure to allow network access
