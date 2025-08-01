@@ -13,6 +13,8 @@ struct SettingsView: View {
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
     @State private var licenseKey: String = ""
+    @State private var adbPortString: String = ""
+
     @State private var isCheckingLicense = false
     @State private var licenseValid: Bool? = nil
 
@@ -37,13 +39,34 @@ struct SettingsView: View {
 
 
                     VStack{
-                        HStack{
+                        HStack {
                             Label("Connect ADB", systemImage: "iphone")
                             Spacer()
-                            Toggle("", isOn: .constant(false))
+                            Toggle("", isOn: .constant(true)) // Change to real binding if implemented
                                 .toggleStyle(.switch)
-                                .disabled(true)
                         }
+
+                        // Show port field if ADB toggle is on
+                        HStack {
+                            Label("ADB Port", systemImage: "arrow.left.arrow.right")
+                                .padding(.trailing, 20)
+                            Spacer()
+                            TextField("ADB Port", text: $adbPortString)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 100)
+                                .onChange(of: adbPortString) { _, newValue in
+                                    adbPortString = newValue.filter { "0123456789".contains($0) }
+                                }
+
+                            Button("Set") {
+                                if let port = UInt16(adbPortString), port > 0 && port < 65535 {
+                                    appState.adbPort = port
+                                    UserDefaults.standard.set(port, forKey: "adbPort")
+                                }
+                            }
+                            .disabled(adbPortString.isEmpty)
+                        }
+
 
                         HStack{
                             Label("Sync device status", systemImage: "battery.75percent")
@@ -345,13 +368,15 @@ Enjoy the app!
                         deviceName = device.name
                         port = String(device.port)
                     } else {
-                        // Load from saved values first
                         deviceName = UserDefaults.standard.string(forKey: "deviceName")
                         ?? (Host.current().localizedName ?? "My Mac")
                         port = UserDefaults.standard.string(forKey: "devicePort")
                         ?? String(Defaults.serverPort)
                     }
+
+                    adbPortString = String(appState.adbPort)
                 }
+
             }
 
 

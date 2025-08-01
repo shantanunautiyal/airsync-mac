@@ -26,6 +26,9 @@ class AppState: ObservableObject {
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
         let port = Int(portString) ?? Int(Defaults.serverPort)
+        let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
+        self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
+
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         if isClipboardSyncEnabled {
@@ -68,6 +71,13 @@ class AppState: ObservableObject {
             saveLicenseDetailsToUserDefaults()
         }
     }
+
+    @Published var adbPort: UInt16 {
+        didSet {
+            UserDefaults.standard.set(adbPort, forKey: "adbPort")
+        }
+    }
+
 
 
     // Toggle licensing
