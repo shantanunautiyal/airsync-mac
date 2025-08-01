@@ -16,29 +16,20 @@ struct HomeView: View {
     var body: some View {
         NavigationSplitView {
             VStack {
-                if let device = appState.device {
-//                    HStack{
-//                        // Picker with only 1 device (for now)
-//                        Picker("", selection: .constant(device)) {
-//                            Label(device.name, systemImage: "iphone.gen3")
-//                                .tag(device)
-//                        }
-//                        .pickerStyle(.menu)
-//                    }
-//                    .padding()
-
-                    Spacer()
-                    SidebarView()
-                    Spacer()
-                    
-                } else {
-                    // Show QR scanner if no device
-                    ScannerView()
+                ZStack {
+                    if appState.device != nil {
+                        SidebarView()
+                            .transition(.opacity.combined(with: .scale))
+                    } else {
+                        ScannerView()
+                            .transition(.opacity.combined(with: .scale))
+                    }
                 }
+                .animation(.easeInOut(duration: 0.35), value: appState.device)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(minWidth: 270)
             .navigationTitle("Devices")
-
         } detail: {
             AppContentView()
         }

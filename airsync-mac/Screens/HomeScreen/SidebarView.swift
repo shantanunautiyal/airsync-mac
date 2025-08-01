@@ -13,6 +13,17 @@ struct SidebarView: View {
     @ObservedObject var appState = AppState.shared
     @State private var isExpandedAllSeas: Bool = false
 
+//    ZStack {
+//        if let device = appState.device {
+//            SidebarView()
+//                .transition(.opacity.combined(with: .scale))
+//        } else {
+//            ScannerView()
+//                .transition(.opacity.combined(with: .scale))
+//        }
+//    }
+//    .animation(.easeInOut(duration: 0.35), value: appState.device)
+
     var body: some View {
         VStack{
             if (appState.status != nil){
@@ -21,15 +32,19 @@ struct SidebarView: View {
                         .padding()
                         .background(.clear)
                         .glassEffect(in: .rect(cornerRadius: 20))
+                        .transition(.opacity.combined(with: .scale))
                 } else {
                     DeviceStatusView()
                         .padding()
+                        .transition(.opacity.combined(with: .scale))
                 }
             }
 
             PhoneView()
+                .transition(.opacity.combined(with: .scale))
 
         }
+        .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
         .frame(minWidth: 270, minHeight: 400)
         .safeAreaInset(edge: .bottom) {
             VStack{
@@ -49,6 +64,7 @@ struct SidebarView: View {
                                         )
                                 }
                             )
+                            .transition(.identity)
                             .buttonStyle(.glass)
                             .contextMenu {
                                 Button("Desktop Mode") {
@@ -73,6 +89,7 @@ struct SidebarView: View {
                                         )
                                 }
                             )
+                            .transition(.identity)
                             .contextMenu {
                                 Button("Desktop Mode") {
                                     ADBConnector.startScrcpy(
@@ -98,6 +115,7 @@ struct SidebarView: View {
                                 appState.adbConnected = false
                             }
                         )
+                        .transition(.identity)
                         .buttonStyle(.glass)
                     } else {
                         GlassButtonView(
@@ -110,8 +128,13 @@ struct SidebarView: View {
                                 appState.adbConnected = false
                             }
                         )
+                        .transition(.identity)
                     }
                 }
+                .animation(
+                    .easeInOut(duration: 0.35),
+                    value: AppState.shared.adbConnected
+                )
                 .padding(.bottom, 20)
             }
         }

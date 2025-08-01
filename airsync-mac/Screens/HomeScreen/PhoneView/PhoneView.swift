@@ -20,6 +20,7 @@ struct PhoneView: View {
                 height: 410,
                 radius: 25
             )
+            .transition(.opacity.combined(with: .scale))
 
 //            Group {
 //                if let path = wallpaperPath,
@@ -36,6 +37,7 @@ struct PhoneView: View {
 //            .cornerRadius(20)
 
             ScreenView()
+                .transition(.opacity.combined(with: .scale))
         }
     }
 }
@@ -68,6 +70,7 @@ struct ScreenView: View {
             Spacer()
 
             TimeView()
+                .transition(.opacity.combined(with: .scale))
 
             Spacer()
 
@@ -76,8 +79,10 @@ struct ScreenView: View {
                     MediaPlayerView(music: music)
                         .background(.clear)
                         .glassEffect(in: .rect(cornerRadius: 20))
+                        .transition(.opacity.combined(with: .scale))
                 } else {
                     MediaPlayerView(music: music)
+                        .transition(.opacity.combined(with: .scale))
                 }
             } else {
                 Spacer()

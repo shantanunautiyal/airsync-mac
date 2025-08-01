@@ -485,13 +485,11 @@ Enjoy the app!
                         .focusEffectDisabled()
 
                         }
+                .padding()
                     }
-                    .padding()
-
 
                 }
                 .frame(minWidth: 300)
-                .padding()
                 .onAppear {
                     if let device = appState.myDevice {
                         deviceName = device.name

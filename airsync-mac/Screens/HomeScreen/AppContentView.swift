@@ -139,7 +139,7 @@ struct AppContentView: View {
                         }
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: AppState.shared.selectedTab)
+            .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
             .frame(minWidth: 550)
         }
         .onChange(of: appState.device) {
