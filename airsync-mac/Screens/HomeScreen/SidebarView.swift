@@ -50,6 +50,16 @@ struct SidebarView: View {
                                 }
                             )
                             .buttonStyle(.glass)
+                            .contextMenu {
+                                Button("Desktop Mode") {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone",
+                                        desktop: true
+                                    )
+                                }
+                            }
                         } else {
                             GlassButtonView(
                                 label: "Mirror",
@@ -63,6 +73,17 @@ struct SidebarView: View {
                                         )
                                 }
                             )
+                            .contextMenu {
+                                Button("Desktop Mode") {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone",
+                                        desktop: true
+                                    )
+                                }
+                            }
+
                         }
                     }
 

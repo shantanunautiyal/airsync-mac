@@ -70,7 +70,7 @@ struct ADBConnector {
         }
     }
 
-    static func startScrcpy(ip: String, port: UInt16, deviceName: String) {
+    static func startScrcpy(ip: String, port: UInt16, deviceName: String, desktop: Bool? = false) {
         guard let scrcpyPath = Bundle.main.path(forResource: "scrcpy", ofType: nil) else {
             AppState.shared.adbConnectionResult = "scrcpy binary not found in bundle."
             return
@@ -81,10 +81,17 @@ struct ADBConnector {
 
         // Arguments to scrcpy for wireless connection
         // scrcpy --tcpip=<ip>:<port>
-        let args = [
+        var args = [
             "--window-title=\(deviceNameFormatted)",
-            "--tcpip=\(fullAddress)"
+            "--tcpip=\(fullAddress)",
+            "--video-bit-rate=3M",
+            "--video-codec=h265",
+            "--max-size=1200"
         ]
+
+        if desktop ?? true {
+            args.append("--new-display=2560x1440")
+        }
 
 
         let task = Process()
