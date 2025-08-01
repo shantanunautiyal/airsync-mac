@@ -77,6 +77,8 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(adbPort, forKey: "adbPort")
         }
     }
+    @Published var adbConnectionResult: String? = nil
+
 
 
 

@@ -65,7 +65,39 @@ struct SettingsView: View {
                                 }
                             }
                             .disabled(adbPortString.isEmpty)
+
+                            Button("Connect ADB") {
+                                let ip = appState.device?.ipAddress ?? ""
+                                let port = appState.adbPort
+                                ADBConnector.connectToADB(ip: ip, port: port)
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Start scrcpy") {
+                                let ip = appState.device?.ipAddress ?? ""
+                                let port = appState.adbPort
+                                ADBConnector.startScrcpy(ip: ip, port: port)
+                            }
+                            .buttonStyle(.bordered)
+
+
                         }
+                        
+                        if let result = appState.adbConnectionResult {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label("ADB Connection Result", systemImage: "terminal")
+                                    .font(.headline)
+                                Text(result)
+                                    .font(.callout)
+                                    .foregroundColor(.primary)
+                                    .padding(8)
+                                    .background(Color.secondary.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
+                            .padding(.top, 8)
+                            .transition(.opacity)
+                        }
+
 
 
                         HStack{
