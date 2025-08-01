@@ -146,10 +146,25 @@ struct AboutView: View {
                         )
                     }
 
-                Button("OK") {
-                    onClose()
+
+                if #available(macOS 26.0, *) {
+                    GlassButtonView(
+                        label: "OK",
+                        action: {
+                            onClose()
+                        }
+                    )
+                    .buttonStyle(.glass)
+                    .keyboardShortcut(.defaultAction)
+                } else {
+                    GlassButtonView(
+                        label: "OK",
+                        action: {
+                            onClose()
+                        }
+                    )
+                    .keyboardShortcut(.defaultAction)
                 }
-                .keyboardShortcut(.defaultAction)
             }
             .padding([.horizontal, .bottom])
         }

@@ -66,6 +66,8 @@ class AppState: ObservableObject {
     @Published var webSocketStatus: WebSocketStatus = .stopped
     @Published var selectedTab: TabIdentifier = .settings
 
+    @Published var adbConnected: Bool = false
+
     @Published var licenseDetails: LicenseDetails? {
         didSet {
             saveLicenseDetailsToUserDefaults()

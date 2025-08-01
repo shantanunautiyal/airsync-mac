@@ -34,18 +34,46 @@ struct SidebarView: View {
         .safeAreaInset(edge: .bottom) {
             VStack{
                 HStack{
+
+                    if appState.adbConnected{
+                        if #available(macOS 26.0, *) {
+                            GlassButtonView(
+                                label: "Mirror",
+                                systemImage: "apps.iphone",
+                                action: {ADBConnector.startScrcpy(ip: appState.device?.ipAddress ?? "", port: appState.adbPort)}
+                            )
+                            .buttonStyle(.glass)
+                        } else {
+                            GlassButtonView(
+                                label: "Mirror",
+                                systemImage: "apps.iphone",
+                                action: {ADBConnector.startScrcpy(ip: appState.device?.ipAddress ?? "", port: appState.adbPort)}
+                            )
+                        }
+                    }
+
                     if #available(macOS 26.0, *) {
                         GlassButtonView(
                             label: "Disconnect",
                             systemImage: "xmark",
-                            action: appState.disconnectDevice
+                            iconOnly: appState.adbConnected,
+                            action: {
+                                appState.disconnectDevice()
+                                ADBConnector.disconnectADB()
+                                appState.adbConnected = false
+                            }
                         )
                         .buttonStyle(.glass)
                     } else {
                         GlassButtonView(
                             label: "Disconnect",
                             systemImage: "xmark",
-                            action: appState.disconnectDevice
+                            iconOnly: appState.adbConnected,
+                            action: {
+                                appState.disconnectDevice()
+                                ADBConnector.disconnectADB()
+                                appState.adbConnected = false
+                            }
                         )
                     }
                 }

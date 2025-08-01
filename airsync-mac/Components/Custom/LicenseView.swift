@@ -267,6 +267,14 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """)
+            ExpandableLicenseSection(title: "Binary: adb", content: """
+This app bundles adb from the Android SDK Platform Tools (Apache License 2.0).
+© Google LLC. See developer.android.com for more.
+""")
+            ExpandableLicenseSection(title: "Binary: scrcpy", content: """
+This app includes scrcpy (Apache License 2.0) by Genymobile.
+Source: https://github.com/Genymobile/scrcpy
+""")
         }
     }
 }

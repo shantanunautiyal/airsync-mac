@@ -33,67 +33,67 @@ struct MediaPlayerView: View {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "backward.end",
+                                    iconOnly: true,
                                     size: .small,
                                     action: {
                                         WebSocketServer.shared.skipPrevious()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                                 .buttonStyle(.glass)
                             } else {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "backward.end",
+                                    iconOnly: true,
                                     size: .small,
                                     action: {
                                         WebSocketServer.shared.skipPrevious()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                             }
 
                             if #available(macOS 26.0, *) {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                                    iconOnly: true,
                                     action: {
                                         WebSocketServer.shared.togglePlayPause()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                                 .buttonStyle(.glass)
                             } else {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                                    iconOnly: true,
                                     action: {
                                         WebSocketServer.shared.togglePlayPause()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                             }
 
                             if #available(macOS 26.0, *) {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "forward.end",
+                                    iconOnly: true,
                                     size: .small,
                                     action: {
                                         WebSocketServer.shared.skipNext()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                                 .buttonStyle(.glass)
                             } else {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "forward.end",
+                                    iconOnly: true,
                                     size: .small,
                                     action: {
                                         WebSocketServer.shared.skipNext()
                                     }
                                 )
-                                .labelStyle(.iconOnly)
                              }
                         }
                     }

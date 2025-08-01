@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+import SwiftUI
+
 struct GlassButtonView: View {
     var label: String
     var systemImage: String? = nil
@@ -17,19 +19,38 @@ struct GlassButtonView: View {
 
     var body: some View {
         Button(action: action) {
-            if let systemImage {
-                Label(label, systemImage: systemImage)
-                    .transition(.identity)
-                    .animation(.easeInOut(duration: 0.2), value: systemImage)
-            } else if let image {
-                Label(label, image: image)
-            } else {
-                Text(label)
-            }
+            labelContent
         }
         .controlSize(size)
+        .modifier(LabelStyleModifier(iconOnly: iconOnly))
+    }
+
+    @ViewBuilder
+    private var labelContent: some View {
+        if let systemImage {
+            Label(label, systemImage: systemImage)
+        } else if let image {
+            Label(label, image: image)
+        } else {
+            Text(label)
+        }
     }
 }
+
+// Conditional label style
+struct LabelStyleModifier: ViewModifier {
+    var iconOnly: Bool
+
+    func body(content: Content) -> some View {
+        if iconOnly {
+            content.labelStyle(IconOnlyLabelStyle())
+        } else {
+            content.labelStyle(TitleAndIconLabelStyle())
+        }
+    }
+}
+
+
 
 
 #Preview {

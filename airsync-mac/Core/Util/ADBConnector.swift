@@ -8,24 +8,45 @@
 import Foundation
 
 struct ADBConnector {
+
     static func connectToADB(ip: String, port: UInt16) {
         guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {
             AppState.shared.adbConnectionResult = "ADB binary not found in bundle."
+            AppState.shared.adbConnected = false
             return
         }
 
         let fullAddress = "\(ip):\(port)"
 
         // Step 1: Kill any existing adb server
-        runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) {_ in 
+        runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
             // Step 2: Connect to device
             runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
                 DispatchQueue.main.async {
-                    AppState.shared.adbConnectionResult = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                    AppState.shared.adbConnectionResult = trimmedOutput
+
+                    if trimmedOutput.lowercased().contains("connected to") {
+                        AppState.shared.adbConnected = true
+                    } else {
+                        AppState.shared.adbConnected = false
+                    }
                 }
             }
         }
     }
+
+    static func disconnectADB() {
+        guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {
+            AppState.shared.adbConnectionResult = "ADB binary not found in bundle."
+            AppState.shared.adbConnected = false
+            return
+        }
+
+        // Step 1: Kill any existing adb server
+        runADBCommand(adbPath: adbPath, arguments: ["kill-server"])
+    }
+
 
     private static func runADBCommand(adbPath: String, arguments: [String], completion: ((String) -> Void)? = nil) {
         let task = Process()

@@ -49,7 +49,6 @@ struct SettingsView: View {
                         // Show port field if ADB toggle is on
                         HStack {
                             Label("ADB Port", systemImage: "arrow.left.arrow.right")
-                                .padding(.trailing, 20)
                             Spacer()
                             TextField("ADB Port", text: $adbPortString)
                                 .textFieldStyle(.roundedBorder)
@@ -58,43 +57,96 @@ struct SettingsView: View {
                                     adbPortString = newValue.filter { "0123456789".contains($0) }
                                 }
 
-                            Button("Set") {
-                                if let port = UInt16(adbPortString), port > 0 && port < 65535 {
-                                    appState.adbPort = port
-                                    UserDefaults.standard.set(port, forKey: "adbPort")
+                            if #available(macOS 26.0, *) {
+                                GlassButtonView(
+                                    label: "Set",
+                                    systemImage: "checkmark.circle",
+                                    action: {
+                                        if let port = UInt16(adbPortString), port > 0 && port < 65535 {
+                                            appState.adbPort = port
+                                            UserDefaults.standard.set(port, forKey: "adbPort")
+                                        }
+                                    }
+                                )
+                                .buttonStyle(.glass)
+                                .disabled(adbPortString.isEmpty)
+                            } else {
+                                GlassButtonView(
+                                    label: "Set",
+                                    systemImage: "checkmark.circle",
+                                    action: {
+                                        if let port = UInt16(adbPortString), port > 0 && port < 65535 {
+                                            appState.adbPort = port
+                                            UserDefaults.standard.set(port, forKey: "adbPort")
+                                        }
+                                    }
+                                )
+                                .disabled(adbPortString.isEmpty)
+                            }
+
+                            if appState.adbConnected {
+                                if #available(macOS 26.0, *) {
+                                    GlassButtonView(
+                                        label: "Disconnect ADB",
+                                        systemImage: "stop.circle",
+                                        action: {
+                                            ADBConnector.disconnectADB()
+                                            appState.adbConnected = false
+                                        }
+                                    )
+                                    .buttonStyle(.glass)
+                                } else {
+                                    GlassButtonView(
+                                        label: "Disconnect ADB",
+                                        systemImage: "stop.circle",
+                                        action: {
+                                            ADBConnector.disconnectADB()
+                                            appState.adbConnected = false
+                                        }
+                                    )
                                 }
-                            }
-                            .disabled(adbPortString.isEmpty)
+                            } else {
+                                if #available(macOS 26.0, *) {
+                                    GlassButtonView(
+                                        label: "Connect ADB",
+                                        systemImage: "play.circle",
+                                        action: {
+                                            let ip = appState.device?.ipAddress ?? ""
+                                            let port = appState.adbPort
+                                            ADBConnector.connectToADB(ip: ip, port: port)
+                                        }
+                                    )
+                                    .buttonStyle(.glass)
+                                    .disabled(
+                                        adbPortString.isEmpty || appState.device == nil
+                                    )
+                                } else {
+                                    GlassButtonView(
+                                        label: "Connect ADB",
+                                        systemImage: "play.circle",
+                                        action: {
+                                            let ip = appState.device?.ipAddress ?? ""
+                                            let port = appState.adbPort
+                                            ADBConnector.connectToADB(ip: ip, port: port)
+                                        }
+                                    )
+                                    .disabled(
+                                        adbPortString.isEmpty || appState.device == nil
+                                    )
+                                }
 
-                            Button("Connect ADB") {
-                                let ip = appState.device?.ipAddress ?? ""
-                                let port = appState.adbPort
-                                ADBConnector.connectToADB(ip: ip, port: port)
                             }
-                            .buttonStyle(.borderedProminent)
 
-                            Button("Start scrcpy") {
-                                let ip = appState.device?.ipAddress ?? ""
-                                let port = appState.adbPort
-                                ADBConnector.startScrcpy(ip: ip, port: port)
-                            }
-                            .buttonStyle(.bordered)
 
 
                         }
-                        
+                        .padding()
+
                         if let result = appState.adbConnectionResult {
                             VStack(alignment: .leading, spacing: 4) {
-                                Label("ADB Connection Result", systemImage: "terminal")
-                                    .font(.headline)
-                                Text(result)
-                                    .font(.callout)
-                                    .foregroundColor(.primary)
-                                    .padding(8)
-                                    .background(Color.secondary.opacity(0.1))
-                                    .cornerRadius(8)
+                                ExpandableLicenseSection(title: "ADB Console", content: result)
                             }
-                            .padding(.top, 8)
+                            .padding()
                             .transition(.opacity)
                         }
 
