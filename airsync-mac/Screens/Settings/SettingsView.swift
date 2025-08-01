@@ -197,7 +197,7 @@ struct SettingsView: View {
                         }
 
                         HStack{
-                            Label("Sync clipoboard", systemImage: "clipboard")
+                            Label("Sync clipboard", systemImage: "clipboard")
                             Spacer()
                             Toggle("", isOn: $appState.isClipboardSyncEnabled)
                                 .toggleStyle(.switch)
