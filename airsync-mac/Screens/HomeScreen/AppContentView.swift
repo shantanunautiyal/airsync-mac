@@ -54,6 +54,17 @@ struct AppContentView: View {
                                 )
                                 .background(.clear)
                                 .glassEffect(in: .rect(cornerRadius: 20))
+                                    .onTapGesture {
+                                        if appState.device != nil && appState.adbConnected && notif.package != "" && notif.package != "com.sameerasw.airsync" {
+                                        ADBConnector
+                                            .startScrcpy(
+                                                ip: appState.device?.ipAddress ?? "",
+                                                port: appState.adbPort,
+                                                deviceName: appState.device?.name ?? "My Phone",
+                                                package: notif.package
+                                            )
+                                    }
+                                }
                             } else {
                                 NotificationView(
                                     notification: notif,

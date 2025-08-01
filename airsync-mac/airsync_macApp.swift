@@ -19,12 +19,23 @@ struct airsync_macApp: App {
         userDriverDelegate: nil
     )
 
-
-    
-
     init() {
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
+
+        // Register "View" button
+        let viewAction = UNNotificationAction(
+            identifier: "VIEW_ACTION",
+            title: "View",
+            options: []
+        )
+        let category = UNNotificationCategory(
+            identifier: "DEFAULT_CATEGORY",
+            actions: [viewAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        center.setNotificationCategories([category])
 
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
@@ -37,7 +48,6 @@ struct airsync_macApp: App {
         let devicePort = UInt16(AppState.shared.myDevice?.port ?? Int(Defaults.serverPort))
         WebSocketServer.shared.start(port: devicePort)
 
-
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
             AppState.shared.syncWithSystemNotifications()
         }
@@ -45,7 +55,6 @@ struct airsync_macApp: App {
         loadCachedIcons()
         loadCachedWallpapers()
     }
-
 
     var body: some Scene {
         WindowGroup {
@@ -63,5 +72,4 @@ struct airsync_macApp: App {
             }
         }
     }
-
 }

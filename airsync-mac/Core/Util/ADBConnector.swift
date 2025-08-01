@@ -70,7 +70,13 @@ struct ADBConnector {
         }
     }
 
-    static func startScrcpy(ip: String, port: UInt16, deviceName: String, desktop: Bool? = false) {
+    static func startScrcpy(
+        ip: String,
+        port: UInt16,
+        deviceName: String,
+        desktop: Bool? = false,
+        package: String? = nil
+    ) {
         guard let scrcpyPath = Bundle.main.path(forResource: "scrcpy", ofType: nil) else {
             AppState.shared.adbConnectionResult = "scrcpy binary not found in bundle."
             return
@@ -91,6 +97,14 @@ struct ADBConnector {
 
         if desktop ?? true {
             args.append("--new-display=2560x1440")
+        }
+
+        if package != nil {
+            args.append(contentsOf: [
+                "--new-display=500x800",
+                "--start-app=\(package ?? "")",
+                "--no-vd-system-decorations"
+            ])
         }
 
 

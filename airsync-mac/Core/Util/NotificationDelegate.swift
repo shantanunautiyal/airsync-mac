@@ -24,4 +24,28 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound])
     }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        if response.actionIdentifier == "VIEW_ACTION" {
+            let userInfo = response.notification.request.content.userInfo
+            if let package = userInfo["package"] as? String,
+               let ip = AppState.shared.device?.ipAddress,
+               let name = AppState.shared.device?.name {
+
+                ADBConnector.startScrcpy(
+                    ip: ip,
+                    port: AppState.shared.adbPort,
+                    deviceName: name,
+                    package: package
+                )
+            } else {
+                print("Missing device details or package for scrcpy.")
+            }
+        }
+
+        completionHandler()
+    }
+
 }

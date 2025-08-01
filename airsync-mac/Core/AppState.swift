@@ -171,20 +171,31 @@ class AppState: ObservableObject {
                 appName: notif.app,
                 title: notif.title,
                 body: notif.body,
-                appIcon: appIcon
+                appIcon: appIcon,
+                package: notif.package
             )
         }
     }
 
-    func postNativeNotification(id: String, appName: String, title: String, body: String, appIcon: NSImage? = nil) {
+    func postNativeNotification(
+        id: String,
+        appName: String,
+        title: String,
+        body: String,
+        appIcon: NSImage? = nil,
+        package: String? = nil
+    ) {
         let content = UNMutableNotificationContent()
-
-        // Show "AppName - Title" as the notification title
         content.title = "\(appName) - \(title)"
         content.body = body
         content.sound = .default
 
-        // Attach the app icon as the notification icon if available
+        if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected {
+            content.categoryIdentifier = "DEFAULT_CATEGORY"
+            content.userInfo["package"] = pkg
+        }
+
+        // Attach app icon if available
         if let icon = appIcon {
             if let iconFileURL = saveIconToTemporaryFile(icon: icon) {
                 do {
@@ -196,12 +207,7 @@ class AppState: ObservableObject {
             }
         }
 
-        // Use notification id passed from caller
-        let request = UNNotificationRequest(
-            identifier: id,
-            content: content,
-            trigger: nil // deliver immediately
-        )
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
@@ -209,6 +215,7 @@ class AppState: ObservableObject {
             }
         }
     }
+
 
     private func saveIconToTemporaryFile(icon: NSImage) -> URL? {
         // Save NSImage as a temporary PNG file to attach in notification
