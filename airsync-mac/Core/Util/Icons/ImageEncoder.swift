@@ -15,14 +15,7 @@ extension Image {
     }
 }
 
-extension String {
-    func stripBase64Prefix() -> String {
-        if let range = self.range(of: "base64,") {
-            return String(self[range.upperBound...])
-        }
-        return self
-    }
-}
+
 
 
 // General-purpose subdirectory helper

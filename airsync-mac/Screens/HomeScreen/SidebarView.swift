@@ -40,14 +40,28 @@ struct SidebarView: View {
                             GlassButtonView(
                                 label: "Mirror",
                                 systemImage: "apps.iphone",
-                                action: {ADBConnector.startScrcpy(ip: appState.device?.ipAddress ?? "", port: appState.adbPort)}
+                                action: {
+                                    ADBConnector
+                                        .startScrcpy(
+                                            ip: appState.device?.ipAddress ?? "",
+                                            port: appState.adbPort,
+                                            deviceName: appState.device?.name ?? "My Phone"
+                                        )
+                                }
                             )
                             .buttonStyle(.glass)
                         } else {
                             GlassButtonView(
                                 label: "Mirror",
                                 systemImage: "apps.iphone",
-                                action: {ADBConnector.startScrcpy(ip: appState.device?.ipAddress ?? "", port: appState.adbPort)}
+                                action: {
+                                    ADBConnector
+                                        .startScrcpy(
+                                            ip: appState.device?.ipAddress ?? "",
+                                            port: appState.adbPort,
+                                            deviceName: appState.device?.name ?? "My Phone"
+                                        )
+                                }
                             )
                         }
                     }

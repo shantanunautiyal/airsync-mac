@@ -70,17 +70,22 @@ struct ADBConnector {
         }
     }
 
-    static func startScrcpy(ip: String, port: UInt16) {
+    static func startScrcpy(ip: String, port: UInt16, deviceName: String) {
         guard let scrcpyPath = Bundle.main.path(forResource: "scrcpy", ofType: nil) else {
             AppState.shared.adbConnectionResult = "scrcpy binary not found in bundle."
             return
         }
 
         let fullAddress = "\(ip):\(port)"
+        let deviceNameFormatted = deviceName.removingApostrophesAndPossessives()
 
         // Arguments to scrcpy for wireless connection
         // scrcpy --tcpip=<ip>:<port>
-        let args = ["--tcpip=\(fullAddress)"]
+        let args = [
+            "--window-title=\(deviceNameFormatted)",
+            "--tcpip=\(fullAddress)"
+        ]
+
 
         let task = Process()
         task.executableURL = URL(fileURLWithPath: scrcpyPath)
