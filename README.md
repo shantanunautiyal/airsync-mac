@@ -1,12 +1,19 @@
 # AirSync 2.0 macOS app written in Swift
 
+
+[![AirSync demo](https://img.youtube.com/vi/HDv0Hu9z294?si=dgycryP1T8QvPJYa/0.jpg)](https://www.youtube.com/watch?v=HDv0Hu9z294?si=dgycryP1T8QvPJYa)
+
 ### During beta testing, You can use the code ```i-am-a-tester``` to try out and test AirSync+ features. Also these + features are subject to change and currently they are limited because to test if the workflow works.
 
-![CleanShot 2025-07-28 at 5  49 29@2x Large](https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42" width="30%" />
+  <img src="https://github.com/user-attachments/assets/58996c84-083f-4464-b0a5-bce069935898" width="30%" />
+  <img src="https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439" width="30%" />
+</p>
 
-![CleanShot 2025-07-28 at 5  49 42@2x Large](https://github.com/user-attachments/assets/58996c84-083f-4464-b0a5-bce069935898)
 
-![CleanShot 2025-07-28 at 5  50 12@2x Large](https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439)
+![1](https://github.com/user-attachments/assets/8abdd977-6f8b-4037-b277-9457e65a6255)
+
 
 ## [Wireless ADB setup](https://github.com/sameerasw/airsync-android/blob/main/README.md#adb-setup)
 
