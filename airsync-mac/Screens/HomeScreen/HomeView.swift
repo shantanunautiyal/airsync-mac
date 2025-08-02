@@ -37,6 +37,7 @@ struct HomeView: View {
         .sheet(isPresented: $isDisconnected) {
             SettingsView()
         }
+        .background(.background.opacity(appState.windowOpacity))
     }
 }
 

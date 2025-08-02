@@ -46,7 +46,6 @@ struct DeviceStatusView: View {
                             Slider(
                                 value: $tempVolume,
                                 in: 0...100,
-                                step: 1,
                                 onEditingChanged: { editing in
                                     if !editing {
                                         WebSocketServer.shared.setVolume(Int(tempVolume))

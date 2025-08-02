@@ -32,6 +32,8 @@ class AppState: ObservableObject {
         self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
+        self.windowOpacity = UserDefaults.standard
+            .double(forKey: "windowOpacity")
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
@@ -91,6 +93,12 @@ class AppState: ObservableObject {
     @Published var adbEnabled: Bool {
         didSet {
             UserDefaults.standard.set(adbEnabled, forKey: "adbEnabled")
+        }
+    }
+
+    @Published var windowOpacity: Double {
+        didSet {
+            UserDefaults.standard.set(windowOpacity, forKey: "windowOpacity")
         }
     }
 
