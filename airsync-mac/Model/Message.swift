@@ -14,7 +14,6 @@ enum MessageType: String, Codable {
     case mediaControlResponse
     case appIcons
     case clipboardUpdate
-    case wallpaperImage
 }
 
 struct Message: Codable {

@@ -40,6 +40,13 @@ struct SidebarView: View {
                 }
             }
 
+            if let deviceVersion = appState.device?.version,
+               isVersion(deviceVersion, lessThan: appState.minAndroidVersion) {
+                Label("Your Android app is outdated", systemImage: "iphone.badge.exclamationmark")
+                    .padding(4)
+            }
+
+
             PhoneView()
                 .transition(.opacity.combined(with: .scale))
 

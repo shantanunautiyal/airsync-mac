@@ -27,6 +27,8 @@ class AppState: ObservableObject {
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
         let port = Int(portString) ?? Int(Defaults.serverPort)
         let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
+
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
         self.mirroringPlus = UserDefaults.standard.bool(forKey: "mirroringPlus")
         self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
@@ -37,16 +39,20 @@ class AppState: ObservableObject {
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
+        
 
         self.myDevice = Device(
             name: name,
             ipAddress: getLocalIPAddress() ?? "N/A",
-            port: port
+            port: port,
+            version:appVersion
         )
         self.licenseDetails = loadLicenseDetailsFromUserDefaults()
 
         postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
     }
+
+    @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
 
     @Published var device: Device? = nil
     @Published var notifications: [Notification] = []

@@ -246,7 +246,8 @@ struct SettingsView: View {
                                 appState.myDevice = Device(
                                     name: deviceName,
                                     ipAddress: ipAddress,
-                                    port: Int(portNumber)
+                                    port: Int(portNumber),
+                                    version: appState.device?.version ?? ""
                                 )
     
                                 UserDefaults.standard
@@ -274,7 +275,8 @@ struct SettingsView: View {
                                 appState.myDevice = Device(
                                     name: deviceName,
                                     ipAddress: ipAddress,
-                                    port: Int(portNumber)
+                                    port: Int(portNumber),
+                                    version: appState.myDevice?.version ?? ""
                                 )
 
                                 UserDefaults.standard

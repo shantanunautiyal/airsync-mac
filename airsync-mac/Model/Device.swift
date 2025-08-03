@@ -13,9 +13,10 @@ struct Device: Codable, Hashable, Identifiable {
     let name: String
     let ipAddress: String
     let port: Int
+    let version: String
 
     private enum CodingKeys: String, CodingKey {
-        case name, ipAddress, port
+        case name, ipAddress, port, version
     }
 }
 
@@ -23,7 +24,8 @@ struct MockData{
     static let sampleDevice = Device(
         name: "Test Device",
         ipAddress: "192.168.1.100",
-        port: 8080
+        port: 8080,
+        version: "2.0.0"
     )
 
     static let sampleNotificaiton = Notification(
@@ -43,8 +45,8 @@ struct MockData{
     )
 
     static let sampleDevices = [
-        Device(name: "Test Device 1", ipAddress: "192.168.1.101", port: 8080),
-        Device(name: "Test Device 2", ipAddress: "192.168.1.102", port: 8080),
-        Device(name: "Test Device 3", ipAddress: "192.168.1.103", port: 8080)
+        Device(name: "Test Device 1", ipAddress: "192.168.1.101", port: 8080, version: "2.0.0"),
+        Device(name: "Test Device 2", ipAddress: "192.168.1.102", port: 8080, version: "2.0.0"),
+        Device(name: "Test Device 3", ipAddress: "192.168.1.103", port: 8080, version: "2.0.0")
     ]
 }

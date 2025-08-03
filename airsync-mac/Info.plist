@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AndroidVersion</key>
+	<string>2.0.4</string>
 	<key>SUFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/appcast.xml</string>
 </dict>
