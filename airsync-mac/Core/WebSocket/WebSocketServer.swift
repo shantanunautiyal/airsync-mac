@@ -153,13 +153,19 @@ class WebSocketServer: ObservableObject {
             if let dict = message.data.value as? [String: Any],
                let name = dict["name"] as? String,
                let ip = dict["ipAddress"] as? String,
-               let port = dict["port"] as? Int{
+               let port = dict["port"] as? Int {
+
                 AppState.shared.device = Device(
                     name: name,
                     ipAddress: ip,
                     port: port
                 )
+
+                if let base64 = dict["wallpaper"] as? String {
+                    AppState.shared.currentDeviceWallpaperBase64 = base64
+                }
             }
+
 
         case .notification:
             if let dict = message.data.value as? [String: Any],
@@ -235,33 +241,6 @@ class WebSocketServer: ObservableObject {
                let text = dict["text"] as? String {
                 AppState.shared.updateClipboardFromAndroid(text)
             }
-
-        case .wallpaperImage:
-            if let dict = message.data.value as? [String: Any],
-               let base64 = dict["image"] as? String,
-               let deviceName = dict["deviceName"] as? String,
-               let ipAddress = dict["ipAddress"] as? String {
-
-                DispatchQueue.global(qos: .background).async {
-                    let key = "\(deviceName)-\(ipAddress)".replacingOccurrences(of: " ", with: "_")
-                    if let imageData = Data(base64Encoded: base64.stripBase64Prefix()) {
-                        let fileURL = wallpaperDirectory().appendingPathComponent("\(key).png")
-                        do {
-                            try imageData.write(to: fileURL)
-                            DispatchQueue.main.async {
-                                AppState.shared.deviceWallpapers[key] = fileURL.path
-                                print("✅ Saved wallpaper for \(deviceName) at: \(fileURL.path)")
-                            }
-                        } catch {
-                            print("❌ Failed to save wallpaper: \(error)")
-                        }
-                    }
-                }
-            }
-
-
-
-
         }
 
         

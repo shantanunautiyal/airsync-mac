@@ -22,19 +22,24 @@ struct PhoneView: View {
             )
             .transition(.opacity.combined(with: .scale))
 
-//            Group {
-//                if let path = wallpaperPath,
-//                   let nsImage = NSImage(contentsOfFile: path) {
-//                    Image(nsImage: nsImage)
-//                        .resizable()
-//                } else {
-//                    Image("wallpaper")
-//                        .resizable()
-//                }
-//            }
-//            .aspectRatio(contentMode: .fill)
-//            .frame(width: 180, height: 400)
-//            .cornerRadius(20)
+            Group {
+                if let base64 = AppState.shared.currentDeviceWallpaperBase64,
+                   let data = Data(base64Encoded: base64.stripBase64Prefix()),
+                   let nsImage = NSImage(data: data) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image("wallpaper")
+                        .resizable()
+                }
+            }
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 180, height: 400)
+            .cornerRadius(20)
+
+
+
 
             ScreenView()
                 .transition(.opacity.combined(with: .scale))

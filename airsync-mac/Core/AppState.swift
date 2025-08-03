@@ -70,6 +70,8 @@ class AppState: ObservableObject {
     @Published var selectedTab: TabIdentifier = .settings
 
     @Published var adbConnected: Bool = false
+    @Published var currentDeviceWallpaperBase64: String? = nil
+
 
     @Published var licenseDetails: LicenseDetails? {
         didSet {
