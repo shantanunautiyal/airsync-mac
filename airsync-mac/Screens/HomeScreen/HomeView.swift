@@ -15,7 +15,6 @@ struct HomeView: View {
 
     var body: some View {
         NavigationSplitView {
-            VStack {
                 ZStack {
                     if appState.device != nil {
                         SidebarView()
@@ -26,18 +25,11 @@ struct HomeView: View {
                     }
                 }
                 .animation(.easeInOut(duration: 0.35), value: appState.device)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(minWidth: 270)
-            .navigationTitle("Devices")
+                .frame(minWidth: 270)
         } detail: {
             AppContentView()
         }
         .navigationTitle(appState.device?.name ?? "AirSync")
-        .sheet(isPresented: $isDisconnected) {
-            SettingsView()
-        }
-        .background(.background.opacity(appState.windowOpacity))
     }
 }
 
