@@ -58,32 +58,6 @@ struct SidebarView: View {
                 HStack{
 
                     if appState.adbConnected{
-                        if #available(macOS 26.0, *) {
-                            GlassButtonView(
-                                label: "Mirror",
-                                systemImage: "apps.iphone",
-                                action: {
-                                    ADBConnector
-                                        .startScrcpy(
-                                            ip: appState.device?.ipAddress ?? "",
-                                            port: appState.adbPort,
-                                            deviceName: appState.device?.name ?? "My Phone"
-                                        )
-                                }
-                            )
-                            .transition(.identity)
-                            .buttonStyle(.glass)
-                            .contextMenu {
-                                Button("Desktop Mode") {
-                                    ADBConnector.startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone",
-                                        desktop: true
-                                    )
-                                }
-                            }
-                        } else {
                             GlassButtonView(
                                 label: "Mirror",
                                 systemImage: "apps.iphone",
@@ -107,11 +81,8 @@ struct SidebarView: View {
                                     )
                                 }
                             }
-
-                        }
                     }
 
-                    if #available(macOS 26.0, *) {
                         GlassButtonView(
                             label: "Disconnect",
                             systemImage: "xmark",
@@ -123,20 +94,6 @@ struct SidebarView: View {
                             }
                         )
                         .transition(.identity)
-                        .buttonStyle(.glass)
-                    } else {
-                        GlassButtonView(
-                            label: "Disconnect",
-                            systemImage: "xmark",
-                            iconOnly: appState.adbConnected,
-                            action: {
-                                appState.disconnectDevice()
-                                ADBConnector.disconnectADB()
-                                appState.adbConnected = false
-                            }
-                        )
-                        .transition(.identity)
-                    }
                 }
                 .animation(
                     .easeInOut(duration: 0.35),

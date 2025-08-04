@@ -29,7 +29,6 @@ struct MediaPlayerView: View {
                 Group {
                     if AppState.shared.isPlus && AppState.shared.licenseCheck {
                         HStack{
-                            if #available(macOS 26.0, *) {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "backward.end",
@@ -39,20 +38,6 @@ struct MediaPlayerView: View {
                                         WebSocketServer.shared.skipPrevious()
                                     }
                                 )
-                                .buttonStyle(.glass)
-                            } else {
-                                GlassButtonView(
-                                    label: "",
-                                    systemImage: "backward.end",
-                                    iconOnly: true,
-                                    size: .small,
-                                    action: {
-                                        WebSocketServer.shared.skipPrevious()
-                                    }
-                                )
-                            }
-
-                            if #available(macOS 26.0, *) {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",
@@ -61,19 +46,7 @@ struct MediaPlayerView: View {
                                         WebSocketServer.shared.togglePlayPause()
                                     }
                                 )
-                                .buttonStyle(.glass)
-                            } else {
-                                GlassButtonView(
-                                    label: "",
-                                    systemImage: music.isPlaying ? "pause.fill" : "play.fill",
-                                    iconOnly: true,
-                                    action: {
-                                        WebSocketServer.shared.togglePlayPause()
-                                    }
-                                )
-                            }
 
-                            if #available(macOS 26.0, *) {
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "forward.end",
@@ -83,18 +56,6 @@ struct MediaPlayerView: View {
                                         WebSocketServer.shared.skipNext()
                                     }
                                 )
-                                .buttonStyle(.glass)
-                            } else {
-                                GlassButtonView(
-                                    label: "",
-                                    systemImage: "forward.end",
-                                    iconOnly: true,
-                                    size: .small,
-                                    action: {
-                                        WebSocketServer.shared.skipNext()
-                                    }
-                                )
-                             }
                         }
                     }
                 }

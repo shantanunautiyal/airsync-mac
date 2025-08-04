@@ -38,7 +38,6 @@ struct AboutView: View {
                         .padding(.horizontal)
 
                     HStack{
-                        if #available(macOS 26.0, *) {
                             GlassButtonView(
                                 label: "Website",
                                 systemImage: "globe",
@@ -48,21 +47,8 @@ struct AboutView: View {
                                     }
                                 }
                             )
-                            .buttonStyle(.glass)
-                        } else {
-                            GlassButtonView(
-                                label: "Website",
-                                systemImage: "globe",
-                                action: {
-                                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac") {
-                                        NSWorkspace.shared.open(url)
-                                    }
-                                }
-                            )
-                        }
 
 
-                        if #available(macOS 26.0, *) {
                             GlassButtonView(
                                 label: "GitHub",
                                 systemImage: "folder",
@@ -72,22 +58,7 @@ struct AboutView: View {
                                     }
                                 }
                             )
-                            .buttonStyle(.glass)
-                        } else {
-                            GlassButtonView(
-                                label: "GitHub",
-                                systemImage: "folder",
-                                action: {
-                                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac") {
-                                        NSWorkspace.shared.open(url)
-                                    }
-                                }
-                            )
-                        }
 
-
-
-                        if #available(macOS 26.0, *) {
                             GlassButtonView(
                                 label: "Get for Android",
                                 systemImage: "iphone.gen3",
@@ -97,18 +68,6 @@ struct AboutView: View {
                                     }
                                 }
                             )
-                            .buttonStyle(.glass)
-                        } else {
-                            GlassButtonView(
-                                label: "Get for Android",
-                                systemImage: "iphone.gen3",
-                                action: {
-                                    if let url = URL(string: "https://github.com/sameerasw/airsync-android/releases/latest") {
-                                        NSWorkspace.shared.open(url)
-                                    }
-                                }
-                            )
-                        }
                     }
 
                     Divider()
@@ -123,7 +82,6 @@ struct AboutView: View {
 
             HStack {
                 Spacer()
-                    if #available(macOS 26.0, *) {
                         GlassButtonView(
                             label: "My Website",
                             systemImage: "link",
@@ -133,30 +91,7 @@ struct AboutView: View {
                                 }
                             }
                         )
-                        .buttonStyle(.glass)
-                    } else {
-                        GlassButtonView(
-                            label: "My Website",
-                            systemImage: "link",
-                            action: {
-                                if let url = URL(string: "https://www.sameerasw.com") {
-                                    NSWorkspace.shared.open(url)
-                                }
-                            }
-                        )
-                    }
 
-
-                if #available(macOS 26.0, *) {
-                    GlassButtonView(
-                        label: "OK",
-                        action: {
-                            onClose()
-                        }
-                    )
-                    .buttonStyle(.glass)
-                    .keyboardShortcut(.defaultAction)
-                } else {
                     GlassButtonView(
                         label: "OK",
                         action: {
@@ -164,7 +99,6 @@ struct AboutView: View {
                         }
                     )
                     .keyboardShortcut(.defaultAction)
-                }
             }
             .padding([.horizontal, .bottom])
         }

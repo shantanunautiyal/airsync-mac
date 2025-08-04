@@ -23,6 +23,7 @@ struct GlassButtonView: View {
         }
         .controlSize(size)
         .modifier(LabelStyleModifier(iconOnly: iconOnly))
+        .applyGlassIfAvailable()
     }
 
     @ViewBuilder
