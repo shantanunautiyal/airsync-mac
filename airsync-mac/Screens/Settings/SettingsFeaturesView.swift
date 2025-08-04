@@ -12,7 +12,9 @@ struct SettingsFeaturesView: View {
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
-    
+    @State private var tempBitrate: Double = 4.00
+    @State private var isDragging = false
+
     var body: some View {
         VStack{
             HStack {
@@ -110,6 +112,35 @@ struct SettingsFeaturesView: View {
                         .toggleStyle(.switch)
                 }
 
+                VStack{
+                    HStack{
+                        Label("Mirroring Settings", systemImage: "gear")
+                        Spacer()
+                    }
+                    HStack{
+                        Text("Video bitrate")
+                        Spacer()
+                        Slider(
+                            value: $tempBitrate,
+                            in: 1...8,
+                            step: 1,
+                            onEditingChanged: { editing in
+                                if !editing {
+                                    AppState.shared.scrcpyBitrate = Int(tempBitrate)
+                                }
+                                isDragging = editing
+                            }
+                        )
+                        .focusable(false)
+                        .frame(maxWidth: 200)
+
+                        Text("\(AppState.shared.scrcpyBitrate) Mbps")
+                            .monospacedDigit()
+                            .foregroundColor(isDragging ? .accentColor : .secondary)
+                            .frame(width: 60, alignment: .leading)
+                    }
+                }
+
                 if let result = appState.adbConnectionResult {
                     VStack(alignment: .leading, spacing: 4) {
                         ExpandableLicenseSection(title: "ADB Console", content: result)
@@ -139,6 +170,7 @@ struct SettingsFeaturesView: View {
         }
         .padding()
         .onAppear{
+
             adbPortString = String(appState.adbPort)
         }
     }

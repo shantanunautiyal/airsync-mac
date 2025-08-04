@@ -84,13 +84,14 @@ struct ADBConnector {
 
         let fullAddress = "\(ip):\(port)"
         let deviceNameFormatted = deviceName.removingApostrophesAndPossessives()
+        let bitrate = AppState.shared.scrcpyBitrate
 
         // Arguments to scrcpy for wireless connection
         // scrcpy --tcpip=<ip>:<port>
         var args = [
             "--window-title=\(deviceNameFormatted)",
             "--tcpip=\(fullAddress)",
-            "--video-bit-rate=3M",
+            "--video-bit-rate=\(bitrate)M",
             "--video-codec=h265",
             "--max-size=1200"
         ]
