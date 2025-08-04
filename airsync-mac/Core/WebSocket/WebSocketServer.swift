@@ -39,7 +39,9 @@ class WebSocketServer: ObservableObject {
         }
         do {
             try server.start(port)
-            let ip = getWiFiAddress()
+            let ip = getLocalIPAddress(
+                adapterIndex: AppState.shared.selectedNetworkAdapter
+            )
             DispatchQueue.main.async {
                 self.localPort = port
                 self.localIPAddress = ip
@@ -115,8 +117,48 @@ class WebSocketServer: ObservableObject {
 
     // MARK: - Local IP
 
-    private func getWiFiAddress() -> String? {
-        var address: String?
+    private func getLocalIPAddress(adapterIndex: Int? = nil) -> String? {
+        var addresses: [String] = []
+        var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
+
+        if getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr {
+            var ptr = firstAddr
+            while ptr.pointee.ifa_next != nil {
+                defer { ptr = ptr.pointee.ifa_next! }
+
+                let interface = ptr.pointee
+                let addrFamily = interface.ifa_addr.pointee.sa_family
+
+                // Only consider IPv4 addresses
+                if addrFamily == UInt8(AF_INET),
+                   let name = String(validatingUTF8: interface.ifa_name) {
+                    var addr = interface.ifa_addr.pointee
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    getnameinfo(&addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                                &hostname, socklen_t(hostname.count),
+                                nil, socklen_t(0), NI_NUMERICHOST)
+                    let address = String(cString: hostname)
+                    addresses.append(address)
+                }
+            }
+            freeifaddrs(ifaddr)
+        }
+
+        if addresses.isEmpty {
+            return nil
+        }
+
+        // If index is provided
+        if let index = adapterIndex, addresses.indices.contains(index) {
+            return addresses[index]
+        }
+
+        // Default: return the first found address
+        return addresses.first
+    }
+
+    func getAvailableNetworkAdapters() -> [(name: String, address: String)] {
+        var adapters: [(String, String)] = []
         var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
 
         if getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr {
@@ -128,22 +170,26 @@ class WebSocketServer: ObservableObject {
                 let addrFamily = interface.ifa_addr.pointee.sa_family
 
                 if addrFamily == UInt8(AF_INET),
-                   let name = String(validatingUTF8: interface.ifa_name),
-                   name == "en0" {
+                   let name = String(validatingUTF8: interface.ifa_name) {
                     var addr = interface.ifa_addr.pointee
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     getnameinfo(&addr, socklen_t(interface.ifa_addr.pointee.sa_len),
                                 &hostname, socklen_t(hostname.count),
                                 nil, socklen_t(0), NI_NUMERICHOST)
-                    address = String(cString: hostname)
-                    break
+                    let address = String(cString: hostname)
+                    if address != "127.0.0.1" {
+                        adapters.append((name, address))
+                    }
+
                 }
             }
+            freeifaddrs(ifaddr)
         }
 
-        freeifaddrs(ifaddr)
-        return address
+        return adapters
     }
+
+
 
     // MARK: - Message Handling
 

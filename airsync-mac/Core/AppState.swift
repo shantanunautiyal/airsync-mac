@@ -77,6 +77,8 @@ class AppState: ObservableObject {
 
     @Published var adbConnected: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
+    @Published var selectedNetworkAdapter: Int? = nil
+    
 
 
     @Published var licenseDetails: LicenseDetails? {

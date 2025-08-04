@@ -22,6 +22,9 @@ struct SettingsView: View {
     @State private var isLicenseVisible = false
     @State private var showingPlusPopover = false
 
+    @State private var availableAdapters: [(name: String, address: String)] = []
+
+
 
 
     var body: some View {
@@ -208,6 +211,28 @@ struct SettingsView: View {
 
                     // Info Section
                     VStack {
+                        HStack {
+                            Label("Network", systemImage: "rectangle.connected.to.line.below")
+                            Spacer()
+
+                            Picker("", selection: Binding(
+                                get: { appState.selectedNetworkAdapter },
+                                set: { appState.selectedNetworkAdapter = $0 }
+                            )) {
+                                Text("Auto").tag(nil as Int?)
+
+                                ForEach(Array(availableAdapters.enumerated()), id: \.offset) { index, adapter in
+                                    Text("\(adapter.name) (\(adapter.address))").tag(Optional(index))
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+
+                        .onAppear {
+                            availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
+                        }
+
+
                         ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
 
                         HStack {
