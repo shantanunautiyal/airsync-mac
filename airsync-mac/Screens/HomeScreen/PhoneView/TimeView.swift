@@ -34,6 +34,8 @@ struct TimeView: View {
         .onReceive(timer) { newValue in
             currentDate = newValue
         }
+        .foregroundColor(.white)
+        .shadow(radius: 10)
     }
 
     // Detect if system uses 24-hour time

@@ -29,9 +29,7 @@ struct PhoneView: View {
                     Image(nsImage: nsImage)
                         .resizable()
                         .scaledToFill()
-                } else {
-                    Image("wallpaper")
-                        .resizable()
+                        .opacity(0.75)
                 }
             }
             .aspectRatio(contentMode: .fill)
@@ -58,7 +56,7 @@ struct StatusBarView: View {
             HStack{
                 Spacer()
                 Circle()
-                    .fill(.gray.opacity(0.2))
+                    .fill(.black.opacity(0.8))
                     .frame(width: 15, height: 15)
                     .padding(5)
                 Spacer()
@@ -79,7 +77,10 @@ struct ScreenView: View {
 
             Spacer()
 
-            if let music = appState.status?.music {
+            if let music = appState.status?.music,
+               let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+               !title.isEmpty {
+
                 if #available(macOS 26.0, *) {
                     MediaPlayerView(music: music)
                         .background(.clear)
@@ -92,6 +93,7 @@ struct ScreenView: View {
             } else {
                 Spacer()
             }
+
         }
         .frame(maxWidth: 175, maxHeight: 390)
     }
