@@ -56,7 +56,7 @@ struct StatusBarView: View {
             HStack{
                 Spacer()
                 Circle()
-                    .fill(.black.opacity(0.8))
+                    .fill(.background.opacity(0.6))
                     .frame(width: 15, height: 15)
                     .padding(5)
                 Spacer()

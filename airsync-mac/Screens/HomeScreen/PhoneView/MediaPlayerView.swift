@@ -15,15 +15,20 @@ struct MediaPlayerView: View {
         ZStack{
 
             VStack{
-                Label(
-                    music.title,
-                    systemImage: "music.note.list"
-                )
-                .font(.caption)
+                HStack(spacing: 4) {
+                    Image(systemName: "music.note.list")
+                    EllipsesTextView(
+                        text: music.title,
+                        font: .caption
+                    )
+                }
+                .frame(height: 14)
 
-                Text(music.artist)
-                    .font(.footnote)
-                    .padding(.bottom, 5)
+                EllipsesTextView(
+                    text: music.artist,
+                    font: .footnote,
+                )
+
 
 
                 Group {
