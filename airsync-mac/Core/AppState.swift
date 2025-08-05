@@ -39,7 +39,18 @@ class AppState: ObservableObject {
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
-        
+
+        self.scrcpyBitrate = UserDefaults.standard.integer(forKey: "scrcpyBitrate")
+        if self.scrcpyBitrate == 0 { self.scrcpyBitrate = 4 }
+
+        self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
+        if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
+
+        self.scrcpyOnTop = UserDefaults.standard.bool(forKey: "scrcpyOnTop")
+        self.scrcpyDesktopMode = UserDefaults.standard.string(forKey: "scrcpyDesktopMode") ?? "2560x1440"
+        self.lastADBCommand = UserDefaults.standard.string(forKey: "lastADBCommand")
+
+
 
         self.myDevice = Device(
             name: name,
@@ -78,7 +89,38 @@ class AppState: ObservableObject {
     @Published var adbConnected: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
     @Published var selectedNetworkAdapter: Int? = nil
-    @Published var scrcpyBitrate: Int = 4
+
+    @Published var scrcpyBitrate: Int = 4 {
+        didSet {
+            UserDefaults.standard.set(scrcpyBitrate, forKey: "scrcpyBitrate")
+        }
+    }
+
+    @Published var scrcpyResolution: Int = 1200 {
+        didSet {
+            UserDefaults.standard.set(scrcpyResolution, forKey: "scrcpyResolution")
+        }
+    }
+
+    @Published var scrcpyOnTop: Bool = false {
+        didSet {
+            UserDefaults.standard.set(scrcpyOnTop, forKey: "scrcpyOnTop")
+        }
+    }
+
+    @Published var scrcpyDesktopMode: String = "2560x1440" {
+        didSet {
+            UserDefaults.standard.set(scrcpyDesktopMode, forKey: "scrcpyDesktopMode")
+        }
+    }
+
+    @Published var lastADBCommand: String? {
+        didSet {
+            UserDefaults.standard.set(lastADBCommand, forKey: "lastADBCommand")
+        }
+    }
+
+
 
 
 

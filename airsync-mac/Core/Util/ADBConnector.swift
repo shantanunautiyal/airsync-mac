@@ -85,6 +85,9 @@ struct ADBConnector {
         let fullAddress = "\(ip):\(port)"
         let deviceNameFormatted = deviceName.removingApostrophesAndPossessives()
         let bitrate = AppState.shared.scrcpyBitrate
+        let resolution = AppState.shared.scrcpyResolution
+        let desktopMode = AppState.shared.scrcpyDesktopMode
+        let alwaysOnTop = AppState.shared.scrcpyOnTop
 
         // Arguments to scrcpy for wireless connection
         // scrcpy --tcpip=<ip>:<port>
@@ -93,11 +96,15 @@ struct ADBConnector {
             "--tcpip=\(fullAddress)",
             "--video-bit-rate=\(bitrate)M",
             "--video-codec=h265",
-            "--max-size=1200"
+            "--max-size=\(resolution)"
         ]
 
+        if  (alwaysOnTop) {
+            args.append("--always-on-top")
+        }
+
         if desktop ?? true {
-            args.append("--new-display=2560x1440")
+            args.append("--new-display=\(desktopMode)")
         }
 
         if package != nil {
@@ -112,6 +119,8 @@ struct ADBConnector {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: scrcpyPath)
         task.arguments = args
+
+        AppState.shared.lastADBCommand = "scrcpy \(args.joined(separator: " "))"
 
         // Optionally, capture output if you want to show logs
         let pipe = Pipe()

@@ -124,7 +124,6 @@ struct ExpandableLicenseSection: View {
                 .font(.subheadline)
                 .bold()
         }
-        .padding(.horizontal)
         .focusEffectDisabled()
     }
 }
