@@ -15,66 +15,75 @@ struct LicenseView: View {
 Mozilla Public License Version 2.0
 ==================================
 
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.  
-If a copy of the MPL was not distributed with this file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, you can obtain one at https://www.mozilla.org/MPL/2.0/.
 
--------------------------------------------------------------------
-Additional Terms: Non-Commercial Use Clause
--------------------------------------------------------------------
+--------------------------------------------------------------------
+Additional Terms: Modified Build Redistribution Restriction
+--------------------------------------------------------------------
 
-In addition to the terms of the Mozilla Public License 2.0, the following restrictions apply:
+In addition to the terms of the Mozilla Public License 2.0, the following conditions apply:
 
-1. **Non-Commercial Use Only**  
-   You may use, modify, and build this software solely for **personal, non-commercial purposes**.  
-   You may not use, distribute, sublicense, or offer any version of this software (modified or unmodified) for **commercial purposes**, including but not limited to:
+1. Permissive Use
+   You are free to use, modify, and build this software for any purpose,
+   including personal, educational, or commercial use.
 
-   - Selling or licensing the software or any derivative work
-   - Hosting the software as part of a paid service
-   - Distributing it bundled in a commercial product or service
+2. No Publishing of Modified Builds
+   You are not permitted to publish, distribute, or share modified builds
+   of this software in any form, whether for free or commercially.
 
-2. **Commercial Use Requires Permission**  
-   Commercial use requires a **separate commercial license agreement** with the original author.  
-   Contact the author at: sameerasw.com@gmail.com for licensing options.
+   This includes, but is not limited to:
+     - Uploading modified builds to public platforms or stores
+     - Distributing modified builds to individuals or organizations
+     - Offering modified versions as part of any product or service
 
-3. **No Trademark Rights**  
-   This license does not grant any rights to use the project name, logo, or branding for commercial or promotional use.
+3. Private Use Only
+   You may modify and build this software only for your own private or internal use.
+   Any form of public redistribution of modified builds is strictly prohibited.
 
-4. **Preservation of this Clause**  
-   This Non-Commercial Use clause must be included in all copies or substantial portions of the Software.
+4. License Inclusion Requirement
+   This license and the entire Additional Terms section must be retained in all
+   copies and derivative works created for private or internal use.
 
--------------------------------------------------------------------
+5. No Trademark Rights
+   This license does not grant rights to use the project name, logo, or branding.
+
+--------------------------------------------------------------------
 END OF ADDITIONAL TERMS
--------------------------------------------------------------------
+--------------------------------------------------------------------
 
 """)
 
             ExpandableLicenseSection(title: "AirSync+ Commercial Eula", content: """
 Commercial End User License Agreement (EULA)
-============================================
+===============================================
 
-This End User License Agreement (the “Agreement”) is a legal agreement between you (either an individual or a legal entity) and Sameera Wijerathna for the use of the AirSync (2.0) application (the “Software”).
+This End User License Agreement ("Agreement") is a legal agreement between you (either an individual or a legal entity) and Sameera Wijerathna for the use of the AirSync (2.0) application (the "Software").
 
-By using or installing the Software, you agree to be bound by the terms of this Agreement.
+By installing or using the Software, you agree to be bound by the terms of this Agreement.
 
-1. GRANT OF LICENSE  
-You are granted a non-exclusive, non-transferable license to use the Software for personal or commercial purposes, according to your purchase terms or subscription plan.
+1. GRANT OF LICENSE
+You are granted a non-exclusive, non-transferable license to use the Software for personal or commercial purposes in accordance with your purchase terms or subscription plan.
 
-2. RESTRICTIONS  
-You may not:
-- Modify, reverse engineer, or redistribute the Software.
-- Rent, lease, or sell access to the Software without permission.
-- Use the Software to create a competing product.
+You may modify and build upon the Software solely for your own internal or personal use. Public redistribution of modified builds is strictly prohibited.
 
-3. OWNERSHIP  
-All rights, title, and interest in the Software remain with the original developer.
+2. RESTRICTIONS
+You may NOT:
+- Publish, share, or distribute modified builds of the Software, whether for free or commercially.
+- Reverse engineer, decompile, or disassemble the Software beyond what is permitted under applicable law.
+- Rent, lease, sublicense, or sell access to the Software without explicit written permission.
+- Use the Software to create or promote a directly competing product.
 
-4. TERMINATION  
-This license is effective until terminated. It will terminate automatically without notice if you fail to comply with any term. Upon termination, you must delete all copies of the Software.
+3. OWNERSHIP
+All rights, title, and interest in the Software remain with the original developer. This license does not transfer ownership.
 
-5. DISCLAIMER  
-This Software is provided “as is,” without warranty of any kind. In no event shall the author be liable for any damages arising from the use of the Software.
+4. TERMINATION
+This license is effective until terminated. It will terminate automatically without notice if you violate any term of this Agreement. Upon termination, you must delete all copies of the Software.
 
-For commercial licensing or custom use cases, contact: sameerasw.com@gmail.com
+5. DISCLAIMER
+This Software is provided "as is" without warranty of any kind. In no event shall the author be liable for any damages arising from the use or inability to use the Software.
+
+For commercial licensing inquiries or special use cases, contact: sameerasw.com@gmail.com
 
 © 2025 sameerasw.com. All Rights Reserved.
 
