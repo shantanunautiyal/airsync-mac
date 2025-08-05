@@ -101,16 +101,17 @@ struct SettingsFeaturesView: View {
                         )
                     }
                 }
+                
+                HStack{
+                    Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
+                    Spacer()
+                    Toggle("", isOn: $appState.mirroringPlus)
+                        .toggleStyle(.switch)
+                }
 
                 VStack{
                     DisclosureGroup(isExpanded: $isExpanded) {
                         VStack(spacing: 10){
-                            HStack{
-                                Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
-                                Spacer()
-                                Toggle("", isOn: $appState.mirroringPlus)
-                                    .toggleStyle(.switch)
-                            }
 
                             HStack {
                                 Text("Video bitrate")
