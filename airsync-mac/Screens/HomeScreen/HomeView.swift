@@ -30,6 +30,7 @@ struct HomeView: View {
             AppContentView()
         }
         .navigationTitle(appState.device?.name ?? "AirSync")
+        .background(.background.opacity(appState.windowOpacity))
     }
 }
 
