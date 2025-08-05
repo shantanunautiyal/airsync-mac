@@ -39,9 +39,8 @@ class WebSocketServer: ObservableObject {
         }
         do {
             try server.start(port)
-            let ip = getLocalIPAddress(
-                adapterIndex: AppState.shared.selectedNetworkAdapter
-            )
+            let ip = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
+
             DispatchQueue.main.async {
                 self.localPort = port
                 self.localIPAddress = ip
@@ -117,9 +116,9 @@ class WebSocketServer: ObservableObject {
 
     // MARK: - Local IP
 
-    private func getLocalIPAddress(adapterIndex: Int? = nil) -> String? {
-        var addresses: [String] = []
+    private func getLocalIPAddress(adapterName: String? = nil) -> String? {
         var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
+        let result: String? = "N/A"
 
         if getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr {
             var ptr = firstAddr
@@ -129,7 +128,6 @@ class WebSocketServer: ObservableObject {
                 let interface = ptr.pointee
                 let addrFamily = interface.ifa_addr.pointee.sa_family
 
-                // Only consider IPv4 addresses
                 if addrFamily == UInt8(AF_INET),
                    let name = String(validatingUTF8: interface.ifa_name) {
                     var addr = interface.ifa_addr.pointee
@@ -138,23 +136,20 @@ class WebSocketServer: ObservableObject {
                                 &hostname, socklen_t(hostname.count),
                                 nil, socklen_t(0), NI_NUMERICHOST)
                     let address = String(cString: hostname)
-                    addresses.append(address)
+
+                    if address == "127.0.0.1" { continue }
+
+                    if adapterName == nil {
+                        return address // First found = Auto
+                    } else if name == adapterName {
+                        return address
+                    }
                 }
             }
             freeifaddrs(ifaddr)
         }
 
-        if addresses.isEmpty {
-            return nil
-        }
-
-        // If index is provided
-        if let index = adapterIndex, addresses.indices.contains(index) {
-            return addresses[index]
-        }
-
-        // Default: return the first found address
-        return addresses.first
+        return result
     }
 
     func getAvailableNetworkAdapters() -> [(name: String, address: String)] {

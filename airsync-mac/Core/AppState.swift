@@ -88,7 +88,7 @@ class AppState: ObservableObject {
 
     @Published var adbConnected: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
-    @Published var selectedNetworkAdapter: Int? = nil
+    @Published var selectedNetworkAdapterName: String? // e.g., "en0"
 
     @Published var scrcpyBitrate: Int = 4 {
         didSet {

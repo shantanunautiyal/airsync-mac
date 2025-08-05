@@ -42,21 +42,29 @@ struct SettingsView: View {
                             Spacer()
 
                             Picker("", selection: Binding(
-                                get: { appState.selectedNetworkAdapter },
-                                set: { appState.selectedNetworkAdapter = $0 }
+                                get: { appState.selectedNetworkAdapterName },
+                                set: { appState.selectedNetworkAdapterName = $0 }
                             )) {
-                                Text("Auto").tag(nil as Int?)
-
-                                ForEach(Array(availableAdapters.enumerated()), id: \.offset) { index, adapter in
-                                    Text("\(adapter.name) (\(adapter.address))").tag(Optional(index))
+                                Text("Auto").tag(nil as String?)
+                                ForEach(availableAdapters, id: \.name) { adapter in
+                                    Text("\(adapter.name) (\(adapter.address))").tag(Optional(adapter.name))
                                 }
                             }
                             .pickerStyle(MenuPickerStyle())
                         }
-
                         .onAppear {
                             availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
                         }
+                        .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
+                            WebSocketServer.shared.stop()
+                            if let port = UInt16(port) {
+                                WebSocketServer.shared.start(port: port)
+                            } else {
+                                WebSocketServer.shared.start()
+                            }
+                        }
+
+
 
 
                         ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
@@ -94,7 +102,6 @@ struct SettingsView: View {
                         )
 
                     }
-                    .padding()
 
                     HStack {
                         Text("Liquid Opacity")
