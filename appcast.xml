@@ -20,11 +20,11 @@
       <pubDate>Tue, 5 Aug 2025 01:00:00 +0000</pubDate>
       <enclosure
         url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.5-BETA/AirSync.dmg"
-        sparkle:version="1"
+        sparkle:version="2"
         sparkle:shortVersionString="2.0.5"
         type="application/octet-stream"
         length="12345678" />
-      <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
     </item>
 
   </channel>
