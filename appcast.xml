@@ -10,21 +10,23 @@
     <description>Updates for AirSync Mac app</description>
     <language>en</language>
     <pubDate>Fri, 1 Aug 2025 01:00:00 +0000</pubDate>
-    <lastBuildDate>Tue, 5 Aug 2025 01:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 06 Aug 2025 01:36:13 +0530</lastBuildDate>
     <ttl>1800</ttl>
 
     <!-- Latest version -->
     <item>
-      <title>Version 2.0.5 BETA</title>
-      <sparkle:releaseNotesLink>https://github.com/sameerasw/airsync-mac/releases/tag/v2.0.5-BETA</sparkle:releaseNotesLink>
-      <pubDate>Tue, 5 Aug 2025 01:00:00 +0000</pubDate>
+      <title>Version 2.0.6 BETA</title>
+      <pubDate>Wed, 06 Aug 2025 01:36:13 +0530</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>2.0.6</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.5-BETA/AirSync.dmg"
-        sparkle:version="2"
-        sparkle:shortVersionString="2.0.5"
+        url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.6-BETA/AirSync.dmg"
+        sparkle:version="3"
+        sparkle:shortVersionString="2.0.6"
         type="application/octet-stream"
-        length="12188754" />
-      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+        length="12204054"
+        sparkle:edSignature="KNBu6z31wRI8V8OBq13UWqU/6Q5X/syR2QaUAqmvJriQ67vKZ15NKZbhMvgGcVwq53R2lI6dk1o7FZIGjaGfDw=="/>
     </item>
 
   </channel>
