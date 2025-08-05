@@ -24,7 +24,7 @@
         sparkle:shortVersionString="2.0.5"
         type="application/octet-stream"
         length="12188754" />
-      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
     </item>
 
   </channel>
