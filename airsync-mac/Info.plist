@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AndroidVersion</key>
-	<string>2.0.4</string>
+	<string>2.0.6</string>
 	<key>SUFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/appcast.xml</string>
 	<key>SUPublicEDKey</key>
