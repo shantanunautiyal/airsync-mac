@@ -117,7 +117,7 @@ class WebSocketServer: ObservableObject {
     // MARK: - Local IP
 
     func getLocalIPAddress(adapterName: String?) -> String? {
-        var address: String? = "N/A"
+        let address: String? = "N/A"
         var ifaddr: UnsafeMutablePointer<ifaddrs>?
 
         guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
