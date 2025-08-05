@@ -14,23 +14,52 @@ struct HomeView: View {
     @State private var isDisconnected: Bool = false
 
     var body: some View {
+
         NavigationSplitView {
-                ZStack {
-                    if appState.device != nil {
-                        SidebarView()
-                            .transition(.opacity.combined(with: .scale))
-                    } else {
-                        ScannerView()
-                            .transition(.opacity.combined(with: .scale))
-                    }
+            ZStack {
+                if let base64 = AppState.shared.currentDeviceWallpaperBase64,
+                   let data = Data(base64Encoded: base64.stripBase64Prefix()),
+                   let nsImage = NSImage(data: data) {
+
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .scaledToFill()
+                        .blur(radius: 10)
+                        .opacity(0.5)
+                        .mask(
+                            LinearGradient(
+                                gradient: Gradient(stops: [
+                                    .init(color: .black, location: 0.0),
+                                    .init(color: .black, location: 0.2),
+                                    .init(color: .clear, location: 0.8),
+                                    .init(color: .clear, location: 1.0)
+                                ]),
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                        )
+                        .ignoresSafeArea()
+
+
                 }
-                .animation(.easeInOut(duration: 0.35), value: appState.device)
-                .frame(minWidth: 270)
+
+                if appState.device != nil {
+                    SidebarView()
+                        .transition(.opacity.combined(with: .scale))
+                } else {
+                    ScannerView()
+                        .transition(.opacity.combined(with: .scale))
+                }
+            }
+            .animation(.easeInOut(duration: 0.35), value: appState.device)
+            .frame(minWidth: 270)
         } detail: {
             AppContentView()
         }
         .navigationTitle(appState.device?.name ?? "AirSync")
         .background(.background.opacity(appState.windowOpacity))
+
+
     }
 }
 

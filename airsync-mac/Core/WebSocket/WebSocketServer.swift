@@ -116,41 +116,46 @@ class WebSocketServer: ObservableObject {
 
     // MARK: - Local IP
 
-    private func getLocalIPAddress(adapterName: String? = nil) -> String? {
-        var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
-        let result: String? = "N/A"
+    func getLocalIPAddress(adapterName: String?) -> String? {
+        var address: String? = "N/A"
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
 
-        if getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr {
-            var ptr = firstAddr
-            while ptr.pointee.ifa_next != nil {
-                defer { ptr = ptr.pointee.ifa_next! }
+        guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
+            return nil
+        }
 
-                let interface = ptr.pointee
-                let addrFamily = interface.ifa_addr.pointee.sa_family
+        defer { freeifaddrs(ifaddr) }
 
-                if addrFamily == UInt8(AF_INET),
-                   let name = String(validatingUTF8: interface.ifa_name) {
-                    var addr = interface.ifa_addr.pointee
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    getnameinfo(&addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-                                &hostname, socklen_t(hostname.count),
-                                nil, socklen_t(0), NI_NUMERICHOST)
-                    let address = String(cString: hostname)
+        for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+            let interface = ptr.pointee
+            let addrFamily = interface.ifa_addr.pointee.sa_family
+            let name = String(cString: interface.ifa_name)
 
-                    if address == "127.0.0.1" { continue }
+            if addrFamily == UInt8(AF_INET) {
+                var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                let result = getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                                         &hostname, socklen_t(hostname.count),
+                                         nil, socklen_t(0), NI_NUMERICHOST)
 
-                    if adapterName == nil {
-                        return address // First found = Auto
-                    } else if name == adapterName {
-                        return address
+                if result == 0 {
+                    let ip = String(cString: hostname)
+                    print("Checking adapter: \(name), IP: \(ip), target: \(adapterName ?? "nil")")
+
+                    if ip == "127.0.0.1" {
+                        continue // Skip loopback
+                    }
+
+                    if adapterName == nil || name == adapterName {
+                        print("Selected adapter match or fallback: \(name) -> \(ip)")
+                        return ip
                     }
                 }
             }
-            freeifaddrs(ifaddr)
         }
 
-        return result
+        return address
     }
+
 
     func getAvailableNetworkAdapters() -> [(name: String, address: String)] {
         var adapters: [(String, String)] = []
