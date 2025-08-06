@@ -1,33 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss
-    version="2.0"
-    xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
-    xmlns:dc="http://purl.org/dc/elements/1.1/">
-
-  <channel>
-    <title>AirSync Mac Updates</title>
-    <link>https://github.com/sameerasw/airsync-mac/releases</link>
-    <description>Updates for AirSync Mac app</description>
-    <language>en</language>
-    <pubDate>Fri, 1 Aug 2025 01:00:00 +0000</pubDate>
-    <lastBuildDate>Wed, 06 Aug 2025 01:36:13 +0530</lastBuildDate>
-    <ttl>1800</ttl>
-
-    <!-- Latest version -->
-    <item>
-      <title>Version 2.0.6 BETA</title>
-      <pubDate>Wed, 06 Aug 2025 01:36:13 +0530</pubDate>
-      <sparkle:version>3</sparkle:version>
-      <sparkle:shortVersionString>2.0.6</sparkle:shortVersionString>
-      <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
-      <enclosure
-        url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.6-BETA/AirSync.dmg"
-        sparkle:version="3"
-        sparkle:shortVersionString="2.0.6"
-        type="application/octet-stream"
-        length="12204054"
-        sparkle:edSignature="KNBu6z31wRI8V8OBq13UWqU/6Q5X/syR2QaUAqmvJriQ67vKZ15NKZbhMvgGcVwq53R2lI6dk1o7FZIGjaGfDw=="/>
-    </item>
-
-  </channel>
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>AirSync</title>
+        <item>
+            <title>2.0.6.1</title>
+            <pubDate>Wed, 06 Aug 2025 23:30:37 +0530</pubDate>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>2.0.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.6.1-BETA/AirSync.dmg" length="31788209" type="application/octet-stream" sparkle:edSignature="dwNvEawY/mYtCokV0/ruOEmIqnwCcQNidjbFnS4OjsrCifXimjvBx84S2rkisbnEXZwhPhCHrSlgqUH9eQ/+DA=="/>
+        </item>
+    </channel>
 </rss>
