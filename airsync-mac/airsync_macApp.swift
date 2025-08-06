@@ -7,11 +7,14 @@
 
 import SwiftUI
 import UserNotifications
-
+import AppKit
 
 @main
 struct airsync_macApp: App {
     let notificationDelegate = NotificationDelegate()
+    
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     init() {
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
@@ -46,6 +49,16 @@ struct airsync_macApp: App {
 
         loadCachedIcons()
         loadCachedWallpapers()
+
+        // Auto-check for update on launch
+        UpdateChecker.shared.checkForUpdateAndDownloadIfNeeded(presentingWindow: nil) { updated in
+            if updated {
+                print("Update downloaded, quitting app for user to install")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    NSApplication.shared.terminate(nil)
+                }
+            }
+        }
     }
 
     var body: some Scene {
@@ -57,15 +70,64 @@ struct airsync_macApp: App {
                         .automatic,
                         for: .windowToolbar
                     )
-                    .toolbarBackground(.clear, for: .windowToolbar  )
+                    .toolbarBackground(.clear, for: .windowToolbar)
             } else {
                 HomeView()
             }
         }
         .commands {
             CommandGroup(after: .appInfo) {
-                
+                Button("Check for Updates...") {
+                    if let window = appDelegate.mainWindow {
+                        checkForUpdatesManually(presentingWindow: window)
+                    } else {
+                        checkForUpdatesManually(presentingWindow: nil)
+                    }
+                }
+                .keyboardShortcut("u", modifiers: [.command])
             }
         }
     }
+
+    func checkForUpdatesManually(presentingWindow: NSWindow?) {
+        UpdateChecker.shared.checkForUpdateAndDownloadIfNeeded(presentingWindow: presentingWindow) { updated in
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "OK")
+
+                if updated {
+                    alert.messageText = "Update downloaded"
+                    alert.informativeText = "A new version was downloaded to your Downloads folder. The app will quit now to let you install it."
+                    alert.runModal()
+                    NSApplication.shared.terminate(nil)
+                } else {
+                    alert.messageText = "No updates available"
+                    alert.informativeText = "Your app is up to date."
+                    alert.runModal()
+                }
+            }
+        }
+    }
+}
+
+
+// Helper to grab NSWindow from SwiftUI:
+struct WindowAccessor: NSViewRepresentable {
+    let callback: (NSWindow) -> Void
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            if let window = view.window {
+                self.callback(window)
+            }
+        }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+// AppDelegate to hold NSWindow reference:
+class AppDelegate: NSObject, NSApplicationDelegate {
+    var mainWindow: NSWindow?
 }
