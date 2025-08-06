@@ -7,18 +7,11 @@
 
 import SwiftUI
 import UserNotifications
-import Sparkle
 
 
 @main
 struct airsync_macApp: App {
     let notificationDelegate = NotificationDelegate()
-    private let updaterController = SPUStandardUpdaterController(
-        startingUpdater: true,
-        updaterDelegate: nil,
-        userDriverDelegate: nil
-    )
-
     init() {
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
@@ -36,7 +29,6 @@ struct airsync_macApp: App {
             options: []
         )
         center.setNotificationCategories([category])
-
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
                 print("Notification permission error: \(error)")
@@ -72,7 +64,7 @@ struct airsync_macApp: App {
         }
         .commands {
             CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterController.updater)
+                
             }
         }
     }
