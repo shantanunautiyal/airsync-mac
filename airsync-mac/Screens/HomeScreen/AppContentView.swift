@@ -44,18 +44,7 @@ struct AppContentView: View {
                     NotificationView()
 
                 case .apps:
-                    VStack(alignment: .leading) {
-                        if let device = appState.device {
-                            Text("📱 \(device.name) @ \(device.ipAddress):\(device.port)")
-                                .font(.headline)
-                        }
-
-                        if let status = appState.status {
-                            Text("🔋 Battery: \(status.battery.level)% \(status.battery.isCharging ? "⚡️ Charging" : "")")
-                            Text("🎵 Now Playing: \(status.music.title) by \(status.music.artist)")
-                        }
-                    }
-                    .padding()
+                    AppsView()
                     .font(.largeTitle)
                     .transition(.blurReplace)
                     .toolbar {

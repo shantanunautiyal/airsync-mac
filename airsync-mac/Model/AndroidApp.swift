@@ -14,5 +14,6 @@ struct AndroidApp: Hashable, Identifiable{
     let name: String
     let iconUrl: String?
     var listening: Bool
+    let systemApp: Bool
 
 }
