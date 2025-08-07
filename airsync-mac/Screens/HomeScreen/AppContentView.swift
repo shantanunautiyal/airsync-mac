@@ -9,7 +9,7 @@ import SwiftUI
 
 enum TabIdentifier: String, CaseIterable, Identifiable {
     case notifications = "Notifications"
-    //    case apps = "Apps"
+        case apps = "Apps"
     case settings = "Settings"
 
     var id: String { rawValue }
@@ -17,7 +17,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .notifications: return "bell.badge.fill"
-            //        case .apps: return "app.badge"
+        case .apps: return "app.badge"
         case .settings: return "gear"
         }
     }
@@ -26,6 +26,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
         var tabs: [TabIdentifier] = [.settings]
         if AppState.shared.device != nil {
             tabs.insert(.notifications, at: 0)
+            tabs.insert(.apps, at: 1)
         }
         return tabs
     }
@@ -42,35 +43,43 @@ struct AppContentView: View {
                 case .notifications:
                     NotificationView()
 
-//                case .apps:
-//                    VStack(alignment: .leading) {
-//                        if let device = appState.device {
-//                            Text("📱 \(device.name) @ \(device.ipAddress):\(device.port)")
-//                                .font(.headline)
-//                        }
-//
-//                        if let status = appState.status {
-//                            Text("🔋 Battery: \(status.battery.level)% \(status.battery.isCharging ? "⚡️ Charging" : "")")
-//                            Text("🎵 Now Playing: \(status.music.title) by \(status.music.artist)")
-//                        }
-//                    }
-//                    .padding()
-//                    .font(.largeTitle)
-//                    .transition(.blurReplace)
-//                    .toolbar {
-//                        ToolbarItem(placement: .primaryAction) {
-//                            Button {
-//                                // Refresh
-//                            } label: {
-//                                Label("Refresh", systemImage: "repeat")
-//                            }
-//                        }
-//                    }
+                case .apps:
+                    VStack(alignment: .leading) {
+                        if let device = appState.device {
+                            Text("📱 \(device.name) @ \(device.ipAddress):\(device.port)")
+                                .font(.headline)
+                        }
+
+                        if let status = appState.status {
+                            Text("🔋 Battery: \(status.battery.level)% \(status.battery.isCharging ? "⚡️ Charging" : "")")
+                            Text("🎵 Now Playing: \(status.music.title) by \(status.music.artist)")
+                        }
+                    }
+                    .padding()
+                    .font(.largeTitle)
+                    .transition(.blurReplace)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+                                // Refresh
+                            } label: {
+                                Label("Refresh", systemImage: "repeat")
+                            }
+                        }
+                    }
 
                 case .settings:
                     SettingsView()
                         .transition(.blurReplace)
                         .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button("Feedback", systemImage: "exclamationmark.bubble"){
+                                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac/issues/new/choose") {
+                                        NSWorkspace.shared.open(url)
+                                    }
+                                }
+                            }
+
                             ToolbarItem(placement: .primaryAction) {
                                 Button {
                                     showAboutSheet = true
@@ -103,13 +112,7 @@ struct AppContentView: View {
                 .pickerStyle(.palette)
             }
 
-            ToolbarItem(placement: .secondaryAction) {
-                Button("Feedback", systemImage: "exclamationmark.bubble"){
-                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac/issues/new/choose") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+
         }
         .sheet(isPresented: $showAboutSheet) {
             AboutView(
