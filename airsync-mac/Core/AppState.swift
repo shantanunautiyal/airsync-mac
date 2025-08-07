@@ -73,7 +73,6 @@ class AppState: ObservableObject {
     @Published var myDevice: Device? = nil
     @Published var port: UInt16 = Defaults.serverPort
 
-    @Published var appIcons: [String: String] = [:] // packageName: base64Icon
     @Published var androidApps: [String: AndroidApp] = [:]
 
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
@@ -239,7 +238,7 @@ class AppState: ObservableObject {
             }
             // Trigger native macOS notification
             var appIcon: NSImage? = nil
-            if let iconPath = self.appIcons[notif.package] {
+            if let iconPath = self.androidApps[notif.package]?.iconUrl {
                 appIcon = NSImage(contentsOfFile: iconPath)
             }
             self.postNativeNotification(
@@ -432,7 +431,8 @@ class AppState: ObservableObject {
                 for app in apps {
                     AppState.shared.androidApps[app.packageName] = app
                     if let iconPath = app.iconUrl {
-                        AppState.shared.appIcons[app.packageName] = iconPath
+                        AppState.shared
+                            .androidApps[app.packageName]?.iconUrl = iconPath
                     }
                 }
             }

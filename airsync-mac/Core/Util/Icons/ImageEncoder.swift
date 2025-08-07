@@ -43,7 +43,7 @@ func loadCachedIcons() {
 
     for file in contents where file.pathExtension == "png" {
         let package = file.deletingPathExtension().lastPathComponent
-        AppState.shared.appIcons[package] = file.path
+        AppState.shared.androidApps[package]?.iconUrl = file.path
     }
 }
 

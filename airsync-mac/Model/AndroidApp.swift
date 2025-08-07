@@ -12,7 +12,7 @@ struct AndroidApp: Hashable, Identifiable, Codable{
 
     let packageName: String
     let name: String
-    let iconUrl: String?
+    var iconUrl: String?
     var listening: Bool
     let systemApp: Bool
 

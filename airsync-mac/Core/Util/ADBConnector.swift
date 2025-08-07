@@ -8,33 +8,67 @@
 import Foundation
 
 struct ADBConnector {
-
-    static func connectToADB(ip: String, port: UInt16) {
+    static func connectToADB(ip: String) {
         guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {
             AppState.shared.adbConnectionResult = "ADB binary not found in bundle."
             AppState.shared.adbConnected = false
             return
         }
 
-        let fullAddress = "\(ip):\(port)"
+        // Step 1: Run `adb mdns services` to discover devices
+        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
+            let lines = output.components(separatedBy: .newlines)
 
-        // Step 1: Kill any existing adb server
-        runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
-            // Step 2: Connect to device
-            runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
+            var tlsPort: UInt16?
+            var normalPort: UInt16?
+
+            for line in lines {
+                guard let range = line.range(of: "\(ip):") else { continue }
+
+                let remaining = line[range.upperBound...]
+                if let portStr = remaining.split(separator: " ").first,
+                   let port = UInt16(portStr) {
+                    if line.contains("_adb-tls-connect._tcp"), tlsPort == nil {
+                        tlsPort = port
+                    } else if line.contains("_adb._tcp"), normalPort == nil {
+                        normalPort = port
+                    }
+                }
+            }
+
+            // Prefer TLS port
+            let selectedPort = tlsPort ?? normalPort
+
+            guard let port = selectedPort else {
                 DispatchQueue.main.async {
-                    let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
-                    AppState.shared.adbConnectionResult = trimmedOutput
+                    AppState.shared.adbConnectionResult = "No ADB service found for IP \(ip)."
+                    AppState.shared.adbConnected = false
+                }
+                return
+            }
 
-                    if trimmedOutput.lowercased().contains("connected to") {
-                        AppState.shared.adbConnected = true
-                    } else {
-                        AppState.shared.adbConnected = false
+            let fullAddress = "\(ip):\(port)"
+
+            // Step 2: Kill any existing adb server
+            runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
+                // Step 3: Connect to device
+                runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
+                    DispatchQueue.main.async {
+                        let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                        AppState.shared.adbConnectionResult = trimmedOutput
+
+                        if trimmedOutput.lowercased().contains("connected to") {
+                            AppState.shared.adbConnected = true
+                            AppState.shared.adbPort = port
+                        } else {
+                            AppState.shared.adbConnected = false
+                        }
                     }
                 }
             }
         }
     }
+
 
     static func disconnectADB() {
         guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {

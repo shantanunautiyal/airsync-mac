@@ -52,7 +52,7 @@ struct NotificationCardView: View {
 
     @ViewBuilder
     private func appIconView() -> some View {
-        if let path = AppState.shared.appIcons[notification.package],
+        if let path = AppState.shared.androidApps[notification.package]?.iconUrl,
            let image = Image(filePath: path) {
             image
                 .resizable()

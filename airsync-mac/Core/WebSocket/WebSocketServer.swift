@@ -213,6 +213,10 @@ class WebSocketServer: ObservableObject {
                 if let base64 = dict["wallpaper"] as? String {
                     AppState.shared.currentDeviceWallpaperBase64 = base64
                 }
+
+                if (!AppState.shared.adbConnected && AppState.shared.adbEnabled && AppState.shared.isPlus) {
+                    ADBConnector.connectToADB(ip: ip)
+                }
             }
 
 
@@ -300,7 +304,8 @@ class WebSocketServer: ObservableObject {
 
                         DispatchQueue.main.async {
                             AppState.shared.androidApps[package] = app
-                            AppState.shared.appIcons[package] = iconPath ?? ""
+                            AppState.shared
+                                .androidApps[package]?.iconUrl = iconPath ?? ""
                         }
                     }
                 }

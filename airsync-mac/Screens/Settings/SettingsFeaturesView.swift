@@ -21,7 +21,7 @@ struct SettingsFeaturesView: View {
     var body: some View {
         VStack{
             HStack {
-                Label("Connect ADB", systemImage: "bolt.horizontal.circle")
+                Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
                 Spacer()
 
                 ZStack {
@@ -55,26 +55,6 @@ struct SettingsFeaturesView: View {
             // Show port field if ADB toggle is on
             if appState.isPlus, appState.adbEnabled{
                 HStack {
-                    Label("ADB Port", systemImage: "arrow.left.arrow.right")
-                    Spacer()
-                    TextField("ADB Port", text: $adbPortString)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 100)
-                        .onChange(of: adbPortString) { _, newValue in
-                            adbPortString = newValue.filter { "0123456789".contains($0) }
-                        }
-
-                    GlassButtonView(
-                        label: "Set",
-                        systemImage: "checkmark.circle",
-                        action: {
-                            if let port = UInt16(adbPortString), port > 0 && port < 65535 {
-                                appState.adbPort = port
-                                UserDefaults.standard.set(port, forKey: "adbPort")
-                            }
-                        }
-                    )
-                    .disabled(adbPortString.isEmpty)
 
                     if appState.adbConnected {
                         GlassButtonView(
@@ -92,8 +72,7 @@ struct SettingsFeaturesView: View {
                             systemImage: "play.circle",
                             action: {
                                 let ip = appState.device?.ipAddress ?? ""
-                                let port = appState.adbPort
-                                ADBConnector.connectToADB(ip: ip, port: port)
+                                ADBConnector.connectToADB(ip: ip)
                             }
                         )
                         .disabled(
@@ -222,6 +201,13 @@ struct SettingsFeaturesView: View {
 
             HStack{
                 Label("Sync clipboard", systemImage: "clipboard")
+                Spacer()
+                Toggle("", isOn: $appState.isClipboardSyncEnabled)
+                    .toggleStyle(.switch)
+            }
+
+            HStack{
+                Label("Sync notification dismissals", systemImage: "bell")
                 Spacer()
                 Toggle("", isOn: $appState.isClipboardSyncEnabled)
                     .toggleStyle(.switch)
