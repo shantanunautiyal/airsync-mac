@@ -16,14 +16,13 @@ class UpdateChecker {
     private init() {}
 
     func checkForUpdateAndDownloadIfNeeded(presentingWindow: NSWindow?, completion: @escaping (Bool) -> Void) {
-        guard let currentVersionShort = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-              let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String else {
+        guard let currentVersionShort = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else {
             print("Unable to get current app version info")
             completion(false)
             return
         }
 
-        let currentVersion = "\(currentVersionShort).\(buildVersion)"
+        let currentVersion = "\(currentVersionShort)"
         print("Current app version: \(currentVersion)")
 
         let task = URLSession.shared.dataTask(with: updatesURL) { data, response, error in
