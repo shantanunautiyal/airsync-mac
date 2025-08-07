@@ -143,7 +143,7 @@ struct ADBConnector {
 
         if package != nil {
             args.append(contentsOf: [
-                "--new-display=500x800",
+                "--new-display=900x900/140",
                 "--start-app=\(package ?? "")",
                 "--no-vd-system-decorations"
             ])
