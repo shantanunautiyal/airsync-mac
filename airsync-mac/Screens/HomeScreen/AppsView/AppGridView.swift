@@ -9,6 +9,18 @@ import SwiftUI
 
 struct AppGridView: View {
     @ObservedObject var appState = AppState.shared
+    @State private var searchText: String = ""
+
+    var filteredApps: [AndroidApp] {
+        if searchText.isEmpty {
+            return Array(appState.androidApps.values)
+        } else {
+            return appState.androidApps.values.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                || $0.packageName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -19,7 +31,7 @@ struct AppGridView: View {
 
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(appState.androidApps.values.sorted(by: { $0.name.lowercased() < $1.name.lowercased() }), id: \.packageName) { app in
+                    ForEach(filteredApps.sorted(by: { $0.name.lowercased() < $1.name.lowercased() }), id: \.packageName) { app in
                         ZStack(alignment: .topTrailing) {
                             VStack(spacing: 8) {
                                 if let iconPath = app.iconUrl,
@@ -57,7 +69,7 @@ struct AppGridView: View {
                                 }
                             }
 
-                            // Accent dot for listening apps
+                            // Dot / icon for notification listening
                             if !app.listening {
                                 Image(systemName: "bell.slash")
                                     .resizable()
@@ -67,10 +79,10 @@ struct AppGridView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
             }
         }
+        .searchable(text: $searchText)
         .padding(0)
     }
 }
-

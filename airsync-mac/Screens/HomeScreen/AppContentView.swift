@@ -47,15 +47,6 @@ struct AppContentView: View {
                     AppsView()
                     .font(.largeTitle)
                     .transition(.blurReplace)
-                    .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button {
-                                // Refresh
-                            } label: {
-                                Label("Refresh", systemImage: "repeat")
-                            }
-                        }
-                    }
 
                 case .settings:
                     SettingsView()
