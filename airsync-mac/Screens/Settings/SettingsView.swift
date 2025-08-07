@@ -137,8 +137,6 @@ struct SettingsView: View {
                     .background(.ultraThinMaterial)
                     .cornerRadius(12.0)
 
-                    Divider()
-
                     SettingsPlusView()
                         .padding()
                         .background(.ultraThinMaterial)
