@@ -10,52 +10,67 @@ import SwiftUI
 struct AppGridView: View {
     @ObservedObject var appState = AppState.shared
 
-    private let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 16), count: 5)
-
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(appState.appIcons.keys.sorted(), id: \.self) { package in
-                    VStack(spacing: 8) {
-                        if let path = appState.appIcons[package],
-                           let image = Image(filePath: path) {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 48, height: 48)
-                                .cornerRadius(8)
-                        } else {
-                            Image(systemName: "app.badge")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 48, height: 48)
-                                .foregroundColor(.gray)
-                        }
+        GeometryReader { geometry in
+            let spacing: CGFloat = 16
+            let itemWidth: CGFloat = 80
+            let columnsCount = max(1, Int((geometry.size.width + spacing) / (itemWidth + spacing)))
+            let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnsCount)
 
-                        Text(package)
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .padding(8)
-                    .background(Color.gray.opacity(0.05))
-                    .cornerRadius(10)
-                    .onTapGesture {
-                        if ((appState.device) != nil && appState.adbConnected) {
-                            ADBConnector
-                                .startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "192.168.100.1",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? package,
-                                    package: package
-                                )
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(appState.androidApps.values.sorted(by: { $0.name.lowercased() < $1.name.lowercased() }), id: \.packageName) { app in
+                        ZStack(alignment: .topTrailing) {
+                            VStack(spacing: 8) {
+                                if let iconPath = app.iconUrl,
+                                   let image = Image(filePath: iconPath) {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 48, height: 48)
+                                        .cornerRadius(8)
+                                } else {
+                                    Image(systemName: "app.badge")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 48, height: 48)
+                                        .foregroundColor(.gray)
+                                }
+
+                                Text(app.name)
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(15)
+                            .onTapGesture {
+                                if let device = appState.device, appState.adbConnected {
+                                    ADBConnector.startScrcpy(
+                                        ip: device.ipAddress,
+                                        port: appState.adbPort,
+                                        deviceName: device.name,
+                                        package: app.packageName
+                                    )
+                                }
+                            }
+
+                            // Accent dot for listening apps
+                            if !app.listening {
+                                Image(systemName: "bell.slash")
+                                    .resizable()
+                                    .frame(width: 10, height: 10)
+                                    .offset(x: -8, y: 8)
+                            }
                         }
                     }
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(0)
         }
         .padding(0)
     }
 }
+
