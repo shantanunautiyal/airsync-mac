@@ -40,65 +40,7 @@ struct AppContentView: View {
             ZStack {
                 switch AppState.shared.selectedTab {
                 case .notifications:
-                    if appState.notifications.count > 0 {
-                        List(appState.notifications.prefix(20), id: \.id) { notif in
-                            if #available(macOS 26.0, *) {
-                                NotificationView(
-                                    notification: notif,
-                                    deleteNotification: {
-                                        appState.removeNotification(notif)
-                                    },
-                                    hideNotification: {
-                                        appState.hideNotification(notif)
-                                    }
-                                )
-                                .background(.clear)
-                                .glassEffect(in: .rect(cornerRadius: 20))
-                                    .onTapGesture {
-                                        if appState.device != nil && appState.adbConnected && notif.package != "" && notif.package != "com.sameerasw.airsync" && appState.mirroringPlus {
-                                        ADBConnector
-                                            .startScrcpy(
-                                                ip: appState.device?.ipAddress ?? "",
-                                                port: appState.adbPort,
-                                                deviceName: appState.device?.name ?? "My Phone",
-                                                package: notif.package
-                                            )
-                                    }
-                                }
-                            } else {
-                                NotificationView(
-                                    notification: notif,
-                                    deleteNotification: {
-                                        appState.removeNotification(notif)
-                                    },
-                                    hideNotification: {
-                                        appState.hideNotification(notif)
-                                    }
-                                )
-                            }
-                        }
-                        .scrollContentBackground(.hidden)
-                        .background(.clear)
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    appState.clearNotifications()
-                                } label: {
-                                    Label("Clear", systemImage: "wind")
-                                }
-                            }
-                        }
-                    } else {
-                        VStack {
-                            Spacer()
-                            Text("└(=^‥^=)┐")
-                                .font(.title)
-                                .padding()
-                            Label("You're all caught up!", systemImage: "tray")
-                            Spacer()
-                        }
-                    }
+                    NotificationView()
 
 //                case .apps:
 //                    VStack(alignment: .leading) {
