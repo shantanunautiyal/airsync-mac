@@ -11,6 +11,7 @@ import AppKit
 
 @main
 struct airsync_macApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     let notificationDelegate = NotificationDelegate()
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -85,6 +86,11 @@ struct airsync_macApp: App {
                     }
                 }
                 .keyboardShortcut("u", modifiers: [.command])
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .background || newPhase == .inactive {
+                AppState.shared.saveAppsToDisk()
             }
         }
     }

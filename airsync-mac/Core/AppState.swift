@@ -60,6 +60,8 @@ class AppState: ObservableObject {
         )
         self.licenseDetails = loadLicenseDetailsFromUserDefaults()
 
+        loadAppsFromDisk()
+
         postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
     }
 
@@ -70,7 +72,10 @@ class AppState: ObservableObject {
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
     @Published var port: UInt16 = Defaults.serverPort
+
     @Published var appIcons: [String: String] = [:] // packageName: base64Icon
+    @Published var androidApps: [String: AndroidApp] = [:]
+
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
     @Published var isClipboardSyncEnabled: Bool {
         didSet {
@@ -405,6 +410,34 @@ class AppState: ObservableObject {
         } catch {
             print("Failed to decode license details: \(error)")
             return nil
+        }
+    }
+
+    func saveAppsToDisk() {
+        let url = appIconsDirectory().appendingPathComponent("apps.json")
+        do {
+            let data = try JSONEncoder().encode(Array(AppState.shared.androidApps.values))
+            try data.write(to: url)
+        } catch {
+            print("Error saving apps: \(error)")
+        }
+    }
+
+    func loadAppsFromDisk() {
+        let url = appIconsDirectory().appendingPathComponent("apps.json")
+        do {
+            let data = try Data(contentsOf: url)
+            let apps = try JSONDecoder().decode([AndroidApp].self, from: data)
+            DispatchQueue.main.async {
+                for app in apps {
+                    AppState.shared.androidApps[app.packageName] = app
+                    if let iconPath = app.iconUrl {
+                        AppState.shared.appIcons[app.packageName] = iconPath
+                    }
+                }
+            }
+        } catch {
+            print("Error loading apps: \(error)")
         }
     }
 

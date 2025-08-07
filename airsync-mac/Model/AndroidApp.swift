@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct AndroidApp: Hashable, Identifiable{
+struct AndroidApp: Hashable, Identifiable, Codable{
     let id = UUID()
 
     let packageName: String
@@ -16,4 +16,7 @@ struct AndroidApp: Hashable, Identifiable{
     var listening: Bool
     let systemApp: Bool
 
+    private enum CodingKeys: String, CodingKey {
+        case packageName, name, iconUrl, listening, systemApp
+    }
 }

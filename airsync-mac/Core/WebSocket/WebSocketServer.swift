@@ -264,26 +264,48 @@ class WebSocketServer: ObservableObject {
             }
 
         case .appIcons:
-            if let dict = message.data.value as? [String: String] {
+            if let dict = message.data.value as? [String: [String: Any]] {
                 DispatchQueue.global(qos: .background).async {
-                    for (package, base64Icon) in dict {
-                        // Strip data URI if present
-                        var cleaned = base64Icon
+                    for (package, details) in dict {
+                        guard let name = details["name"] as? String,
+                              let iconBase64 = details["icon"] as? String,
+                              let systemApp = details["systemApp"] as? Bool,
+                              let listening = details["listening"] as? Bool else {
+                            continue
+                        }
+
+                        var cleaned = iconBase64
                         if let range = cleaned.range(of: "base64,") {
                             cleaned = String(cleaned[range.upperBound...])
                         }
 
+                        var iconPath: String? = nil
                         if let data = Data(base64Encoded: cleaned) {
                             let fileURL = appIconsDirectory().appendingPathComponent("\(package).png")
-                            try? data.write(to: fileURL)
-
-                            DispatchQueue.main.async {
-                                AppState.shared.appIcons[package] = fileURL.path
+                            do {
+                                try data.write(to: fileURL)
+                                iconPath = fileURL.path
+                            } catch {
+                                print("Failed to write icon for \(package): \(error)")
                             }
+                        }
+
+                        let app = AndroidApp(
+                            packageName: package,
+                            name: name,
+                            iconUrl: iconPath,
+                            listening: listening,
+                            systemApp: systemApp
+                        )
+
+                        DispatchQueue.main.async {
+                            AppState.shared.androidApps[package] = app
+                            AppState.shared.appIcons[package] = iconPath ?? ""
                         }
                     }
                 }
             }
+
 
         case .clipboardUpdate:
             if let dict = message.data.value as? [String: Any],
