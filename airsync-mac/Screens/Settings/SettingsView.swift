@@ -109,20 +109,29 @@ struct SettingsView: View {
 
                     }
 
-                    HStack {
-                        Text("Liquid Opacity")
-                        Spacer()
-                        Slider(
-                            value: $appState.windowOpacity,
-                            in: 0...1.0
-                        )
-                            .frame(width: 200)
+                    VStack {
                         HStack{
+                            Text("Liquid Opacity")
                             Spacer()
-                            Text(appState.windowOpacity == 0.0 ? "Liquid AF" : String(format: "%.0f%%", appState.windowOpacity * 100))
-                                .font(.caption)
-                        }
+                            Slider(
+                                value: $appState.windowOpacity,
+                                in: 0...1.0
+                            )
+                            .frame(width: 200)
+                            HStack{
+                                Spacer()
+                                Text(appState.windowOpacity == 0.0 ? "Liquid AF" : String(format: "%.0f%%", appState.windowOpacity * 100))
+                                    .font(.caption)
+                            }
                             .frame(width: 75)
+                        }
+
+                        HStack{
+                            Text("Toolbar contrast")
+                            Spacer()
+                            Toggle("", isOn: $appState.toolbarContrast)
+                                .toggleStyle(.switch)
+                        }
                     }
                     .padding()
                     .background(.ultraThinMaterial)

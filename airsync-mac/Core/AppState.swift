@@ -36,6 +36,10 @@ class AppState: ObservableObject {
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         self.windowOpacity = UserDefaults.standard
             .double(forKey: "windowOpacity")
+        self.toolbarContrast = UserDefaults.standard
+            .bool(forKey: "toolbarContrast")
+        self.dismissNotif = UserDefaults.standard
+            .bool(forKey: "dismissNotif")
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
@@ -159,6 +163,18 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var toolbarContrast: Bool {
+        didSet {
+            UserDefaults.standard.set(toolbarContrast, forKey: "toolbarContrast")
+        }
+    }
+
+    @Published var dismissNotif: Bool {
+        didSet {
+            UserDefaults.standard.set(dismissNotif, forKey: "dismissNotif")
+        }
+    }
+
     // Toggle licensing
     let licenseCheck: Bool = true
 
@@ -183,7 +199,9 @@ class AppState: ObservableObject {
             withAnimation {
                 self.notifications.removeAll { $0.id == notif.id }
             }
-            WebSocketServer.shared.dismissNotification(id: notif.nid)
+            if self.dismissNotif {
+                WebSocketServer.shared.dismissNotification(id: notif.nid)
+            }
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notif.nid])
         }
     }
@@ -193,7 +211,9 @@ class AppState: ObservableObject {
             withAnimation {
                 self.notifications.removeAll { $0.nid == nid }
             }
-            WebSocketServer.shared.dismissNotification(id: nid)
+            if self.dismissNotif {
+                WebSocketServer.shared.dismissNotification(id: nid)
+            }
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [nid])
         }
     }

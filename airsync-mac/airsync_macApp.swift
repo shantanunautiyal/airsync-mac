@@ -71,7 +71,6 @@ struct airsync_macApp: App {
                         .automatic,
                         for: .windowToolbar
                     )
-                    .toolbarBackground(.clear, for: .windowToolbar)
             } else {
                 HomeView()
             }

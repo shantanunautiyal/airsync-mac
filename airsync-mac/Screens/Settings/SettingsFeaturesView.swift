@@ -207,9 +207,9 @@ struct SettingsFeaturesView: View {
             }
 
             HStack{
-                Label("Sync notification dismissals", systemImage: "bell")
+                Label("Sync notification dismissals", systemImage: "bell.badge")
                 Spacer()
-                Toggle("", isOn: $appState.isClipboardSyncEnabled)
+                Toggle("", isOn: $appState.dismissNotif)
                     .toggleStyle(.switch)
             }
 

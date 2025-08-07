@@ -58,6 +58,13 @@ struct HomeView: View {
         }
         .navigationTitle(appState.device?.name ?? "AirSync")
         .background(.background.opacity(appState.windowOpacity))
+        .toolbarBackground(
+            appState.toolbarContrast ? Material.ultraThinMaterial
+                .opacity(1) : Material.ultraThinMaterial
+                .opacity(0),
+            for: .windowToolbar
+        )
+
 
 
     }
@@ -65,9 +72,6 @@ struct HomeView: View {
 
 
 
-#Preview {
-    HomeView()
-}
 
 
 #Preview {
