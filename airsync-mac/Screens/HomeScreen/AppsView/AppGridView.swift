@@ -68,6 +68,21 @@ struct AppGridView: View {
                                     )
                                 }
                             }
+                            .contextMenu {
+                                Button {
+                                    WebSocketServer.shared
+                                        .toggleNotification(
+                                            for: app.packageName,
+                                            to: !app.listening
+                                        )
+                                } label: {
+                                    Label(
+                                        app.listening ? "Mute app" : "Unmute app",
+                                        systemImage: app.listening ? "bell.slash" : "bell.and.waves.left.and.right"
+                                    )
+
+                                }
+                            }
 
                             // Dot / icon for notification listening
                             if !app.listening {

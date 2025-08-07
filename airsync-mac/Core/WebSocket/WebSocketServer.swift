@@ -414,4 +414,25 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    func toggleNotification(for package: String, to state: Bool) {
+        guard var app = AppState.shared.androidApps[package] else { return }
+
+        app.listening = state
+        AppState.shared.androidApps[package] = app
+        AppState.shared.saveAppsToDisk()
+
+        // WebSocket call
+        let message = """
+        {
+            "type": "toggleAppNotif",
+            "data": {
+                "package": "\(package)",
+                "state": "\(state)"
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+
 }
