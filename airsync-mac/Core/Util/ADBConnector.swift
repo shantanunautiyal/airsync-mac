@@ -15,10 +15,31 @@ struct ADBConnector {
             return
         }
 
-        // Step 1: Run `adb mdns services` to discover devices
-        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
-            let lines = output.components(separatedBy: .newlines)
+        AppState.shared.lastADBCommand = "adb mdns services"
 
+        // Step 1: Discover devices
+        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
+            let trimmedMDNSOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if trimmedMDNSOutput.isEmpty {
+                DispatchQueue.main.async {
+                    AppState.shared.adbConnectionResult = """
+`adb mdns services` returned no results.
+
+Make sure:
+- Your Android device is on the same Wi-Fi network
+- Wireless debugging is enabled in Developer Options
+- You can see your device in `adb devices`
+
+Raw output:
+\(trimmedMDNSOutput)
+"""
+                    AppState.shared.adbConnected = false
+                }
+                return
+            }
+
+            let lines = trimmedMDNSOutput.components(separatedBy: .newlines)
             var tlsPort: UInt16?
             var normalPort: UInt16?
 
@@ -36,12 +57,20 @@ struct ADBConnector {
                 }
             }
 
-            // Prefer TLS port
             let selectedPort = tlsPort ?? normalPort
-
             guard let port = selectedPort else {
                 DispatchQueue.main.async {
-                    AppState.shared.adbConnectionResult = "No ADB service found for IP \(ip)."
+                    AppState.shared.adbConnectionResult = """
+No ADB service found for IP \(ip).
+
+Suggestions:
+- Ensure your Android device is in Wireless debugging mode
+- Try toggling Wireless Debugging off and on again
+- Reconnect to the same Wi-Fi as your Mac
+
+Raw `adb mdns services` output:
+\(trimmedMDNSOutput)
+"""
                     AppState.shared.adbConnected = false
                 }
                 return
@@ -49,12 +78,14 @@ struct ADBConnector {
 
             let fullAddress = "\(ip):\(port)"
 
-            // Step 2: Kill any existing adb server
+            // Step 2: Kill adb server
             runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
-                // Step 3: Connect to device
+                // Step 3: Connect
                 runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
+                    let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
                     DispatchQueue.main.async {
-                        let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                        AppState.shared.lastADBCommand = "adb connect \(fullAddress)"
                         AppState.shared.adbConnectionResult = trimmedOutput
 
                         if trimmedOutput.lowercased().contains("connected to") {
@@ -62,12 +93,25 @@ struct ADBConnector {
                             AppState.shared.adbPort = port
                         } else {
                             AppState.shared.adbConnected = false
+                            AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
+
+Possible fixes:
+- Ensure device is authorized for adb
+- Disconnect and reconnect Wireless Debugging
+- Run `adb disconnect` then retry
+- It might be connected to another device.
+  Try killing any external adb instances in mac terminal with 'adb kill-server' command.
+
+Raw output:
+\(trimmedOutput)
+"""
                         }
                     }
                 }
             }
         }
     }
+
 
 
     static func disconnectADB() {
@@ -79,6 +123,8 @@ struct ADBConnector {
 
         // Step 1: Kill any existing adb server
         runADBCommand(adbPath: adbPath, arguments: ["kill-server"])
+        AppState.shared.lastADBCommand = "adb kill-server"
+        AppState.shared.adbConnected = false
     }
 
 
@@ -156,7 +202,6 @@ struct ADBConnector {
 
         AppState.shared.lastADBCommand = "scrcpy \(args.joined(separator: " "))"
 
-        // Optionally, capture output if you want to show logs
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = pipe

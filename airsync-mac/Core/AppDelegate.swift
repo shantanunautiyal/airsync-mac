@@ -11,7 +11,7 @@ import Cocoa
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var mainWindow: NSWindow?
 
-    func applicationWillTerminate(_ notification: Notification) {
+    func applicationWillTerminate() {
         ADBConnector.disconnectADB()
         WebSocketServer.shared.stop()
     }

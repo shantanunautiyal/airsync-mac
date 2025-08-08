@@ -252,6 +252,8 @@ class AppState: ObservableObject {
             self.device = nil
             self.notifications.removeAll()
             self.status = nil
+
+            ADBConnector.disconnectADB()
         }
     }
 
