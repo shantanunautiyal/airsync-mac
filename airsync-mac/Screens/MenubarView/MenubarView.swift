@@ -9,16 +9,41 @@ import SwiftUI
 
 struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
+    @StateObject private var appState = AppState.shared
+
+    private func getDeviceName() -> String {
+        let deviceName = appState.device?.name ?? "Ready"
+        return deviceName
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("AirSync")
+            Text("AirSync - \(getDeviceName())")
                 .font(.headline)
                 .padding(.bottom, 4)
 
-            HStack{
+            HStack {
                 Button("Open App") {
                     openWindow(id: "main")
+                }
+            }
+
+            if (appState.adbConnected && appState.isPlus) {
+                HStack {
+                    Button("Android Mirror") {
+                        ADBConnector
+                            .startScrcpy(
+                                ip: appState.device?.ipAddress ?? "",
+                                port: appState.adbPort,
+                                deviceName: appState.device?.name ?? "My Phone"
+                            )
+                    }
+                }
+            }
+
+            HStack {
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
                 }
             }
         }

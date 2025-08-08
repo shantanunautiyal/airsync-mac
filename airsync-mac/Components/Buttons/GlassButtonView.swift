@@ -1,12 +1,3 @@
-//
-//  GlassButtonView.swift
-//  airsync-mac
-//
-//  Created by Sameera Sandakelum on 2025-07-28.
-//
-
-import SwiftUI
-
 import SwiftUI
 
 struct GlassButtonView: View {
@@ -15,6 +6,7 @@ struct GlassButtonView: View {
     var image: String? = nil
     var iconOnly: Bool = false
     var size: ControlSize = .large
+    var primary: Bool = false
     var action: () -> Void = {}
 
     var body: some View {
@@ -23,7 +15,7 @@ struct GlassButtonView: View {
         }
         .controlSize(size)
         .modifier(LabelStyleModifier(iconOnly: iconOnly))
-        .applyGlassIfAvailable()
+        .applyGlassButtonStyle(primary: primary)
     }
 
     @ViewBuilder
@@ -38,7 +30,8 @@ struct GlassButtonView: View {
     }
 }
 
-// Conditional label style
+// MARK: - Label Style Modifier
+
 struct LabelStyleModifier: ViewModifier {
     var iconOnly: Bool
 
@@ -51,9 +44,47 @@ struct LabelStyleModifier: ViewModifier {
     }
 }
 
+// MARK: - Button Style Extension
+
+extension View {
+    @ViewBuilder
+    func applyGlassButtonStyle(primary: Bool) -> some View {
+        if primary {
+            self.glassPrimaryButtonIfAvailable()
+        } else {
+            self.glassButtonIfAvailable()
+        }
+    }
+}
 
 
+extension View {
+    @ViewBuilder
+    func glassButtonIfAvailable() -> some View {
+        if #available(macOS 26.0, *) {
+            self.buttonStyle(.glass)
+        } else {
+            self.buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    func glassPrimaryButtonIfAvailable() -> some View {
+        if #available(macOS 26.0, *) {
+            self.buttonStyle(.glassProminent)
+        } else {
+            self.buttonStyle(.borderedProminent)
+        }
+    }
+}
+
+
+// MARK: - Preview
 
 #Preview {
-    GlassButtonView(label: "Button", systemImage: "xmark")
+    VStack(spacing: 20) {
+        GlassButtonView(label: "Normal", systemImage: "xmark")
+        GlassButtonView(label: "Primary", systemImage: "checkmark", primary: true)
+    }
+    .padding()
 }

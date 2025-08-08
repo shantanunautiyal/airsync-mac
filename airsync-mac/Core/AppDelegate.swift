@@ -5,6 +5,17 @@
 //  Created by Sameera Sandakelum on 2025-08-07.
 //
 import SwiftUI
+import Cocoa
+
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    var mainWindow: NSWindow?
+
+    func applicationWillTerminate(_ notification: Notification) {
+        ADBConnector.disconnectADB()
+        WebSocketServer.shared.stop()
+    }
+}
 
 // Helper to grab NSWindow from SwiftUI:
 struct WindowAccessor: NSViewRepresentable {
@@ -19,9 +30,4 @@ struct WindowAccessor: NSViewRepresentable {
         return view
     }
     func updateNSView(_ nsView: NSView, context: Context) {}
-}
-
-// AppDelegate to hold NSWindow reference:
-class AppDelegate: NSObject, NSApplicationDelegate {
-    var mainWindow: NSWindow?
 }

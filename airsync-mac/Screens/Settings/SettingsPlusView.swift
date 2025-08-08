@@ -30,8 +30,11 @@ struct SettingsPlusView: View {
                 .disabled(isCheckingLicense)
 
             HStack{
-                if #available(macOS 26.0, *) {
-                    Button("Check License") {
+
+                GlassButtonView(
+                    label: "Check License",
+                    systemImage: "checkmark.seal",
+                    action: {
                         Task {
                             isCheckingLicense = true
                             licenseValid = nil
@@ -42,27 +45,10 @@ struct SettingsPlusView: View {
                             isCheckingLicense = false
                         }
                     }
-                    .disabled(
-                        licenseKey.isEmpty || isCheckingLicense
-                    )
-                    .buttonStyle(.glass)
-                    .controlSize(.large)
-                } else {
-                    Button("Check License") {
-                        Task {
-                            isCheckingLicense = true
-                            licenseValid = nil
-                            let result = try? await checkLicenseKeyValidity(
-                                key: licenseKey
-                            )
-                            licenseValid = result ?? false
-                            isCheckingLicense = false
-                        }
-                    }
-                    .disabled(
-                        licenseKey.isEmpty || isCheckingLicense
-                    )
-                }
+                )
+                .disabled(
+                    licenseKey.isEmpty || isCheckingLicense
+                )
 
 
                 if isCheckingLicense {

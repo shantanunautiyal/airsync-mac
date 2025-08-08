@@ -13,7 +13,6 @@ import AppKit
 struct airsync_macApp: App {
     @Environment(\.scenePhase) private var scenePhase
     let notificationDelegate = NotificationDelegate()
-    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
