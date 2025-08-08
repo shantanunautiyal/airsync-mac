@@ -17,6 +17,10 @@ struct airsync_macApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
+//        DispatchQueue.main.async {
+//            NSApp.activate(ignoringOtherApps: true)
+//        }
+
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
 
@@ -63,7 +67,11 @@ struct airsync_macApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        MenuBarExtra("AirSync", systemImage: "iphone.gen3") {
+            MenubarView()
+        }
+
+        WindowGroup(id: "main") {
             if #available(macOS 15.0, *) {
                 HomeView()
                     .containerBackground(.ultraThinMaterial, for: .window)
