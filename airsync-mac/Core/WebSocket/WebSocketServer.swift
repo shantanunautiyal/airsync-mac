@@ -131,7 +131,6 @@ class WebSocketServer: ObservableObject {
     // MARK: - Local IP
 
     func getLocalIPAddress(adapterName: String?) -> String? {
-        let address: String? = "N/A"
         var ifaddr: UnsafeMutablePointer<ifaddrs>?
 
         guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
@@ -139,6 +138,8 @@ class WebSocketServer: ObservableObject {
         }
 
         defer { freeifaddrs(ifaddr) }
+
+        var fallbackIP: String? = nil
 
         for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
             let interface = ptr.pointee
@@ -159,16 +160,35 @@ class WebSocketServer: ObservableObject {
                         continue // Skip loopback
                     }
 
-                    if adapterName == nil || name == adapterName {
-                        print("Selected adapter match or fallback: \(name) -> \(ip)")
+                    // Exact match
+                    if adapterName != nil, name == adapterName {
+                        print("Selected adapter match: \(name) -> \(ip)")
                         return ip
+                    }
+
+                    // If no adapter specified, return first valid
+                    if adapterName == nil {
+                        print("Auto-selected adapter: \(name) -> \(ip)")
+                        return ip
+                    }
+
+                    // Keep as fallback in case selected adapter not found
+                    if fallbackIP == nil {
+                        fallbackIP = ip
                     }
                 }
             }
         }
 
-        return address
+        // Return fallback if specific adapter wasn't found
+        if let fallback = fallbackIP {
+            print("Falling back to: \(fallback)")
+            return fallback
+        }
+
+        return "N/A - No local IP found ;("
     }
+
 
 
     func getAvailableNetworkAdapters() -> [(name: String, address: String)] {
