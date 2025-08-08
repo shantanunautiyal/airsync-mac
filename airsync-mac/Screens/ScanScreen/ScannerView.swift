@@ -8,6 +8,7 @@
 import SwiftUI
 import QRCode
 internal import SwiftImageReadWrite
+import CryptoKit
 
 struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
@@ -98,8 +99,10 @@ struct ScannerView: View {
         let text = generateQRText(
             ip: getLocalIPAddress(),
             port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),
-            name: appState.myDevice?.name
-        ) ?? "That doesn't look right"
+            name: appState.myDevice?.name,
+            key: WebSocketServer.shared.getSymmetricKeyBase64() ?? ""
+
+        ) ?? "That doesn't look right, QR Generation failed"
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -135,13 +138,13 @@ struct ScannerView: View {
     }
 }
 
-func generateQRText(ip: String?, port: UInt16?, name: String?) -> String? {
+func generateQRText(ip: String?, port: UInt16?, name: String?, key: String) -> String? {
     guard let ip = ip, let port = port else {
         return nil
     }
 
     let encodedName = name?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Unknown"
-    return "airsync://\(ip):\(port)?name=\(encodedName)?plus=\(AppState.shared.isPlus)"
+    return "airsync://\(ip):\(port)?name=\(encodedName)?plus=\(AppState.shared.isPlus)?key=\(key)"
 }
 
 

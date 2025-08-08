@@ -8,6 +8,7 @@
 import Foundation
 import Swifter
 internal import Combine
+import CryptoKit
 
 enum WebSocketStatus {
     case stopped
@@ -21,6 +22,7 @@ class WebSocketServer: ObservableObject {
 
     private var server = HttpServer()
     private var activeSessions: [WebSocketSession] = []
+    @Published var symmetricKey: SymmetricKey?
 
     @Published var localPort: UInt16?
     @Published var localIPAddress: String?
@@ -30,6 +32,7 @@ class WebSocketServer: ObservableObject {
     @Published var deviceStatus: DeviceStatus?
 
     init() {
+        loadOrGenerateSymmetricKey()
         setupWebSocket()
     }
 
@@ -80,9 +83,19 @@ class WebSocketServer: ObservableObject {
         server["/socket"] = websocket(
             text: { [weak self] session, text in
                 guard let self = self else { return }
-                print("WebSocket Received:\n\(text)")
 
-                if let data = text.data(using: .utf8) {
+                // Step 1: Decrypt the message
+                let decryptedText: String
+                if let key = self.symmetricKey {
+                    decryptedText = decryptMessage(text, using: key) ?? ""
+                } else {
+                    decryptedText = text
+                }
+
+                print("WebSocket Received:\n\(decryptedText)")
+
+                // Step 2: Decode JSON and handle
+                if let data = decryptedText.data(using: .utf8) {
                     do {
                         let message = try JSONDecoder().decode(Message.self, from: data)
                         DispatchQueue.main.async {
@@ -93,6 +106,7 @@ class WebSocketServer: ObservableObject {
                     }
                 }
             },
+
             connected: { [weak self] session in
                 print("WebSocket connected")
                 self?.activeSessions.append(session)
@@ -329,8 +343,13 @@ class WebSocketServer: ObservableObject {
     }
 
     private func sendToFirstAvailable(message: String) {
-        activeSessions.first?.writeText(message)
+        if let key = symmetricKey, let encrypted = encryptMessage(message, using: key) {
+            activeSessions.first?.writeText(encrypted)
+        } else {
+            activeSessions.first?.writeText(message)
+        }
     }
+
 
     // MARK: - Notification Control
 
@@ -439,5 +458,42 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    func loadOrGenerateSymmetricKey() {
+        let defaults = UserDefaults.standard
+
+        if let savedKey = defaults.string(forKey: "encryptionKey"),
+           let keyData = Data(base64Encoded: savedKey) {
+            symmetricKey = SymmetricKey(data: keyData)
+            print("Loaded existing symmetric key")
+        } else {
+            let base64Key = generateSymmetricKey()
+            defaults.set(base64Key, forKey: "encryptionKey")
+
+            if let keyData = Data(base64Encoded: base64Key) {
+                symmetricKey = SymmetricKey(data: keyData)
+                print("Generated and stored new symmetric key")
+            } else {
+                print("Failed to generate symmetric key")
+            }
+        }
+    }
+
+    func resetSymmetricKey() {
+        UserDefaults.standard.removeObject(forKey: "encryptionKey")
+        loadOrGenerateSymmetricKey()
+    }
+
+    func getSymmetricKeyBase64() -> String? {
+        guard let key = symmetricKey else { return nil }
+        return key.withUnsafeBytes { Data($0).base64EncodedString() }
+    }
+
+
+    func setEncryptionKey(base64Key: String) {
+        if let data = Data(base64Encoded: base64Key) {
+            symmetricKey = SymmetricKey(data: data)
+            print("Encryption key set")
+        }
+    }
 
 }
