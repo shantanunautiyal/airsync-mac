@@ -465,13 +465,15 @@ class AppState: ObservableObject {
         }
     }
 
-
     func checkLicenseIfNeeded() async {
         let now = Date()
-        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate,
-           Calendar.current.isDateInToday(lastCheck) {
-            print("License was already checked today")
-            return // Already checked today
+
+        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate {
+            let daysSinceLastCheck = Calendar.current.dateComponents([.day], from: lastCheck, to: now).day ?? 0
+            if daysSinceLastCheck < 3 {
+                print("License was already checked within the last \(daysSinceLastCheck) day(s)")
+                return
+            }
         }
 
         await checkLicense()
@@ -488,8 +490,9 @@ class AppState: ObservableObject {
 
         let result = try? await checkLicenseKeyValidity(key: key, save: false)
         self.isPlus = result ?? false
-        print("License checked, validity: ", isPlus)
+        print("License checked, validity:", isPlus)
     }
+
 
 
 }
