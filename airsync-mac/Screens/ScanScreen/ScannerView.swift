@@ -13,6 +13,7 @@ import CryptoKit
 struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
     @State private var qrImage: CGImage?
+    @State private var copyStatus: String?
 
     private func statusInfo(for status: WebSocketStatus) -> (text: String, icon: String, color: Color) {
         switch status {
@@ -53,6 +54,31 @@ struct ScannerView: View {
             } else {
                 ProgressView("Generating QR…")
                     .frame(width: 100, height: 100)
+            }
+
+            // --- Copy Key Button ---
+            if let key = WebSocketServer.shared.getSymmetricKeyBase64(), !key.isEmpty {
+                GlassButtonView(
+                    label: "Copy Key",
+                    systemImage: "key",
+                    action: {
+                        copyToClipboard(key)
+                    }
+                )
+                .padding(.top, 8)
+                .contextMenu {
+                    Button("Reset key - Devices will need to reAuth") {
+                        WebSocketServer.shared.resetSymmetricKey()
+                        generateQRAsync()
+                    }
+                }
+
+                if let status = copyStatus {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundColor(.green)
+                        .transition(.opacity)
+                }
             }
 
             Spacer()
@@ -132,7 +158,23 @@ struct ScannerView: View {
                     self.qrImage = cgImage
                 }
             } catch {
-                print("❌ QR generation failed: \(error)")
+                print("QR generation failed: \(error)")
+            }
+        }
+    }
+
+
+    private func copyToClipboard(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+
+        withAnimation {
+            copyStatus = "Copied! Keep it safe"
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            withAnimation {
+                copyStatus = nil
             }
         }
     }
