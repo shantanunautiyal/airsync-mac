@@ -32,11 +32,11 @@ struct SettingsView: View {
                         TextField("Device Name", text: $deviceName)
                     }
                     .padding()
-                    .background(.ultraThinMaterial)
+                    .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
 
                     SettingsFeaturesView()
-                        .background(.ultraThinMaterial)
+                        .background(.background.opacity(0.3))
                         .cornerRadius(12.0)
 
                     // Info Section
@@ -93,7 +93,7 @@ struct SettingsView: View {
 
                     }
                     .padding()
-                    .background(.ultraThinMaterial)
+                    .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
 
                     HStack{
@@ -134,12 +134,12 @@ struct SettingsView: View {
                         }
                     }
                     .padding()
-                    .background(.ultraThinMaterial)
+                    .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
 
                     SettingsPlusView()
                         .padding()
-                        .background(.ultraThinMaterial)
+                        .background(.background.opacity(0.3))
                         .cornerRadius(12.0)
 
                         }

@@ -56,7 +56,7 @@ struct AppGridView: View {
                                     .frame(maxWidth: .infinity)
                             }
                             .padding(8)
-                            .background(.ultraThinMaterial)
+                            .background(.background.opacity(0.3))
                             .cornerRadius(15)
                             .onTapGesture {
                                 if let device = appState.device, appState.adbConnected {

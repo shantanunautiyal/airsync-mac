@@ -47,6 +47,7 @@ struct MediaPlayerView: View {
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",
                                     iconOnly: true,
+                                    primary: true,
                                     action: {
                                         WebSocketServer.shared.togglePlayPause()
                                     }
