@@ -82,16 +82,34 @@ Raw `adb mdns services` output:
             runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
                 // Step 3: Connect
                 runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
-                    let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
                     DispatchQueue.main.async {
                         AppState.shared.lastADBCommand = "adb connect \(fullAddress)"
                         AppState.shared.adbConnectionResult = trimmedOutput
 
-                        if trimmedOutput.lowercased().contains("connected to") {
+                        if trimmedOutput.contains("connected to") {
                             AppState.shared.adbConnected = true
                             AppState.shared.adbPort = port
-                        } else {
+                        }
+                        else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
+                            AppState.shared.adbConnected = false
+                            AppState.shared.adbConnectionResult = """
+ADB connection failed due to another ADB instance already using the device.
+
+This is not an AirSync error — it’s a limitation of the ADB protocol (only one connection allowed at a time).
+
+Possible fixes:
+- Check for other ADB connections (including Android Studio, scrcpy, or other tools)
+- In Terminal: run `adb kill-server`
+- If that doesn’t work, quit ADB manually via Activity Monitor
+- Toggle Wireless Debugging off and on in Developer Options
+
+Raw output:
+\(trimmedOutput)
+"""
+                        }
+                        else {
                             AppState.shared.adbConnected = false
                             AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
 
@@ -111,6 +129,7 @@ Raw output:
             }
         }
     }
+
 
 
 
