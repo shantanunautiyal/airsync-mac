@@ -7,7 +7,7 @@
 
 import Foundation
 
-func checkLicenseKeyValidity(key: String) async throws -> Bool {
+func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
     if key == "i-am-a-tester" {
         AppState.shared.setPlusTemporarily(true)
         AppState.shared.licenseDetails = LicenseDetails(
@@ -55,19 +55,30 @@ func checkLicenseKeyValidity(key: String) async throws -> Bool {
         let purchase = json["purchase"] as? [String: Any]
     else {
         AppState.shared.isPlus = false
-        AppState.shared.licenseDetails = nil
+        if (save) {
+            AppState.shared.licenseDetails = nil
+        }
         return false
     }
 
     AppState.shared.isPlus = true
 
-    AppState.shared.licenseDetails = LicenseDetails(
-        key: key,
-        email: purchase["email"] as? String ?? "unknown",
-        productName: purchase["product_name"] as? String ?? "unknown",
-        orderNumber: purchase["order_number"] as? Int ?? 0,
-        purchaserID: purchase["purchaser_id"] as? String ?? ""
-    )
+    if (save) {
+        AppState.shared.licenseDetails = LicenseDetails(
+            key: key,
+            email: purchase["email"] as? String ?? "unknown",
+            productName: purchase["product_name"] as? String ?? "unknown",
+            orderNumber: purchase["order_number"] as? Int ?? 0,
+            purchaserID: purchase["purchaser_id"] as? String ?? ""
+        )
+    }
 
     return true
+}
+
+extension UserDefaults {
+    var lastLicenseCheckDate: Date? {
+        get { object(forKey: "lastLicenseCheckDate") as? Date }
+        set { set(newValue, forKey: "lastLicenseCheckDate") }
+    }
 }

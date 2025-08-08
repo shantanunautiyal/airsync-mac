@@ -44,6 +44,10 @@ class AppState: ObservableObject {
             startClipboardMonitoring()
         }
 
+        Task {
+            await checkLicenseIfNeeded()
+        }
+
         self.scrcpyBitrate = UserDefaults.standard.integer(forKey: "scrcpyBitrate")
         if self.scrcpyBitrate == 0 { self.scrcpyBitrate = 4 }
 
@@ -461,6 +465,31 @@ class AppState: ObservableObject {
         }
     }
 
+
+    func checkLicenseIfNeeded() async {
+        let now = Date()
+        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate,
+           Calendar.current.isDateInToday(lastCheck) {
+            print("License was already checked today")
+            return // Already checked today
+        }
+
+        await checkLicense()
+        UserDefaults.standard.lastLicenseCheckDate = now
+    }
+
+    @MainActor
+    func checkLicense() async {
+        guard let key = self.licenseDetails?.key,
+              !key.isEmpty else {
+            self.isPlus = false
+            return
+        }
+
+        let result = try? await checkLicenseKeyValidity(key: key, save: false)
+        self.isPlus = result ?? false
+        print("License checked, validity: ", isPlus)
+    }
 
 
 }

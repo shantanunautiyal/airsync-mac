@@ -39,7 +39,8 @@ struct SettingsPlusView: View {
                             isCheckingLicense = true
                             licenseValid = nil
                             let result = try? await checkLicenseKeyValidity(
-                                key: licenseKey
+                                key: licenseKey,
+                                save: true
                             )
                             licenseValid = result ?? false
                             isCheckingLicense = false
@@ -149,6 +150,11 @@ struct SettingsPlusView: View {
                 .cornerRadius(10)
                 .transition(.opacity.combined(with: .move(edge: .top)))
                 .animation(.easeInOut(duration: 0.3), value: appState.licenseDetails)
+
+                if (appState.licenseDetails?.key != nil && !appState.isPlus){
+                    Label("License invalid, expired or network error", systemImage: "xmark.circle")
+                        .foregroundColor(.red)
+                }
             }
 
         }
