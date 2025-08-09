@@ -15,7 +15,6 @@ struct PhoneView: View {
     var body: some View {
         ZStack {
             GlassBoxView(
-                color: .gray.opacity(0.2),
                 width: 190,
                 height: 410,
                 radius: 25

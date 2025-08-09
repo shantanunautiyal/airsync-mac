@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct GlassBoxView: View {
-    var color: Color = .clear
     var width: CGFloat? = nil
     var height: CGFloat? = nil
     var maxWidth: CGFloat? = nil
@@ -18,17 +17,18 @@ struct GlassBoxView: View {
     var body: some View {
         if #available(macOS 26.0, *) {
             Rectangle()
-                .fill(color)
+                .fill(.clear)
                 .frame(width: width, height: height)
                 .frame(maxWidth: maxWidth, maxHeight: maxHeight)
-                .glassEffect(in: .rect(cornerRadius: radius))
+                .glassBoxIfAvailable(radius: radius)
                 .cornerRadius(radius)
         } else {
             Rectangle()
-                .fill(color)
+                .fill(.gray.opacity(0.2))
                 .frame(width: width, height: height)
                 .frame(maxWidth: maxWidth, maxHeight: maxHeight)
                 .cornerRadius(radius)
+                .background(.ultraThinMaterial)
         }
     }
 }
@@ -36,4 +36,14 @@ struct GlassBoxView: View {
 
 #Preview {
     GlassBoxView(width: 100, height: 100)
+}
+
+
+extension View {
+    @ViewBuilder
+    func glassBoxIfAvailable(radius: CGFloat) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(in: .rect(cornerRadius: radius))
+        }
+    }
 }
