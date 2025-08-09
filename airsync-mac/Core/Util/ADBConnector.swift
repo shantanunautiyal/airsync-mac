@@ -15,6 +15,7 @@ struct ADBConnector {
         "/usr/local/bin/adb"      // Intel Homebrew
     ]
     private static let possibleScrcpyPaths = [
+        "/opt/scrcpy/scrcpy",
         "/opt/homebrew/bin/scrcpy",
         "/usr/local/bin/scrcpy"
     ]
@@ -281,7 +282,17 @@ Raw output:
         task.executableURL = URL(fileURLWithPath: scrcpyPath)
         task.arguments = args
 
+        //  Inject adb into scrcpy's environment
+        if let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) {
+            var env = ProcessInfo.processInfo.environment
+            let adbDir = URL(fileURLWithPath: adbPath).deletingLastPathComponent().path
+            env["PATH"] = "\(adbDir):" + (env["PATH"] ?? "")
+            env["ADB"] = adbPath
+            task.environment = env
+        }
+
         AppState.shared.lastADBCommand = "scrcpy \(args.joined(separator: " "))"
+
 
         let pipe = Pipe()
         task.standardOutput = pipe
