@@ -22,44 +22,51 @@ struct SettingsPlusView: View {
             HStack {
                 Label("AirSync+", systemImage: "key")
                 Spacer()
+                if appState.isPlus {
+                    Button("Unregister", systemImage: "key.slash", action: {
+                        appState.licenseDetails = nil
+                        appState.isPlus = false
+                    })
+                    .buttonStyle(.plain)
+                }
             }
             .padding()
 
-            TextField("Enter license key", text: $licenseKey)
-                .textFieldStyle(.roundedBorder)
-                .disabled(isCheckingLicense)
+            if !appState.isPlus {
+                TextField("Enter license key", text: $licenseKey)
+                    .textFieldStyle(.roundedBorder)
+                    .disabled(isCheckingLicense)
 
-            HStack{
-
-                GlassButtonView(
-                    label: "Check License",
-                    systemImage: "checkmark.seal",
-                    action: {
-                        Task {
-                            isCheckingLicense = true
-                            licenseValid = nil
-                            let result = try? await checkLicenseKeyValidity(
-                                key: licenseKey,
-                                save: true
-                            )
-                            licenseValid = result ?? false
-                            isCheckingLicense = false
+                HStack{
+                    GlassButtonView(
+                        label: "Check License",
+                        systemImage: "checkmark.seal",
+                        action: {
+                            Task {
+                                isCheckingLicense = true
+                                licenseValid = nil
+                                let result = try? await checkLicenseKeyValidity(
+                                    key: licenseKey,
+                                    save: true
+                                )
+                                licenseValid = result ?? false
+                                isCheckingLicense = false
+                            }
                         }
+                    )
+                    .disabled(
+                        licenseKey.isEmpty || isCheckingLicense
+                    )
+
+
+                    if isCheckingLicense {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                    } else if let valid = licenseValid {
+                        Image(systemName: valid ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                            .foregroundColor(valid ? .green : .red)
+                            .transition(.scale)
                     }
-                )
-                .disabled(
-                    licenseKey.isEmpty || isCheckingLicense
-                )
-
-
-                if isCheckingLicense {
-                    ProgressView()
-                        .scaleEffect(0.6)
-                } else if let valid = licenseValid {
-                    Image(systemName: valid ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                        .foregroundColor(valid ? .green : .red)
-                        .transition(.scale)
-                }
 
                     GlassButtonView(
                         label: "Get AirSync+",
@@ -71,7 +78,8 @@ struct SettingsPlusView: View {
                         }
                     )
 
-                Spacer()
+                    Spacer()
+                }
             }
 
             if let details = appState.licenseDetails {
