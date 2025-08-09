@@ -64,7 +64,7 @@ extension View {
         if #available(macOS 26.0, *) {
             self.buttonStyle(.glass)
         } else {
-            self.buttonStyle(.plain)
+            self.buttonStyle(.bordered)
         }
     }
 
