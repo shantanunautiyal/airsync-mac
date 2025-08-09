@@ -8,14 +8,76 @@
 import Foundation
 
 struct ADBConnector {
+
+    // Potential fallback paths
+    private static let possibleADBPaths = [
+        "/opt/homebrew/bin/adb",  // Apple Silicon Homebrew
+        "/usr/local/bin/adb"      // Intel Homebrew
+    ]
+    private static let possibleScrcpyPaths = [
+        "/opt/homebrew/bin/scrcpy",
+        "/usr/local/bin/scrcpy"
+    ]
+
+    // Try to locate a binary
+    private static func findExecutable(named name: String, fallbackPaths: [String]) -> String? {
+        // Step 1: Try direct execution from PATH
+        if isExecutableAvailable(name) {
+            logBinaryDetection("\(name) found in system PATH — using direct command.")
+            return name
+        }
+
+        // Step 2: Try fallback paths
+        for path in fallbackPaths {
+            if FileManager.default.isExecutableFile(atPath: path) {
+                logBinaryDetection("\(name) found at \(path) — using fallback path.")
+                return path
+            }
+        }
+
+        logBinaryDetection("\(name) not found in PATH or fallback locations.")
+        return nil
+    }
+
+    // Check if binary is available in PATH
+    private static func isExecutableAvailable(_ name: String) -> Bool {
+        let process = Process()
+        process.launchPath = "/usr/bin/which"
+        process.arguments = [name]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return false
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return !output.isEmpty
+    }
+
+    private static func logBinaryDetection(_ message: String) {
+        DispatchQueue.main.async {
+            AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\n[Binary Detection] \(message)"
+        }
+        print("[Binary Detection] \(message)")
+    }
+
     static func connectToADB(ip: String) {
-        guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {
-            AppState.shared.adbConnectionResult = "ADB binary not found in bundle."
+        // Find adb
+        guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
+            AppState.shared.adbConnectionResult = "ADB not found. Please install via Homebrew: brew install android-platform-tools"
             AppState.shared.adbConnected = false
             return
         }
 
         AppState.shared.lastADBCommand = "adb mdns services"
+
+        logBinaryDetection("Running: \(adbPath) mdns services")
 
         // Step 1: Discover devices
         runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
@@ -79,8 +141,10 @@ Raw `adb mdns services` output:
             let fullAddress = "\(ip):\(port)"
 
             // Step 2: Kill adb server
+            logBinaryDetection("Killing adb server: \(adbPath) kill-server")
             runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
                 // Step 3: Connect
+                logBinaryDetection("Connecting to device: \(adbPath) connect \(fullAddress)")
                 runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
                     let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
@@ -91,9 +155,11 @@ Raw `adb mdns services` output:
                         if trimmedOutput.contains("connected to") {
                             AppState.shared.adbConnected = true
                             AppState.shared.adbPort = port
+                            logBinaryDetection("(/^▽^)/ ADB connection successful to \(fullAddress)")
                         }
                         else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
                             AppState.shared.adbConnected = false
+                            logBinaryDetection("(T＿T) ADB connection failed due to existing connection.")
                             AppState.shared.adbConnectionResult = """
 ADB connection failed due to another ADB instance already using the device.
 
@@ -111,6 +177,7 @@ Raw output:
                         }
                         else {
                             AppState.shared.adbConnected = false
+                            logBinaryDetection("(∩︵∩) ADB connection failed.")
                             AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
 
 Possible fixes:
@@ -130,22 +197,18 @@ Raw output:
         }
     }
 
-
-
-
     static func disconnectADB() {
-        guard let adbPath = Bundle.main.path(forResource: "adb", ofType: nil) else {
-            AppState.shared.adbConnectionResult = "ADB binary not found in bundle."
+        guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
+            AppState.shared.adbConnectionResult = "ADB not found — cannot disconnect."
             AppState.shared.adbConnected = false
             return
         }
 
-        // Step 1: Kill any existing adb server
+        logBinaryDetection("Killing adb server: \(adbPath) kill-server")
         runADBCommand(adbPath: adbPath, arguments: ["kill-server"])
         AppState.shared.lastADBCommand = "adb kill-server"
         AppState.shared.adbConnected = false
     }
-
 
     private static func runADBCommand(adbPath: String, arguments: [String], completion: ((String) -> Void)? = nil) {
         let task = Process()
@@ -165,7 +228,7 @@ Raw output:
         do {
             try task.run()
         } catch {
-            completion?("Failed to run adb: \(error.localizedDescription)")
+            completion?("Failed to run \(adbPath): \(error.localizedDescription)")
         }
     }
 
@@ -176,8 +239,8 @@ Raw output:
         desktop: Bool? = false,
         package: String? = nil
     ) {
-        guard let scrcpyPath = Bundle.main.path(forResource: "scrcpy", ofType: nil) else {
-            AppState.shared.adbConnectionResult = "scrcpy binary not found in bundle."
+        guard let scrcpyPath = findExecutable(named: "scrcpy", fallbackPaths: possibleScrcpyPaths) else {
+            AppState.shared.adbConnectionResult = "scrcpy not found. Please install via Homebrew: brew install scrcpy"
             return
         }
 
@@ -188,8 +251,6 @@ Raw output:
         let desktopMode = AppState.shared.scrcpyDesktopMode
         let alwaysOnTop = AppState.shared.scrcpyOnTop
 
-        // Arguments to scrcpy for wireless connection
-        // scrcpy --tcpip=<ip>:<port>
         var args = [
             "--window-title=\(deviceNameFormatted)",
             "--tcpip=\(fullAddress)",
@@ -198,7 +259,7 @@ Raw output:
             "--max-size=\(resolution)"
         ]
 
-        if  (alwaysOnTop) {
+        if alwaysOnTop {
             args.append("--always-on-top")
         }
 
@@ -206,14 +267,15 @@ Raw output:
             args.append("--new-display=\(desktopMode)")
         }
 
-        if package != nil {
+        if let pkg = package {
             args.append(contentsOf: [
                 "--new-display=900x900/140",
-                "--start-app=\(package ?? "")",
+                "--start-app=\(pkg)",
                 "--no-vd-system-decorations"
             ])
         }
 
+        logBinaryDetection("Launching scrcpy: \(scrcpyPath) \(args.joined(separator: " "))")
 
         let task = Process()
         task.executableURL = URL(fileURLWithPath: scrcpyPath)
@@ -236,11 +298,11 @@ Raw output:
         do {
             try task.run()
             DispatchQueue.main.async {
-                AppState.shared.adbConnectionResult = "Started scrcpy on \(fullAddress)"
+                AppState.shared.adbConnectionResult = "(ﾉ´ヮ´)ﾉ Started scrcpy on \(fullAddress)"
             }
         } catch {
             DispatchQueue.main.async {
-                AppState.shared.adbConnectionResult = "Failed to start scrcpy: \(error.localizedDescription)"
+                AppState.shared.adbConnectionResult = "┐('～`；)┌ Failed to start scrcpy: \(error.localizedDescription)"
             }
         }
     }
