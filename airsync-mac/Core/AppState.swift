@@ -472,8 +472,8 @@ class AppState: ObservableObject {
 
         if let lastCheck = UserDefaults.standard.lastLicenseCheckDate {
             let daysSinceLastCheck = Calendar.current.dateComponents([.day], from: lastCheck, to: now).day ?? 0
-            if daysSinceLastCheck < 3 {
-                print("License was already checked within the last \(daysSinceLastCheck) day(s)")
+            if daysSinceLastCheck < 1 { // only check once a day
+                print("License was already checked today")
                 return
             }
         }
@@ -487,14 +487,55 @@ class AppState: ObservableObject {
         guard let key = self.licenseDetails?.key,
               !key.isEmpty else {
             self.isPlus = false
+            resetLicenseIfNeeded()
             return
         }
 
         let result = try? await checkLicenseKeyValidity(key: key, save: false)
-        self.isPlus = result ?? false
+
+        if result == true {
+            // License valid — reset fail count
+            UserDefaults.standard.consecutiveLicenseFailCount = 0
+            self.isPlus = true
+        } else {
+            // License invalid — increment fail count
+            let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
+            UserDefaults.standard.consecutiveLicenseFailCount = failCount
+            self.isPlus = false
+
+            if failCount >= 3 {
+                clearLicenseDetails()
+                print("License check failed 3 days in a row — license removed")
+            }
+        }
+
         print("License checked, validity:", isPlus)
     }
 
+    private func clearLicenseDetails() {
+        self.licenseDetails = nil
+        UserDefaults.standard.removeObject(forKey: "licenseDetailsKey") 
+        UserDefaults.standard.consecutiveLicenseFailCount = 0
+    }
 
+    private func resetLicenseIfNeeded() {
+        let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
+        UserDefaults.standard.consecutiveLicenseFailCount = failCount
+        if failCount >= 3 {
+            clearLicenseDetails()
+        }
+    }
 
+}
+
+extension UserDefaults {
+    private enum Keys {
+        static let lastLicenseCheckDate = "lastLicenseCheckDate"
+        static let consecutiveLicenseFailCount = "consecutiveLicenseFailCount"
+    }
+
+    var consecutiveLicenseFailCount: Int {
+        get { integer(forKey: Keys.consecutiveLicenseFailCount) }
+        set { set(newValue, forKey: Keys.consecutiveLicenseFailCount) }
+    }
 }

@@ -270,7 +270,7 @@ Raw output:
 
         if let pkg = package {
             args.append(contentsOf: [
-                "--new-display=900x900/140",
+                "--new-display=\(desktopMode)",
                 "--start-app=\(pkg)",
                 "--no-vd-system-decorations"
             ])
