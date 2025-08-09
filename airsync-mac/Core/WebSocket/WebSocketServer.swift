@@ -31,6 +31,11 @@ class WebSocketServer: ObservableObject {
     @Published var notifications: [Notification] = []
     @Published var deviceStatus: DeviceStatus?
 
+    private var lastKnownIP: String?
+    private var networkMonitorTimer: Timer?
+    private let networkCheckInterval: TimeInterval = 5.0 // seconds
+
+
     init() {
         loadOrGenerateSymmetricKey()
         setupWebSocket()
@@ -40,23 +45,30 @@ class WebSocketServer: ObservableObject {
         DispatchQueue.main.async {
             AppState.shared.webSocketStatus = .starting
         }
-        do {
-            try server.start(port)
-            let ip = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
 
-            DispatchQueue.main.async {
-                self.localPort = port
-                self.localIPAddress = ip
-                AppState.shared.webSocketStatus = .started(port: port, ip: ip)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            do {
+                try self.server.start(port)
+                let ip = self.getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
+
+                DispatchQueue.main.async {
+                    self.localPort = port
+                    self.localIPAddress = ip
+                    AppState.shared.webSocketStatus = .started(port: port, ip: ip)
+                }
+                print("WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
+
+                self.startNetworkMonitoring()
+            } catch {
+                DispatchQueue.main.async {
+                    AppState.shared.webSocketStatus = .failed(error: "\(error)")
+                }
+                print("Failed to start WebSocket server: \(error)")
             }
-            print("WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket")
-        } catch {
-            DispatchQueue.main.async {
-                AppState.shared.webSocketStatus = .failed(error: "\(error)")
-            }
-            print("Failed to start WebSocket server: \(error)")
         }
     }
+
+
 
 
     func stop() {
@@ -65,7 +77,9 @@ class WebSocketServer: ObservableObject {
         DispatchQueue.main.async {
             AppState.shared.webSocketStatus = .stopped
         }
+        stopNetworkMonitoring()
     }
+
 
 
     func sendDisconnectRequest() {
@@ -516,4 +530,29 @@ class WebSocketServer: ObservableObject {
         }
     }
 
+    func startNetworkMonitoring() {
+        networkMonitorTimer = Timer.scheduledTimer(withTimeInterval: networkCheckInterval, repeats: true) { [weak self] _ in
+            self?.checkNetworkChange()
+        }
+        networkMonitorTimer?.tolerance = 1.0
+        networkMonitorTimer?.fire()
+    }
+
+    func stopNetworkMonitoring() {
+        networkMonitorTimer?.invalidate()
+        networkMonitorTimer = nil
+    }
+
+    private func checkNetworkChange() {
+        let currentIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
+        if currentIP != lastKnownIP {
+            print("Network IP changed from \(lastKnownIP ?? "nil") to \(currentIP ?? "nil"), restarting WebSocket in 5 seconds")
+            lastKnownIP = currentIP
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                self.stop()
+                self.start(port: Defaults.serverPort)
+            }
+        }
+    }
 }
