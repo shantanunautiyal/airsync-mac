@@ -15,6 +15,9 @@ extension UserDefaults {
         static let scrcpyShareRes = "scrcpyShareRes"
         static let scrcpyDesktopMode = "scrcpyDesktopMode"
         static let lastADBCommand = "lastADBCommand"
+        static let stayAwake = "stayAwake"
+        static let turnScreenOff = "turnScreenOff"
+        static let noAudio = "noAudio"
     }
 
     var consecutiveLicenseFailCount: Int {
@@ -45,5 +48,20 @@ extension UserDefaults {
     var lastADBCommand: String? {
         get { object(forKey: "lastADBCommand") as? String }
         set { set(newValue, forKey: Keys.lastADBCommand) }
+    }
+
+    var stayAwake: Bool {
+        get { bool(forKey: Keys.stayAwake)}
+        set { set(newValue, forKey: Keys.stayAwake)}
+    }
+
+    var turnScreenOff: Bool {
+        get { bool(forKey: Keys.turnScreenOff)}
+        set { set(newValue, forKey: Keys.turnScreenOff)}
+    }
+
+    var noAudio: Bool {
+        get { bool(forKey: Keys.noAudio)}
+        set { set(newValue, forKey: Keys.noAudio)}
     }
 }

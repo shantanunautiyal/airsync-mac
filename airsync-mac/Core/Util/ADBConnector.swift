@@ -251,18 +251,34 @@ Raw output:
         let resolution = AppState.shared.scrcpyResolution
         let desktopMode = UserDefaults.standard.scrcpyDesktopMode
         let alwaysOnTop = UserDefaults.standard.scrcpyOnTop
+        let stayAwake = UserDefaults.standard.stayAwake
+        let turnScreenOff = UserDefaults.standard.turnScreenOff
         let appRes = UserDefaults.standard.scrcpyShareRes ? UserDefaults.standard.scrcpyDesktopMode : "900x2100"
+        let noAudio = UserDefaults.standard.noAudio
 
         var args = [
             "--window-title=\(deviceNameFormatted)",
             "--tcpip=\(fullAddress)",
             "--video-bit-rate=\(bitrate)M",
             "--video-codec=h265",
-            "--max-size=\(resolution)"
+            "--max-size=\(resolution)",
+            "--no-power-on"
         ]
 
         if alwaysOnTop {
             args.append("--always-on-top")
+        }
+
+        if stayAwake {
+            args.append("--stay-awake")
+        }
+
+        if turnScreenOff {
+            args.append("--turn-screen-off")
+        }
+
+        if noAudio {
+            args.append("--no-audio")
         }
 
         if desktop ?? true {
@@ -273,7 +289,8 @@ Raw output:
             args.append(contentsOf: [
                 "--new-display=\(appRes ?? "900x2100")",
                 "--start-app=\(pkg)",
-                "--no-vd-system-decorations"
+                "--no-vd-system-decorations",
+                "--no-vd-destroy-content"
             ])
         }
 

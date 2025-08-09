@@ -11,6 +11,9 @@ struct SettingsFeaturesView: View {
     @ObservedObject var appState = AppState.shared
     @AppStorage("scrcpyShareRes") private var scrcpyShareRes = false
     @AppStorage("scrcpyOnTop") private var scrcpyOnTop = false
+    @AppStorage("stayAwake") private var stayAwake = false
+    @AppStorage("turnScreenOff") private var turnScreenOff = false
+    @AppStorage("noAudio") private var noAudio = false
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
@@ -90,13 +93,6 @@ struct SettingsFeaturesView: View {
                         .toggleStyle(.switch)
                 }
 
-                HStack {
-                    Text("Apps & Desktop mode shared resolution")
-                    Spacer()
-
-                    Toggle("", isOn: $scrcpyShareRes)
-                        .toggleStyle(.switch)
-                }
 
                 VStack{
                     DisclosureGroup(isExpanded: $isExpanded) {
@@ -162,6 +158,38 @@ struct SettingsFeaturesView: View {
 
 
                             HStack {
+                                Text("Stay awake (charging)")
+                                Spacer()
+
+                                Toggle("", isOn: $stayAwake)
+                                    .toggleStyle(.switch)
+                            }
+
+                            HStack {
+                                Text("Blank display")
+                                Spacer()
+
+                                Toggle("", isOn: $turnScreenOff)
+                                    .toggleStyle(.switch)
+                            }
+
+                            HStack {
+                                Text("No audio")
+                                Spacer()
+
+                                Toggle("", isOn: $noAudio)
+                                    .toggleStyle(.switch)
+                            }
+
+                            HStack {
+                                Text("Apps & Desktop mode shared resolution")
+                                Spacer()
+
+                                Toggle("", isOn: $scrcpyShareRes)
+                                    .toggleStyle(.switch)
+                            }
+
+                            HStack {
                                 Text(UserDefaults.standard.scrcpyShareRes ? "Desktop and App mirroring" :"Desktop mode")
                                 Spacer()
 
@@ -180,6 +208,7 @@ struct SettingsFeaturesView: View {
                         Label("Mirroring Settings", systemImage: "gear")
                             .font(.subheadline)
                             .bold()
+                            .padding()
                     }
                     .onAppear {
                         tempBitrate = Double(AppState.shared.scrcpyBitrate)
@@ -197,10 +226,17 @@ struct SettingsFeaturesView: View {
                     }
 
                 }
-                .padding()
             }
 
+        }
+        .padding()
+        .onAppear{
 
+            adbPortString = String(appState.adbPort)
+        }
+
+
+        VStack{
             HStack{
                 Label("Sync device status", systemImage: "battery.75percent")
                 Spacer()
