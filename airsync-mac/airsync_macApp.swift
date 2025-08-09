@@ -94,8 +94,9 @@ struct airsync_macApp: App {
                 .keyboardShortcut("u", modifiers: [.command])
             }
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .background || newPhase == .inactive {
+                AppState.shared.disconnectDevice()
                 AppState.shared.saveAppsToDisk()
             }
         }

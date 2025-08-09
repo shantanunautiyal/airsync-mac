@@ -76,7 +76,7 @@ struct ADBConnector {
             return
         }
 
-        AppState.shared.lastADBCommand = "adb mdns services"
+        UserDefaults.standard.lastADBCommand = "adb mdns services"
 
         logBinaryDetection("Running: \(adbPath) mdns services")
 
@@ -150,7 +150,7 @@ Raw `adb mdns services` output:
                     let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
                     DispatchQueue.main.async {
-                        AppState.shared.lastADBCommand = "adb connect \(fullAddress)"
+                        UserDefaults.standard.lastADBCommand = "adb connect \(fullAddress)"
                         AppState.shared.adbConnectionResult = trimmedOutput
 
                         if trimmedOutput.contains("connected to") {
@@ -207,7 +207,7 @@ Raw output:
 
         logBinaryDetection("Killing adb server: \(adbPath) kill-server")
         runADBCommand(adbPath: adbPath, arguments: ["kill-server"])
-        AppState.shared.lastADBCommand = "adb kill-server"
+        UserDefaults.standard.lastADBCommand = "adb kill-server"
         AppState.shared.adbConnected = false
     }
 
@@ -249,8 +249,9 @@ Raw output:
         let deviceNameFormatted = deviceName.removingApostrophesAndPossessives()
         let bitrate = AppState.shared.scrcpyBitrate
         let resolution = AppState.shared.scrcpyResolution
-        let desktopMode = AppState.shared.scrcpyDesktopMode
-        let alwaysOnTop = AppState.shared.scrcpyOnTop
+        let desktopMode = UserDefaults.standard.scrcpyDesktopMode
+        let alwaysOnTop = UserDefaults.standard.scrcpyOnTop
+        let appRes = UserDefaults.standard.scrcpyShareRes ? UserDefaults.standard.scrcpyDesktopMode : "900x2100"
 
         var args = [
             "--window-title=\(deviceNameFormatted)",
@@ -265,12 +266,12 @@ Raw output:
         }
 
         if desktop ?? true {
-            args.append("--new-display=\(desktopMode)")
+            args.append("--new-display=\(desktopMode ?? "1600x1000")")
         }
 
         if let pkg = package {
             args.append(contentsOf: [
-                "--new-display=\(desktopMode)",
+                "--new-display=\(appRes ?? "900x2100")",
                 "--start-app=\(pkg)",
                 "--no-vd-system-decorations"
             ])
@@ -291,7 +292,7 @@ Raw output:
             task.environment = env
         }
 
-        AppState.shared.lastADBCommand = "scrcpy \(args.joined(separator: " "))"
+        UserDefaults.standard.lastADBCommand = "scrcpy \(args.joined(separator: " "))"
 
 
         let pipe = Pipe()

@@ -54,10 +54,6 @@ class AppState: ObservableObject {
         self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
         if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
 
-        self.scrcpyOnTop = UserDefaults.standard.bool(forKey: "scrcpyOnTop")
-        self.scrcpyDesktopMode = UserDefaults.standard.string(forKey: "scrcpyDesktopMode") ?? "2560x1440"
-        self.lastADBCommand = UserDefaults.standard.string(forKey: "lastADBCommand")
-
 
 
         self.myDevice = Device(
@@ -113,28 +109,6 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(scrcpyResolution, forKey: "scrcpyResolution")
         }
     }
-
-    @Published var scrcpyOnTop: Bool = false {
-        didSet {
-            UserDefaults.standard.set(scrcpyOnTop, forKey: "scrcpyOnTop")
-        }
-    }
-
-    @Published var scrcpyDesktopMode: String = "2560x1440" {
-        didSet {
-            UserDefaults.standard.set(scrcpyDesktopMode, forKey: "scrcpyDesktopMode")
-        }
-    }
-
-    @Published var lastADBCommand: String? {
-        didSet {
-            UserDefaults.standard.set(lastADBCommand, forKey: "lastADBCommand")
-        }
-    }
-
-
-
-
 
     @Published var licenseDetails: LicenseDetails? {
         didSet {
@@ -514,7 +488,7 @@ class AppState: ObservableObject {
 
     private func clearLicenseDetails() {
         self.licenseDetails = nil
-        UserDefaults.standard.removeObject(forKey: "licenseDetailsKey") 
+        UserDefaults.standard.removeObject(forKey: "licenseDetailsKey")
         UserDefaults.standard.consecutiveLicenseFailCount = 0
     }
 
@@ -528,14 +502,3 @@ class AppState: ObservableObject {
 
 }
 
-extension UserDefaults {
-    private enum Keys {
-        static let lastLicenseCheckDate = "lastLicenseCheckDate"
-        static let consecutiveLicenseFailCount = "consecutiveLicenseFailCount"
-    }
-
-    var consecutiveLicenseFailCount: Int {
-        get { integer(forKey: Keys.consecutiveLicenseFailCount) }
-        set { set(newValue, forKey: Keys.consecutiveLicenseFailCount) }
-    }
-}

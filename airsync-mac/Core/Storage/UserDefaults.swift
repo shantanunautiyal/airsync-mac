@@ -1,0 +1,49 @@
+//
+//  UserDefaults.swift
+//  AirSync
+//
+//  Created by Sameera Sandakelum on 2025-08-10.
+//
+
+import Foundation
+
+extension UserDefaults {
+    private enum Keys {
+        static let lastLicenseCheckDate = "lastLicenseCheckDate"
+        static let consecutiveLicenseFailCount = "consecutiveLicenseFailCount"
+        static let scrcpyOnTop = "scrcpyOnTop"
+        static let scrcpyShareRes = "scrcpyShareRes"
+        static let scrcpyDesktopMode = "scrcpyDesktopMode"
+        static let lastADBCommand = "lastADBCommand"
+    }
+
+    var consecutiveLicenseFailCount: Int {
+        get { integer(forKey: Keys.consecutiveLicenseFailCount) }
+        set { set(newValue, forKey: Keys.consecutiveLicenseFailCount) }
+    }
+
+    var lastLicenseCheckDate: Date? {
+        get { object(forKey: "lastLicenseCheckDate") as? Date }
+        set { set(newValue, forKey: "lastLicenseCheckDate") }
+    }
+
+    var scrcpyOnTop: Bool {
+        get { bool(forKey: Keys.scrcpyOnTop)}
+        set { set(newValue, forKey: Keys.scrcpyOnTop)}
+    }
+
+    var scrcpyShareRes: Bool {
+        get { bool(forKey: Keys.scrcpyShareRes)}
+        set { set(newValue, forKey: Keys.scrcpyShareRes)}
+    }
+
+    var scrcpyDesktopMode: String? {
+        get { object(forKey: "scrcpyDesktopMode") as? String }
+        set { set(newValue, forKey: Keys.scrcpyDesktopMode) }
+    }
+
+    var lastADBCommand: String? {
+        get { object(forKey: "lastADBCommand") as? String }
+        set { set(newValue, forKey: Keys.lastADBCommand) }
+    }
+}

@@ -75,10 +75,3 @@ func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
 
     return true
 }
-
-extension UserDefaults {
-    var lastLicenseCheckDate: Date? {
-        get { object(forKey: "lastLicenseCheckDate") as? Date }
-        set { set(newValue, forKey: "lastLicenseCheckDate") }
-    }
-}

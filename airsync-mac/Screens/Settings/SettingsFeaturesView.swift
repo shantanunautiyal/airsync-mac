@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SettingsFeaturesView: View {
     @ObservedObject var appState = AppState.shared
+    @AppStorage("scrcpyShareRes") private var scrcpyShareRes = false
+    @AppStorage("scrcpyOnTop") private var scrcpyOnTop = false
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
@@ -88,6 +90,14 @@ struct SettingsFeaturesView: View {
                         .toggleStyle(.switch)
                 }
 
+                HStack {
+                    Text("Apps & Desktop mode shared resolution")
+                    Spacer()
+
+                    Toggle("", isOn: $scrcpyShareRes)
+                        .toggleStyle(.switch)
+                }
+
                 VStack{
                     DisclosureGroup(isExpanded: $isExpanded) {
                         VStack(spacing: 10){
@@ -146,18 +156,18 @@ struct SettingsFeaturesView: View {
                                 Text("Stay on top")
                                 Spacer()
 
-                                Toggle("", isOn: $appState.scrcpyOnTop)
+                                Toggle("", isOn: $scrcpyOnTop)
                                     .toggleStyle(.switch)
                             }
 
 
                             HStack {
-                                Text("Desktop mode")
+                                Text(UserDefaults.standard.scrcpyShareRes ? "Desktop and App mirroring" :"Desktop mode")
                                 Spacer()
 
                                 Picker("", selection: Binding(
-                                    get: { appState.scrcpyDesktopMode },
-                                    set: { appState.scrcpyDesktopMode = $0 }
+                                    get: { UserDefaults.standard.scrcpyDesktopMode },
+                                    set: { UserDefaults.standard.scrcpyDesktopMode = $0 }
                                 )) {
                                     Text("2560x1440").tag("2560x1440")
                                     Text("2560x1600").tag("2560x1600")
@@ -181,7 +191,7 @@ struct SettingsFeaturesView: View {
 
                     if let result = appState.adbConnectionResult {
                         VStack(alignment: .leading, spacing: 6) {
-                            ExpandableLicenseSection(title: "ADB Console", content: "[" + (appState.lastADBCommand ?? "[]") + "] " + result)
+                            ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
                         }
                         .transition(.opacity)
                     }
