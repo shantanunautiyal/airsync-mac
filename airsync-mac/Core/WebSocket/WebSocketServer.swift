@@ -33,7 +33,7 @@ class WebSocketServer: ObservableObject {
 
     private var lastKnownIP: String?
     private var networkMonitorTimer: Timer?
-    private let networkCheckInterval: TimeInterval = 5.0 // seconds
+    private let networkCheckInterval: TimeInterval = 10.0 // seconds
 
 
     init() {

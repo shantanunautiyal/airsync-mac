@@ -22,15 +22,28 @@ struct MenubarView: View {
                 .font(.headline)
                 .padding(.bottom, 4)
 
+            Divider()
+
+            if (appState.device != nil) {
+                DeviceStatusView()
+            }
+
             HStack {
-                Button("Open App") {
+                GlassButtonView(
+                    label: "Open App",
+                    systemImage: "arrow.up.forward.app"
+                ) {
                     openWindow(id: "main")
                 }
             }
 
             if (appState.adbConnected && appState.isPlus) {
                 HStack {
-                    Button("Android Mirror") {
+
+                    GlassButtonView(
+                        label: "Android Mirror",
+                        systemImage: "iphone.gen3.badge.play"
+                    ) {
                         ADBConnector
                             .startScrcpy(
                                 ip: appState.device?.ipAddress ?? "",
@@ -41,11 +54,12 @@ struct MenubarView: View {
                 }
             }
 
-            HStack {
-                Button("Quit") {
-                    NSApplication.shared.terminate(nil)
-                }
+            Divider()
+
+            GlassButtonView(label: "Quit", systemImage: "power") {
+                NSApplication.shared.terminate(nil)
             }
+
         }
         .padding()
         .frame(width: 250)

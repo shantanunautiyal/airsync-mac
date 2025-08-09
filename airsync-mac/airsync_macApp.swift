@@ -14,11 +14,9 @@ struct airsync_macApp: App {
     @Environment(\.scenePhase) private var scenePhase
     let notificationDelegate = NotificationDelegate()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var appState = AppState.shared
 
     init() {
-//        DispatchQueue.main.async {
-//            NSApp.activate(ignoringOtherApps: true)
-//        }
 
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
@@ -66,7 +64,10 @@ struct airsync_macApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("AirSync", systemImage: "iphone.gen3") {
+        MenuBarExtra(
+            "AirSync",
+            systemImage: appState.device != nil ? "iphone.gen3" : "iphone.slash"
+        ) {
             MenubarView()
         }
 
