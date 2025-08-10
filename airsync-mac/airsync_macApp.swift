@@ -75,10 +75,6 @@ struct airsync_macApp: App {
             if #available(macOS 15.0, *) {
                 HomeView()
                     .containerBackground(.ultraThinMaterial, for: .window)
-                    .toolbarBackgroundVisibility(
-                        .automatic,
-                        for: .windowToolbar
-                    )
             } else {
                 HomeView()
             }

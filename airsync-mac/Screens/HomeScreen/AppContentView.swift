@@ -59,6 +59,7 @@ struct AppContentView: View {
                                     } label: {
                                         Label("Clear", systemImage: "wind")
                                     }
+                                .badge(appState.notifications.count)
                                 }
                             }
                         }
@@ -104,7 +105,10 @@ struct AppContentView: View {
             ToolbarItem(placement: .secondaryAction) {
                 Picker("Tab", selection: $appState.selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
-                        Label(tab.rawValue, systemImage: tab.icon)
+//                        Label(tab.rawValue, systemImage: tab.icon)
+//                            .labelStyle(.iconOnly)
+//                            .tag(tab)
+                        Button(tab.rawValue, systemImage: tab.icon){}
                             .labelStyle(.iconOnly)
                             .tag(tab)
                     }
