@@ -46,7 +46,7 @@ class WebSocketServer: ObservableObject {
             AppState.shared.webSocketStatus = .starting
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             do {
                 try self.server.start(port)
                 let ip = self.getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)

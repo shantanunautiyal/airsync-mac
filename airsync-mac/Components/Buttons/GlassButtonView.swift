@@ -16,6 +16,7 @@ struct GlassButtonView: View {
         .controlSize(size)
         .modifier(LabelStyleModifier(iconOnly: iconOnly))
         .applyGlassButtonStyle(primary: primary)
+        .contentTransition(.symbolEffect)
     }
 
     @ViewBuilder

@@ -47,3 +47,12 @@ extension View {
         }
     }
 }
+
+extension View {
+    @ViewBuilder
+    func applyGlassViewIfAvailable() -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(in: .rect(cornerRadius: 20))
+        }
+    }
+}

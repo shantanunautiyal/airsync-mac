@@ -9,26 +9,108 @@ import SwiftUI
 
 struct NotificationView: View {
     @ObservedObject var appState = AppState.shared
+    @AppStorage("notificationStacks") private var notificationStacks = true
+    @State private var expandedPackages: Set<String> = []
 
     var body: some View {
-        if appState.notifications.count > 0 {
-            List(appState.notifications.prefix(20), id: \.id) { notif in
-                notificationRow(for: notif)
-            }
-            .scrollContentBackground(.hidden)
-            .background(.clear)
-            .transition(.blurReplace)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        appState.clearNotifications()
-                    } label: {
-                        Label("Clear", systemImage: "wind")
-                    }
+        Group {
+            if appState.notifications.isEmpty {
+                NotificationEmptyView()
+                    .transition(.scale)
+            } else {
+                if notificationStacks {
+                    stackedList
+                        .id("stacked")
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .top).combined(
+                                    with: .scale
+                                ),
+                                removal:
+                                        .move(edge: .bottom)
+                                        .combined(with: .scale)
+)
+)
+                } else {
+                    flatList
+                        .id("flat")
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .bottom).combined(
+                                    with: .scale
+                                ),
+                                removal:
+                                        .move(edge: .top)
+                                        .combined(with: .scale)
+)
+)
                 }
             }
-        } else {
-            NotificationEmptyView()
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: notificationStacks)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: expandedPackages)
+    }
+
+    // MARK: - Flat List
+    private var flatList: some View {
+        List(appState.notifications.prefix(20), id: \.id) { notif in
+            notificationRow(for: notif)
+                .transition(.opacity.combined(with: .scale))
+        }
+        .scrollContentBackground(.hidden)
+        .background(.clear)
+        .listStyle(.sidebar)
+    }
+
+    // MARK: - Stacked List
+    private var stackedList: some View {
+        List {
+            ForEach(groupedNotifications.keys.sorted(), id: \.self) { package in
+                let packageNotifs = groupedNotifications[package] ?? []
+                let isExpanded = expandedPackages.contains(package)
+
+                Section {
+                    let visibleNotifs = isExpanded ? packageNotifs : Array(packageNotifs.prefix(1))
+
+                    ForEach(visibleNotifs, id: \.id) { notif in
+                        notificationRow(for: notif)
+                            .transition(.opacity.combined(with: .scale))
+                    }
+
+                    if packageNotifs.count > 1 {
+                        Button {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                if isExpanded {
+                                    expandedPackages.remove(package)
+                                } else {
+                                    expandedPackages.insert(package)
+                                }
+                            }
+                        } label: {
+                            Label(
+                                isExpanded ? "Show Less" : "Show \(packageNotifs.count - 1) More",
+                                systemImage: isExpanded ? "chevron.up" : "chevron.down"
+                            )
+                            .font(.caption)
+                        }
+                        .buttonStyle(.borderless)
+                        .padding(.top, 4)
+                        .transition(.opacity)
+                    }
+                } header: {
+                    Text(appState.androidApps[package]?.name ?? "AirSync")
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(.clear)
+        .listStyle(.sidebar)
+    }
+
+    // MARK: - Helpers
+    private var groupedNotifications: [String: [Notification]] {
+        Dictionary(grouping: appState.notifications.prefix(20)) { notif in
+            notif.package
         }
     }
 
@@ -36,12 +118,8 @@ struct NotificationView: View {
     private func notificationRow(for notif: Notification) -> some View {
         NotificationCardView(
             notification: notif,
-            deleteNotification: {
-                appState.removeNotification(notif)
-            },
-            hideNotification: {
-                appState.hideNotification(notif)
-            }
+            deleteNotification: { appState.removeNotification(notif) },
+            hideNotification: { appState.hideNotification(notif) }
         )
         .background(.clear)
         .applyGlassViewIfAvailable()
@@ -59,18 +137,9 @@ struct NotificationView: View {
             }
         }
     }
-
 }
+
 
 #Preview {
     NotificationView()
-}
-
-extension View {
-    @ViewBuilder
-    func applyGlassViewIfAvailable() -> some View {
-        if #available(macOS 26.0, *) {
-            self.glassEffect(in: .rect(cornerRadius: 20))
-        }
-    }
 }

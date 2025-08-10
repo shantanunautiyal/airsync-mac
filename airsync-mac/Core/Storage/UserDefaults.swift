@@ -18,6 +18,9 @@ extension UserDefaults {
         static let stayAwake = "stayAwake"
         static let turnScreenOff = "turnScreenOff"
         static let noAudio = "noAudio"
+
+
+        static let notificationStacks = "notificationStacks"
     }
 
     var consecutiveLicenseFailCount: Int {
@@ -63,5 +66,10 @@ extension UserDefaults {
     var noAudio: Bool {
         get { bool(forKey: Keys.noAudio)}
         set { set(newValue, forKey: Keys.noAudio)}
+    }
+
+    var notificationStacks: Bool {
+        get { bool(forKey: Keys.notificationStacks)}
+        set { set(newValue, forKey: Keys.notificationStacks)}
     }
 }

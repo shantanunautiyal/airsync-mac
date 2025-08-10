@@ -16,7 +16,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .notifications: return "bell.badge.fill"
+        case .notifications: return "bell.badge"
         case .apps: return "app.badge"
         case .settings: return "gear"
         }
@@ -35,6 +35,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
     @State private var showAboutSheet = false
+    @AppStorage("notificationStacks") private var notificationStacks = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,6 +43,23 @@ struct AppContentView: View {
                 switch AppState.shared.selectedTab {
                 case .notifications:
                     NotificationView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    notificationStacks.toggle()
+                                } label: {
+                                    Label("Toggle Notification Stacks", systemImage: notificationStacks ? "square.stack" : "list.dash.header.rectangle")
+                                }
+                            }
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    appState.clearNotifications()
+                                } label: {
+                                    Label("Clear", systemImage: "wind")
+                                }
+                            }
+                        }
 
                 case .apps:
                     AppsView()

@@ -22,12 +22,14 @@ struct DeviceStatusView: View {
                     "\(appState.status?.battery.level ?? 100)%",
                     systemImage: batteryIcon(for: appState.status?.battery.level ?? 100, isCharging: appState.status?.battery.isCharging ?? false)
                 )
+                .contentTransition(.symbolEffect)
 
                 // Volume Button with left/right click handling
                 Label(
                     "\(appState.status?.music.volume ?? 100)%",
                     systemImage: volumeIcon(for: appState.status?.music.volume ?? 100, isMuted: appState.status?.music.isMuted ?? false)
                 )
+                .contentTransition(.symbolEffect)
                 .onTapGesture {
                     if AppState.shared.isPlus && AppState.shared.licenseCheck {
                         if let currentVolume = appState.status?.music.volume {
@@ -65,6 +67,8 @@ struct DeviceStatusView: View {
                     PlusFeaturePopover(message: "Control volume with AirSync+")
                 }
             }
+            .animation(.easeInOut(duration: 0.25),
+                       value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)")
         }
     }
 
