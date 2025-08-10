@@ -13,17 +13,6 @@ struct SidebarView: View {
     @ObservedObject var appState = AppState.shared
     @State private var isExpandedAllSeas: Bool = false
 
-//    ZStack {
-//        if let device = appState.device {
-//            SidebarView()
-//                .transition(.opacity.combined(with: .scale))
-//        } else {
-//            ScannerView()
-//                .transition(.opacity.combined(with: .scale))
-//        }
-//    }
-//    .animation(.easeInOut(duration: 0.35), value: appState.device)
-
     var body: some View {
         VStack{
             if (appState.status != nil){
@@ -48,7 +37,7 @@ struct SidebarView: View {
 
 
             PhoneView()
-                .transition(.blurReplace)
+                .transition(.scale)
 
         }
         .animation(.easeInOut(duration: 0.5), value: appState.status != nil)

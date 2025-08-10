@@ -64,6 +64,19 @@ struct NotificationView: View {
 
                     ForEach(visibleNotifs) { notif in
                         notificationRow(for: notif)
+                            .onTapGesture {
+                                if appState.device != nil && appState.adbConnected &&
+                                    notif.package != "" &&
+                                    notif.package != "com.sameerasw.airsync" &&
+                                    appState.mirroringPlus {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone",
+                                        package: notif.package
+                                    )
+                                }
+                            }
                     }
 
                     if packageNotifs.count > 1 {
@@ -111,19 +124,6 @@ struct NotificationView: View {
         )
         .background(.clear)
         .applyGlassViewIfAvailable()
-        .onTapGesture {
-            if appState.device != nil && appState.adbConnected &&
-                notif.package != "" &&
-                notif.package != "com.sameerasw.airsync" &&
-                appState.mirroringPlus {
-                ADBConnector.startScrcpy(
-                    ip: appState.device?.ipAddress ?? "",
-                    port: appState.adbPort,
-                    deviceName: appState.device?.name ?? "My Phone",
-                    package: notif.package
-                )
-            }
-        }
     }
 }
 

@@ -226,6 +226,7 @@ class AppState: ObservableObject {
             self.device = nil
             self.notifications.removeAll()
             self.status = nil
+            self.currentDeviceWallpaperBase64 = nil
 
             ADBConnector.disconnectADB()
         }
