@@ -43,7 +43,7 @@ struct NotificationView: View {
         .scrollContentBackground(.hidden)
         .background(.clear)
         .transition(.blurReplace)
-        .listStyle(.automatic)
+        .listStyle(.sidebar)
     }
 
     // MARK: - Stacked List
