@@ -13,53 +13,37 @@ struct NotificationView: View {
     @State private var expandedPackages: Set<String> = []
 
     var body: some View {
-        Group {
-            if appState.notifications.isEmpty {
-                NotificationEmptyView()
-                    .transition(.scale)
-            } else {
-                if notificationStacks {
-                    stackedList
-                        .id("stacked")
-                        .transition(
-                            .asymmetric(
-                                insertion: .move(edge: .top).combined(
-                                    with: .scale
-                                ),
-                                removal:
-                                        .move(edge: .bottom)
-                                        .combined(with: .scale)
-)
-)
-                } else {
-                    flatList
-                        .id("flat")
-                        .transition(
-                            .asymmetric(
-                                insertion: .move(edge: .bottom).combined(
-                                    with: .scale
-                                ),
-                                removal:
-                                        .move(edge: .top)
-                                        .combined(with: .scale)
-)
-)
-                }
+        if appState.notifications.isEmpty {
+            NotificationEmptyView()
+        } else {
+            ZStack {
+                // stacked view on top when notificationStacks == true
+                stackedList
+                    .opacity(notificationStacks ? 1 : 0)
+                    .allowsHitTesting(notificationStacks)     // only interact when visible
+                    .accessibilityHidden(!notificationStacks)
+                    .animation(.easeInOut(duration: 0.5), value: notificationStacks)
+
+                // flat view on top when notificationStacks == false
+                flatList
+                    .opacity(notificationStacks ? 0 : 1)
+                    .allowsHitTesting(!notificationStacks)
+                    .accessibilityHidden(notificationStacks)
+                    .animation(.easeInOut(duration: 0.5), value: notificationStacks)
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: notificationStacks)
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: expandedPackages)
     }
+
 
     // MARK: - Flat List
     private var flatList: some View {
         List(appState.notifications.prefix(20), id: \.id) { notif in
             notificationRow(for: notif)
-                .transition(.opacity.combined(with: .scale))
         }
         .scrollContentBackground(.hidden)
         .background(.clear)
-        .listStyle(.sidebar)
+        .transition(.blurReplace)
+        .listStyle(.automatic)
     }
 
     // MARK: - Stacked List
@@ -70,16 +54,21 @@ struct NotificationView: View {
                 let isExpanded = expandedPackages.contains(package)
 
                 Section {
-                    let visibleNotifs = isExpanded ? packageNotifs : Array(packageNotifs.prefix(1))
+                    let visibleNotifs: [Notification] = {
+                        if isExpanded {
+                            return packageNotifs
+                        } else {
+                            return packageNotifs.first.map { [$0] } ?? []
+                        }
+                    }()
 
-                    ForEach(visibleNotifs, id: \.id) { notif in
+                    ForEach(visibleNotifs) { notif in
                         notificationRow(for: notif)
-                            .transition(.opacity.combined(with: .scale))
                     }
 
                     if packageNotifs.count > 1 {
                         Button {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            withAnimation(.spring) {
                                 if isExpanded {
                                     expandedPackages.remove(package)
                                 } else {
@@ -94,8 +83,6 @@ struct NotificationView: View {
                             .font(.caption)
                         }
                         .buttonStyle(.borderless)
-                        .padding(.top, 4)
-                        .transition(.opacity)
                     }
                 } header: {
                     Text(appState.androidApps[package]?.name ?? "AirSync")
@@ -104,6 +91,7 @@ struct NotificationView: View {
         }
         .scrollContentBackground(.hidden)
         .background(.clear)
+        .transition(.blurReplace)
         .listStyle(.sidebar)
     }
 
@@ -138,7 +126,6 @@ struct NotificationView: View {
         }
     }
 }
-
 
 #Preview {
     NotificationView()

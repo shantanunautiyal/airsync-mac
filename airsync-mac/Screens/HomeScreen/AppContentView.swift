@@ -45,18 +45,20 @@ struct AppContentView: View {
                     NotificationView()
                         .transition(.blurReplace)
                         .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    notificationStacks.toggle()
-                                } label: {
-                                    Label("Toggle Notification Stacks", systemImage: notificationStacks ? "square.stack" : "list.dash.header.rectangle")
+                            if (appState.notifications.count > 0){
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button {
+                                        notificationStacks.toggle()
+                                    } label: {
+                                        Label("Toggle Notification Stacks", systemImage: notificationStacks ? "mail" : "mail.stack")
+                                    }
                                 }
-                            }
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    appState.clearNotifications()
-                                } label: {
-                                    Label("Clear", systemImage: "wind")
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button {
+                                        appState.clearNotifications()
+                                    } label: {
+                                        Label("Clear", systemImage: "wind")
+                                    }
                                 }
                             }
                         }
