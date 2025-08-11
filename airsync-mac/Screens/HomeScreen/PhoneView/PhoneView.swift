@@ -71,7 +71,6 @@ struct PhoneView: View {
               let nsImage = NSImage(data: data) else { return }
 
         if !animated || currentImage == nil {
-            // First load, no animation
             currentImage = nsImage
             nextImage = nil
             nextImageOpacity = 0.0
