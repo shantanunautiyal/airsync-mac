@@ -41,7 +41,8 @@ struct MockData{
         title: "Sample Music Title",
         artist: "Sample Artist",
         volume: 50,
-        isMuted: false
+        isMuted: false,
+        albumArt: ""
     )
 
     static let sampleDevices = [

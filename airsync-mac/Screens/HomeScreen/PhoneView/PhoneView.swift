@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct PhoneView: View {
-    var wallpaperPath: String? {
-        AppState.shared.currentWallpaperPath
-    }
+    @ObservedObject var appState = AppState.shared
+
+    @State private var currentImage: NSImage?
+    @State private var nextImage: NSImage?
+    @State private var nextImageOpacity: Double = 0.0
 
     var body: some View {
         ZStack {
@@ -21,34 +23,81 @@ struct PhoneView: View {
             )
             .transition(.opacity.combined(with: .scale))
 
-            Group {
-                if let base64 = AppState.shared.currentDeviceWallpaperBase64,
-                   let data = Data(base64Encoded: base64.stripBase64Prefix()),
-                   let nsImage = NSImage(data: data) {
-                    Image(nsImage: nsImage)
+            ZStack {
+                if let image = currentImage {
+                    Image(nsImage: image)
                         .resizable()
                         .scaledToFill()
                         .opacity(0.75)
+                        .transition(.blurReplace)
+                }
+
+                if let image = nextImage {
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .opacity(nextImageOpacity * 0.75)
+                        .transition(.blurReplace)
                 }
             }
             .aspectRatio(contentMode: .fill)
             .frame(width: 180, height: 400)
             .cornerRadius(20)
 
-
-
-
             ScreenView()
-                .transition(.opacity.combined(with: .scale))
+                .transition(.blurReplace)
+        }
+        .onAppear {
+            updateImage(animated: false)
+        }
+        .onChange(of: appState.status?.music.isPlaying) {
+            updateImage(animated: true)
+        }
+        .onChange(of: appState.status?.music.albumArt) {
+            updateImage(animated: true)
+        }
+        .onChange(of: AppState.shared.currentDeviceWallpaperBase64) {
+            updateImage(animated: true)
+        }
+    }
+
+    private func updateImage(animated: Bool) {
+        let base64 = (appState.status?.music.isPlaying ?? false)
+        ? appState.status?.music.albumArt
+        : AppState.shared.currentDeviceWallpaperBase64
+
+        guard let base64 = base64,
+              let data = Data(base64Encoded: base64.stripBase64Prefix()),
+              let nsImage = NSImage(data: data) else { return }
+
+        if !animated || currentImage == nil {
+            // First load, no animation
+            currentImage = nsImage
+            nextImage = nil
+            nextImageOpacity = 0.0
+            return
+        }
+
+        // Crossfade
+        nextImage = nsImage
+        nextImageOpacity = 0.0
+
+        withAnimation(.easeInOut(duration: 0.75)) {
+            nextImageOpacity = 1.0
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+            currentImage = nsImage
+            nextImage = nil
+            nextImageOpacity = 0.0
         }
     }
 }
 
-
-
 #Preview {
     PhoneView()
 }
+
 
 struct StatusBarView: View {
     var body: some View {

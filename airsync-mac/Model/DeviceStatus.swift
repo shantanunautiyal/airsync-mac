@@ -19,6 +19,7 @@ struct DeviceStatus: Codable {
         let artist: String
         let volume: Int
         let isMuted: Bool
+        let albumArt: String
     }
 
     let battery: Battery

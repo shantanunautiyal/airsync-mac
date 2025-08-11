@@ -277,7 +277,6 @@ class WebSocketServer: ObservableObject {
                let package = dict["package"] as? String{
                 let notif = Notification(title: title, body: body, app: app, nid: nid, package: package)
                 DispatchQueue.main.async {
-//                    AppState.shared.notifications.insert(notif, at: 0)
                     AppState.shared.addNotification(notif)
                 }
             }
@@ -293,11 +292,13 @@ class WebSocketServer: ObservableObject {
                let title = music["title"] as? String,
                let artist = music["artist"] as? String,
                let volume = music["volume"] as? Int,
-               let isMuted = music["isMuted"] as? Bool {
+               let isMuted = music["isMuted"] as? Bool,
+               let albumArt = music["albumArt"] as? String
+            {
                 AppState.shared.status = DeviceStatus(
                     battery: .init(level: level, isCharging: isCharging),
                     isPaired: paired,
-                    music: .init(isPlaying: playing, title: title, artist: artist, volume: volume, isMuted: isMuted)
+                    music: .init(isPlaying: playing, title: title, artist: artist, volume: volume, isMuted: isMuted, albumArt: albumArt)
                 )
             }
 
