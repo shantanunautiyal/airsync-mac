@@ -71,7 +71,13 @@ struct SettingsView: View {
 
 
 
-                        ConnectionInfoText(label: "IP Address", icon: "wifi", text: getLocalIPAddress() ?? "N/A")
+                        ConnectionInfoText(
+                            label: "IP Address",
+                            icon: "wifi",
+                            text: WebSocketServer.shared.getLocalIPAddress(adapterName:
+                                appState.selectedNetworkAdapterName
+                            ) ?? "N/A"
+                        )
 
                         HStack {
                             Label("Server Port", systemImage: "rectangle.connected.to.line.below")

@@ -124,7 +124,10 @@ struct ScannerView: View {
 
      func generateQRAsync() {
         let text = generateQRText(
-            ip: getLocalIPAddress(),
+            ip: WebSocketServer.shared
+                .getLocalIPAddress(
+                    adapterName: appState.selectedNetworkAdapterName
+                ),
             port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),
             name: appState.myDevice?.name,
             key: WebSocketServer.shared.getSymmetricKeyBase64() ?? ""

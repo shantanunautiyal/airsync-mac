@@ -55,6 +55,8 @@ class WebSocketServer: ObservableObject {
                     self.localPort = port
                     self.localIPAddress = ip
                     AppState.shared.webSocketStatus = .started(port: port, ip: ip)
+
+                    self.lastKnownIP = ip
                 }
                 print("WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
 
@@ -67,6 +69,7 @@ class WebSocketServer: ObservableObject {
             }
         }
     }
+
 
 
 
@@ -168,7 +171,7 @@ class WebSocketServer: ObservableObject {
 
                 if result == 0 {
                     let ip = String(cString: hostname)
-                    print("Checking adapter: \(name), IP: \(ip), target: \(adapterName ?? "nil")")
+                    print("Checking adapter: \(name), IP: \(ip), target: \(adapterName ?? "N/A")")
 
                     if ip == "127.0.0.1" {
                         continue // Skip loopback
@@ -546,14 +549,17 @@ class WebSocketServer: ObservableObject {
 
     private func checkNetworkChange() {
         let currentIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
-        if currentIP != lastKnownIP {
-            print("Network IP changed from \(lastKnownIP ?? "nil") to \(currentIP ?? "nil"), restarting WebSocket in 5 seconds")
+        if let lastIP = lastKnownIP, currentIP != lastIP {
+            print("Network IP changed from \(lastIP) to \(currentIP ?? "N/A"), restarting WebSocket in 5 seconds")
             lastKnownIP = currentIP
-
             DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                 self.stop()
                 self.start(port: Defaults.serverPort)
             }
+        } else if lastKnownIP == nil {
+            // First run
+            lastKnownIP = currentIP
         }
     }
+
 }

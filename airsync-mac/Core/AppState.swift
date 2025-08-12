@@ -60,7 +60,10 @@ class AppState: ObservableObject {
 
         self.myDevice = Device(
             name: name,
-            ipAddress: getLocalIPAddress() ?? "N/A",
+            ipAddress: WebSocketServer.shared
+                .getLocalIPAddress(
+                    adapterName: selectedNetworkAdapterName
+                ) ?? "N/A",
             port: port,
             version:appVersion
         )
