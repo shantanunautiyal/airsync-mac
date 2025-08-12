@@ -1,5 +1,6 @@
 # AirSync 2.0 macOS app written in Swift
 
+Min : macOS 14.5
 
 [![AirSync demo](https://img.youtube.com/vi/HDv0Hu9z294?si=dgycryP1T8QvPJYa/0.jpg)](https://www.youtube.com/watch?v=HDv0Hu9z294?si=dgycryP1T8QvPJYa)
 
