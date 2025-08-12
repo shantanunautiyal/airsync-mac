@@ -12,6 +12,8 @@ struct SettingsView: View {
 
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
+    @AppStorage("showMenubarText") private var showMenubarText = true
+
 
 
     @State private var availableAdapters: [(name: String, address: String)] = []
@@ -136,6 +138,13 @@ struct SettingsView: View {
                             Text("Toolbar contrast")
                             Spacer()
                             Toggle("", isOn: $appState.toolbarContrast)
+                                .toggleStyle(.switch)
+                        }
+
+                        HStack{
+                            Text("Menubar text")
+                            Spacer()
+                            Toggle("", isOn: $showMenubarText)
                                 .toggleStyle(.switch)
                         }
                     }

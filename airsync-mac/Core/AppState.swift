@@ -34,6 +34,7 @@ class AppState: ObservableObject {
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
         self.mirroringPlus = UserDefaults.standard.bool(forKey: "mirroringPlus")
         self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
+        self.showMenubarText = UserDefaults.standard.bool(forKey: "showMenubarText")
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         self.windowOpacity = UserDefaults.standard
@@ -102,6 +103,11 @@ class AppState: ObservableObject {
     @Published var adbConnected: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
     @Published var selectedNetworkAdapterName: String? // e.g., "en0"
+    @Published var showMenubarText: Bool {
+        didSet {
+            UserDefaults.standard.set(showMenubarText, forKey: "showMenubarText")
+        }
+    }
 
     @Published var scrcpyBitrate: Int = 4 {
         didSet {

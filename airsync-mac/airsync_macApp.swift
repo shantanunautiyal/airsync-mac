@@ -64,12 +64,14 @@ struct airsync_macApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra(
-            "AirSync",
-            systemImage: appState.device != nil ? "iphone.gen3" : "iphone.slash"
-        ) {
+        MenuBarExtra {
             MenubarView()
+                .environmentObject(appState)
+        } label: {
+            MenuBarLabelView()
+                .environmentObject(appState)
         }
+
 
         WindowGroup(id: "main") {
             if #available(macOS 15.0, *) {
