@@ -39,6 +39,19 @@ struct NotificationView: View {
     private var flatList: some View {
         List(appState.notifications.prefix(20), id: \.id) { notif in
             notificationRow(for: notif)
+                .onTapGesture {
+                    if appState.device != nil && appState.adbConnected &&
+                        notif.package != "" &&
+                        notif.package != "com.sameerasw.airsync" &&
+                        appState.mirroringPlus {
+                        ADBConnector.startScrcpy(
+                            ip: appState.device?.ipAddress ?? "",
+                            port: appState.adbPort,
+                            deviceName: appState.device?.name ?? "My Phone",
+                            package: notif.package
+                        )
+                    }
+                }
         }
         .scrollContentBackground(.hidden)
         .background(.clear)
@@ -122,7 +135,6 @@ struct NotificationView: View {
             deleteNotification: { appState.removeNotification(notif) },
             hideNotification: { appState.hideNotification(notif) }
         )
-        .background(.clear)
         .applyGlassViewIfAvailable()
     }
 }

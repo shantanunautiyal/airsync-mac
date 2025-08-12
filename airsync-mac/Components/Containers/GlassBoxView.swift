@@ -52,7 +52,10 @@ extension View {
     @ViewBuilder
     func applyGlassViewIfAvailable() -> some View {
         if #available(macOS 26.0, *) {
+            self.background(.clear)
             self.glassEffect(in: .rect(cornerRadius: 20))
+        } else {
+            self.background(.thinMaterial)
         }
     }
 }
