@@ -62,7 +62,7 @@ extension View {
 extension View {
     @ViewBuilder
     func glassButtonIfAvailable() -> some View {
-        if #available(macOS 26.0, *) {
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
             self.buttonStyle(.glass)
         } else {
             self.buttonStyle(.bordered)
@@ -71,7 +71,7 @@ extension View {
 
     @ViewBuilder
     func glassPrimaryButtonIfAvailable() -> some View {
-        if #available(macOS 26.0, *) {
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
             self.buttonStyle(.glassProminent)
         } else {
             self.buttonStyle(.borderedProminent)

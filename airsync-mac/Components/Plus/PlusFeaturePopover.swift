@@ -18,17 +18,9 @@ struct PlusFeaturePopover: View {
 
             HStack{
                 Spacer()
-                if #available(macOS 26.0, *) {
-                    Button("See more") {
-                        AppState.shared.selectedTab = .settings
-                    }
-                    .buttonStyle(.glass)
-                } else {
-                    Button("See more") {
-                        AppState.shared.selectedTab = .settings
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
+                GlassButtonView(label: "See more", action: {
+                    AppState.shared.selectedTab = .settings
+                })
                 Spacer()
             }
         }

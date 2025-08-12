@@ -57,7 +57,7 @@ struct SaveAndRestartButton: View {
 extension View {
     @ViewBuilder
     func applyGlassIfAvailable() -> some View {
-        if #available(macOS 26.0, *) {
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
             self.buttonStyle(.glass)
         } else {
             self.buttonStyle(.borderedProminent)

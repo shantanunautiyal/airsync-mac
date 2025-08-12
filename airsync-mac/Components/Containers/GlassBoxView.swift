@@ -15,7 +15,7 @@ struct GlassBoxView: View {
     var radius: CGFloat = 16.0
 
     var body: some View {
-        if #available(macOS 26.0, *) {
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
             Rectangle()
                 .fill(.clear)
                 .frame(width: width, height: height)
@@ -42,7 +42,7 @@ struct GlassBoxView: View {
 extension View {
     @ViewBuilder
     func glassBoxIfAvailable(radius: CGFloat) -> some View {
-        if #available(macOS 26.0, *) {
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
             self.glassEffect(in: .rect(cornerRadius: radius))
         }
     }
@@ -51,13 +51,12 @@ extension View {
 extension View {
     @ViewBuilder
     func applyGlassViewIfAvailable(cornerRadius: CGFloat = 20) -> some View {
-        if #available(macOS 26.0, *) {
-            self.background(.clear).glassEffect(in: .rect(cornerRadius: cornerRadius))
+        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
+            self.background(.clear)
+                .glassEffect(in: .rect(cornerRadius: cornerRadius))
         } else {
-            self.background(
-                .thinMaterial,
-                in: .rect(cornerRadius: cornerRadius)
-            )
+            self.background(.thinMaterial, in: .rect(cornerRadius: cornerRadius))
         }
     }
 }
+

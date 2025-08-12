@@ -17,6 +17,8 @@ class AppState: ObservableObject {
     private var shouldSkipSave = false
     private let licenseDetailsKey = "licenseDetails"
 
+    @Published var isOS26: Bool = true
+
 
     init() {
         self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")

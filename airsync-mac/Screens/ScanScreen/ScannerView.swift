@@ -83,7 +83,7 @@ struct ScannerView: View {
 
             Spacer()
 
-            if #available(macOS 26.0, *) {
+            if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
                 Label {
                     Text(info.text)
                         .foregroundColor(info.color)
@@ -103,6 +103,7 @@ struct ScannerView: View {
                     Image(systemName: info.icon)
                         .foregroundColor(info.color)
                 }
+                .background(.thinMaterial, in: .rect(cornerRadius: 20))
                 .padding()
             }
         }
