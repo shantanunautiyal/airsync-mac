@@ -189,7 +189,7 @@ func generateQRText(ip: String?, port: UInt16?, name: String?, key: String) -> S
         return nil
     }
 
-    let encodedName = name?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Unknown"
+    let encodedName = name?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "My Mac"
     return "airsync://\(ip):\(port)?name=\(encodedName)?plus=\(AppState.shared.isPlus)?key=\(key)"
 }
 
