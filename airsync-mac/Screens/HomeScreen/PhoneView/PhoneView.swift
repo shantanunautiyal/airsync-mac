@@ -16,12 +16,6 @@ struct PhoneView: View {
 
     var body: some View {
         ZStack {
-            GlassBoxView(
-                width: 190,
-                height: 410,
-                radius: 25
-            )
-            .transition(.opacity.combined(with: .scale))
 
             ZStack {
                 if let image = currentImage {
@@ -47,6 +41,9 @@ struct PhoneView: View {
             ScreenView()
                 .transition(.blurReplace)
         }
+        .frame(width: 190, height: 410)
+        .applyGlassViewIfAvailable(cornerRadius: 25)
+        .transition(.opacity.combined(with: .scale))
         .onAppear {
             updateImage(animated: false)
         }
@@ -128,15 +125,8 @@ struct ScreenView: View {
                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
                !title.isEmpty {
 
-                if #available(macOS 26.0, *) {
-                    MediaPlayerView(music: music)
-                        .background(.clear)
-                        .glassEffect(in: .rect(cornerRadius: 20))
-                        .transition(.opacity.combined(with: .scale))
-                } else {
-                    MediaPlayerView(music: music)
-                        .transition(.opacity.combined(with: .scale))
-                }
+                MediaPlayerView(music: music)
+                    .transition(.opacity.combined(with: .scale))
             } else {
                 Spacer()
             }

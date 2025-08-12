@@ -16,18 +16,9 @@ struct SidebarView: View {
     var body: some View {
         VStack{
             if (appState.status != nil){
-                if #available(macOS 26.0, *) {
                     DeviceStatusView()
-                        .padding()
-                        .background(.clear)
-                        .glassEffect(in: .rect(cornerRadius: 20))
-                        .transition(.opacity.combined(with: .scale))
-                } else {
-                    DeviceStatusView()
-                        .padding()
                         .transition(.opacity.combined(with: .scale))
                 }
-            }
 
             if let deviceVersion = appState.device?.version,
                isVersion(deviceVersion, lessThan: appState.minAndroidVersion) {

@@ -69,6 +69,7 @@ struct MediaPlayerView: View {
         }
         .padding()
         .frame(maxWidth: 170)
+        .applyGlassViewIfAvailable(cornerRadius: 20)
         .onTapGesture {
             showingPlusPopover = !AppState.shared.isPlus && AppState.shared.licenseCheck
         }
