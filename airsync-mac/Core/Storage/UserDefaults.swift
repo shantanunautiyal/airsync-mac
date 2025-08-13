@@ -18,7 +18,7 @@ extension UserDefaults {
         static let stayAwake = "stayAwake"
         static let turnScreenOff = "turnScreenOff"
         static let noAudio = "noAudio"
-			static let hasPairedDeviceOnce = "hasPairedDeviceOnce"
+        static let hasPairedDeviceOnce = "hasPairedDeviceOnce"
 
 
         static let notificationStacks = "notificationStacks"

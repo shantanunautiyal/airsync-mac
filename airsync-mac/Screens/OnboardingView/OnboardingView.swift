@@ -25,6 +25,14 @@ struct OnboardingView: View {
                         .padding()
                 } else {
                     VStack(spacing: 20) {
+
+                        if let appIcon = NSApplication.shared.applicationIconImage {
+                            Image(nsImage: appIcon)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 100, height: 100)
+                        }
+
                         Text("AirSync")
                             .font(.system(size: 48, weight: .bold))
                             .tracking(0.5)
