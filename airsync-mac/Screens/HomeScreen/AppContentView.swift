@@ -47,11 +47,12 @@ struct AppContentView: View {
                         .toolbar {
                             if (appState.notifications.count > 0){
                                 ToolbarItem(placement: .primaryAction) {
-                                    Button {
+                                Button {
                                         notificationStacks.toggle()
                                     } label: {
                                         Label("Toggle Notification Stacks", systemImage: notificationStacks ? "mail" : "mail.stack")
                                     }
+                                    .help(notificationStacks ? "Switch to stacked view" : "Switch to expanded view")
                                 }
                                 ToolbarItem(placement: .primaryAction) {
                                     Button {
@@ -59,6 +60,7 @@ struct AppContentView: View {
                                     } label: {
                                         Label("Clear", systemImage: "wind")
                                     }
+                                    .help("Clear all notifications")
                                 .badge(appState.notifications.count)
                                 }
                             }
@@ -79,6 +81,7 @@ struct AppContentView: View {
                                         NSWorkspace.shared.open(url)
                                     }
                                 }
+                                .help("Report issues or suggest features")
                             }
 
                             ToolbarItem(placement: .primaryAction) {
@@ -87,6 +90,7 @@ struct AppContentView: View {
                                 } label: {
                                     Label("About", systemImage: "info")
                                 }
+                                .help("View app information and version details")
                             }
                         }
                 }
@@ -111,6 +115,7 @@ struct AppContentView: View {
                         Button(tab.rawValue, systemImage: tab.icon){}
                             .labelStyle(.iconOnly)
                             .tag(tab)
+                            .help(tab.rawValue)
                     }
                 }
                 .pickerStyle(.palette)
