@@ -72,6 +72,7 @@ struct airsync_macApp: App {
             MenuBarLabelView()
                 .environmentObject(appState)
         }
+        .menuBarExtraStyle(.window)
 
         WindowGroup(id: "main") {
             if #available(macOS 15.0, *) {

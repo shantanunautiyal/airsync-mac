@@ -17,25 +17,19 @@ struct MenubarView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .center, spacing: 12) {
             Text("AirSync - \(getDeviceName())")
                 .font(.headline)
                 .padding(.bottom, 4)
 
-            Divider()
 
             if (appState.device != nil) {
+                Divider()
                 DeviceStatusView()
+                PhoneView()
             }
 
-            HStack {
-                GlassButtonView(
-                    label: "Open App",
-                    systemImage: "arrow.up.forward.app"
-                ) {
-                    openWindow(id: "main")
-                }
-            }
+
 
             if (appState.adbConnected && appState.isPlus) {
                 HStack {
@@ -56,8 +50,17 @@ struct MenubarView: View {
 
             Divider()
 
-            GlassButtonView(label: "Quit", systemImage: "power") {
-                NSApplication.shared.terminate(nil)
+            HStack {
+                GlassButtonView(
+                    label: "Open App",
+                    systemImage: "arrow.up.forward.app"
+                ) {
+                    openWindow(id: "main")
+                }
+
+                GlassButtonView(label: "Quit", systemImage: "power") {
+                    NSApplication.shared.terminate(nil)
+                }
             }
 
         }

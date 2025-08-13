@@ -67,6 +67,7 @@ struct DeviceStatusView: View {
                     PlusFeaturePopover(message: "Control volume with AirSync+")
                 }
             }
+            .frame(width: 150)
             .padding()
             .applyGlassViewIfAvailable()
             .animation(.easeInOut(duration: 0.25),
