@@ -18,6 +18,7 @@ extension UserDefaults {
         static let stayAwake = "stayAwake"
         static let turnScreenOff = "turnScreenOff"
         static let noAudio = "noAudio"
+			static let hasPairedDeviceOnce = "hasPairedDeviceOnce"
 
 
         static let notificationStacks = "notificationStacks"
@@ -67,6 +68,11 @@ extension UserDefaults {
         get { bool(forKey: Keys.noAudio)}
         set { set(newValue, forKey: Keys.noAudio)}
     }
+
+		var hasPairedDeviceOnce: Bool {
+			get { bool(forKey: Keys.hasPairedDeviceOnce) }
+			set { set(newValue, forKey: Keys.hasPairedDeviceOnce) }
+		}
 
     var notificationStacks: Bool {
         get { bool(forKey: Keys.notificationStacks)}

@@ -15,6 +15,7 @@ struct airsync_macApp: App {
     let notificationDelegate = NotificationDelegate()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
+    @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
 
     init() {
 
@@ -72,6 +73,16 @@ struct airsync_macApp: App {
                 .environmentObject(appState)
         }
 
+        WindowGroup(id: "onboarding") {
+            if #available(macOS 15.0, *) {
+                OnboardingView()
+                    .containerBackground(.ultraThinMaterial, for: .window)
+            } else {
+                OnboardingView()
+            }
+        }
+        .defaultSize(width: 720, height: 480)
+        .windowStyle(.hiddenTitleBar)
 
         WindowGroup(id: "main") {
             if #available(macOS 15.0, *) {
@@ -115,5 +126,6 @@ struct airsync_macApp: App {
             }
         }
     }
+    
 }
 

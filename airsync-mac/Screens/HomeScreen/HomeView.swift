@@ -6,14 +6,23 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct HomeView: View {
     @ObservedObject var appState = AppState.shared
     @State private var targetOpacity: Double = 0
+    @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
 
     var body: some View {
         NavigationSplitView {
             ZStack {
+                // If first run, immediately hide this window so only onboarding shows
+                WindowAccessor { window in
+                    if hasPairedDeviceOnce == false {
+                        window.orderOut(nil)
+                    }
+                }
+
                 if let base64 = AppState.shared.currentDeviceWallpaperBase64,
                    let data = Data(base64Encoded: base64.stripBase64Prefix()),
                    let nsImage = NSImage(data: data) {

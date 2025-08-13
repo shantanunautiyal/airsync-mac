@@ -268,6 +268,11 @@ class WebSocketServer: ObservableObject {
                 if (!AppState.shared.adbConnected && AppState.shared.adbEnabled && AppState.shared.isPlus) {
                     ADBConnector.connectToADB(ip: ip)
                 }
+
+				// mark first-time pairing
+				if UserDefaults.standard.hasPairedDeviceOnce == false {
+					UserDefaults.standard.hasPairedDeviceOnce = true
+				}
             }
 
 
