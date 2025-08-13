@@ -41,8 +41,8 @@ struct MenubarView: View {
     }
 
     // Constants for min height
-    private let minHeightTabs: CGFloat = 480
-    private let minWidthTabs: CGFloat = 300
+    private let minHeightTabs: CGFloat = 520
+    private let minWidthTabs: CGFloat = 280
 
     var body: some View {
         VStack(spacing: 12) {
