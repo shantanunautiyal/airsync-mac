@@ -40,10 +40,12 @@ struct MenubarView: View {
         appState.device?.name ?? "Ready"
     }
 
+    // Constants for min height
+    private let minHeightTabs: CGFloat = 480
+    private let minWidthTabs: CGFloat = 300
+
     var body: some View {
-        VStack() {
-            // Header
-            // Icon-only Picker for tabs
+        VStack(spacing: 12) {
             Picker("", selection: $selectedTab) {
                 ForEach(Tab.availableTabs) { tab in
                     Label(tab.rawValue.capitalized, systemImage: tab.icon)
@@ -54,16 +56,15 @@ struct MenubarView: View {
             }
             .pickerStyle(.palette)
 
+            // Header
             Text("AirSync - \(getDeviceName())")
                 .font(.headline)
 
-
-            // Tab content
             ZStack {
                 switch selectedTab {
                 case .home:
                     VStack(alignment: .center, spacing: 12) {
-                        if appState.device != nil {
+                        if let _ = appState.device {
                             DeviceStatusView()
                             PhoneView()
                         }
@@ -83,16 +84,24 @@ struct MenubarView: View {
                             }
                         }
                     }
+                    .transition(.opacity.combined(with: .blurReplace))
 
                 case .notifications:
                     NotificationView()
+                        .transition(.opacity.combined(with: .blurReplace))
 
                 case .apps:
                     AppsView()
+                        .transition(.opacity.combined(with: .blurReplace))
                 }
             }
-            .frame( minWidth: 300,minHeight: appState.device != nil ? 480 : 0)
-
+            .animation(.easeInOut(duration: 0.25), value: selectedTab)
+            .frame(
+                minWidth: minWidthTabs,
+                minHeight: appState.device != nil
+                ? (selectedTab == .notifications ? nil : minHeightTabs)
+                : 0
+            )
 
             // Footer
             HStack {
