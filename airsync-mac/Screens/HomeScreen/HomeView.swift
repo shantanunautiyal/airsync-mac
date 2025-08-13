@@ -12,17 +12,11 @@ struct HomeView: View {
     @ObservedObject var appState = AppState.shared
     @State private var targetOpacity: Double = 0
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
+    @State private var showOnboarding = false
 
     var body: some View {
         NavigationSplitView {
             ZStack {
-                // If first run, immediately hide this window so only onboarding shows
-                WindowAccessor { window in
-                    if hasPairedDeviceOnce == false {
-                        window.orderOut(nil)
-                    }
-                }
-
                 if let base64 = AppState.shared.currentDeviceWallpaperBase64,
                    let data = Data(base64Encoded: base64.stripBase64Prefix()),
                    let nsImage = NSImage(data: data) {
@@ -53,11 +47,9 @@ struct HomeView: View {
                         .onChange(of: base64) {
                             fadeOpacity()
                         }
-
-
                 }
 
-                // Your sidebar or scanner views here...
+                // Sidebar or scanner depending on device state
                 if appState.device != nil {
                     SidebarView()
                         .transition(.opacity.combined(with: .scale))
@@ -77,6 +69,23 @@ struct HomeView: View {
             : Material.ultraThinMaterial.opacity(0),
             for: .windowToolbar
         )
+        // Show onboarding sheet when needed
+        .onAppear {
+            if hasPairedDeviceOnce == false {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView()
+                .frame(minWidth: 640, minHeight: 420)
+        }
+        // Close onboarding sheet automatically once device is paired
+        .onChange(of: appState.device) { newDevice in
+            if newDevice != nil {
+                hasPairedDeviceOnce = true
+                showOnboarding = false
+            }
+        }
     }
 
     func fadeOpacity() {
@@ -90,11 +99,6 @@ struct HomeView: View {
         }
     }
 }
-
-
-
-
-
 
 #Preview {
     HomeView()
