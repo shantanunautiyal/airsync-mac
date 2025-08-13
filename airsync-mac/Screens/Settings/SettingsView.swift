@@ -1,11 +1,5 @@
-//
-//  ContentView.swift
-//  airsync-mac
-//
-//  Created by Sameera Sandakelum on 2025-07-27.
-//
-
 import SwiftUI
+import UserNotifications
 
 struct SettingsView: View {
     @ObservedObject var appState = AppState.shared
@@ -13,19 +7,17 @@ struct SettingsView: View {
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
     @AppStorage("showMenubarText") private var showMenubarText = true
-
-
-
     @State private var availableAdapters: [(name: String, address: String)] = []
 
-
-
+    // New state for notification permissions
+    @State private var notificationsGranted = false
+    @State private var notificationsChecked = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack {
-                    // Name Field
+                    // Device Name Field
                     VStack {
                         HStack {
                             Label("Device Name", systemImage: "pencil")
@@ -70,15 +62,10 @@ struct SettingsView: View {
                             }
                         }
 
-
-
-
                         ConnectionInfoText(
                             label: "IP Address",
                             icon: "wifi",
-                            text: WebSocketServer.shared.getLocalIPAddress(adapterName:
-                                appState.selectedNetworkAdapterName
-                            ) ?? "N/A"
+                            text: WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
                         )
 
                         HStack {
@@ -88,7 +75,6 @@ struct SettingsView: View {
                             TextField("Server Port", text: $port)
                                 .textFieldStyle(.roundedBorder)
                                 .onChange(of: port) { oldValue, newValue in
-                                    // Only allow digits
                                     port = newValue.filter { "0123456789".contains($0) }
                                 }
                         }
@@ -98,7 +84,6 @@ struct SettingsView: View {
                             icon: "plus.app",
                             text: appState.isPlus ? "Active" : "Not active"
                         )
-
                     }
                     .padding()
                     .background(.background.opacity(0.3))
@@ -114,12 +99,29 @@ struct SettingsView: View {
                             onSave: nil,
                             onRestart: nil
                         )
-
                     }
 
+                    // UI Tweaks Section
                     VStack {
+                        HStack {
+                            Label("System Notifications", systemImage: "bell.badge")
+
+                            Spacer()
+
+                            GlassButtonView(
+                                label: notificationsGranted ? "Enabled" : "Grant Permission",
+                                systemImage: notificationsGranted ? "checkmark.circle.fill" : "bell.badge",
+                                primary: !notificationsGranted,
+                                action: {
+                                        openNotificationSettings()
+                                }
+                            )
+                            .disabled(notificationsGranted)
+                            .transition(.identity)
+                        }
+
                         HStack{
-                            Text("Liquid Opacity")
+                            Label("Liquid Opacity", systemImage: "app.background.dotted")
                             Spacer()
                             Slider(
                                 value: $appState.windowOpacity,
@@ -135,14 +137,14 @@ struct SettingsView: View {
                         }
 
                         HStack{
-                            Text("Toolbar contrast")
+                            Label("Toolbar contrast", systemImage: "uiwindow.split.2x1")
                             Spacer()
                             Toggle("", isOn: $appState.toolbarContrast)
                                 .toggleStyle(.switch)
                         }
 
                         HStack{
-                            Text("Menubar text")
+                            Label("Menubar text", systemImage: "menubar.arrow.up.rectangle")
                             Spacer()
                             Toggle("", isOn: $showMenubarText)
                                 .toggleStyle(.switch)
@@ -156,29 +158,38 @@ struct SettingsView: View {
                         .padding()
                         .background(.background.opacity(0.3))
                         .cornerRadius(12.0)
-
-                        }
+                }
                 .padding()
-                    }
-
-                }
-                .frame(minWidth: 300)
-                .onAppear {
-                    if let device = appState.myDevice {
-                        deviceName = device.name
-                        port = String(device.port)
-                    } else {
-                        deviceName = UserDefaults.standard.string(forKey: "deviceName")
-                        ?? (Host.current().localizedName ?? "My Mac")
-                        port = UserDefaults.standard.string(forKey: "devicePort")
-                        ?? String(Defaults.serverPort)
-                    }
-                }
             }
+        }
+        .frame(minWidth: 300)
+        .onAppear {
+            if let device = appState.myDevice {
+                deviceName = device.name
+                port = String(device.port)
+            } else {
+                deviceName = UserDefaults.standard.string(forKey: "deviceName")
+                ?? (Host.current().localizedName ?? "My Mac")
+                port = UserDefaults.standard.string(forKey: "devicePort")
+                ?? String(Defaults.serverPort)
+            }
+            checkNotificationPermissions()
+        }
+    }
+
+    // MARK: - Notification Permission Helpers
+    func checkNotificationPermissions() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                notificationsGranted = (settings.authorizationStatus == .authorized)
+                notificationsChecked = true
+            }
+        }
+    }
+
+    func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
 }
-
-#Preview {
-    SettingsView()
-}
-
-

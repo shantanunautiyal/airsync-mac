@@ -237,13 +237,13 @@ struct SettingsFeaturesView: View {
 
 
         VStack{
-            HStack{
-                Label("Sync device status", systemImage: "battery.75percent")
-                Spacer()
-                Toggle("", isOn: .constant(false))
-                    .toggleStyle(.switch)
-                    .disabled(true)
-            }
+//            HStack{
+//                Label("Sync device status", systemImage: "battery.75percent")
+//                Spacer()
+//                Toggle("", isOn: .constant(false))
+//                    .toggleStyle(.switch)
+//                    .disabled(true)
+//            }
 
             HStack{
                 Label("Sync clipboard", systemImage: "clipboard")
