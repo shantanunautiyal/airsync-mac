@@ -300,15 +300,24 @@ class WebSocketServer: ObservableObject {
                let title = music["title"] as? String,
                let artist = music["artist"] as? String,
                let volume = music["volume"] as? Int,
-               let isMuted = music["isMuted"] as? Bool,
-               let albumArt = music["albumArt"] as? String
+               let isMuted = music["isMuted"] as? Bool
             {
+                let albumArt = (music["albumArt"] as? String) ?? ""
+
                 AppState.shared.status = DeviceStatus(
                     battery: .init(level: level, isCharging: isCharging),
                     isPaired: paired,
-                    music: .init(isPlaying: playing, title: title, artist: artist, volume: volume, isMuted: isMuted, albumArt: albumArt)
+                    music: .init(
+                        isPlaying: playing,
+                        title: title,
+                        artist: artist,
+                        volume: volume,
+                        isMuted: isMuted,
+                        albumArt: albumArt
+                    )
                 )
             }
+
 
         case .dismissalResponse:
             if let dict = message.data.value as? [String: Any],
