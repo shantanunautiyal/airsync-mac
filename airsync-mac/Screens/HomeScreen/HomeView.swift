@@ -12,7 +12,7 @@ struct HomeView: View {
     @ObservedObject var appState = AppState.shared
     @State private var targetOpacity: Double = 0
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
-    @State private var showOnboarding = false
+    @State var showOnboarding = false
 
     var body: some View {
         NavigationSplitView {
@@ -78,13 +78,6 @@ struct HomeView: View {
         .sheet(isPresented: $showOnboarding) {
             OnboardingView()
                 .frame(minWidth: 640, minHeight: 420)
-        }
-        // Close onboarding sheet automatically once device is paired
-        .onChange(of: appState.device) { newDevice in
-            if newDevice != nil {
-                hasPairedDeviceOnce = true
-                showOnboarding = false
-            }
         }
     }
 
