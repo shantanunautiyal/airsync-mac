@@ -17,7 +17,6 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
             orderNumber: 0,
             purchaserID: "tester",
             usesCount: 0,
-            initialUseCount: 0,
             price: 0,
             currency: "usd",
             saleTimestamp: "",
