@@ -208,7 +208,7 @@ struct SettingsFeaturesView: View {
                             }
 
                             HStack{
-                                Text("Manual positioning (x,y)")
+                                Text("Manual launch position (x,y)")
                                 Spacer()
 
                                 TextField("x", text: $xCoords)
