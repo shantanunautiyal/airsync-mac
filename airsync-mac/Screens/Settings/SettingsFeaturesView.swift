@@ -15,6 +15,7 @@ struct SettingsFeaturesView: View {
     @AppStorage("turnScreenOff") private var turnScreenOff = false
     @AppStorage("noAudio") private var noAudio = false
     @AppStorage("manualPosition") private var manualPosition = false
+    @AppStorage("continueApp") private var continueApp = false
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
@@ -181,6 +182,13 @@ struct SettingsFeaturesView: View {
                                 Spacer()
 
                                 Toggle("", isOn: $noAudio)
+                                    .toggleStyle(.switch)
+                            }
+                            HStack {
+                                Text("Continue app after closing")
+                                Spacer()
+
+                                Toggle("", isOn: $continueApp)
                                     .toggleStyle(.switch)
                             }
 

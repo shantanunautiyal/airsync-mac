@@ -21,6 +21,7 @@ extension UserDefaults {
         static let hasPairedDeviceOnce = "hasPairedDeviceOnce"
         static let manualPosition = "manualPosition"
         static let manualPositionCoords = "manualPositionCoords"
+        static let continueApp = "continueApp"
 
 
         static let notificationStacks = "notificationStacks"
@@ -94,5 +95,10 @@ extension UserDefaults {
     var notificationStacks: Bool {
         get { bool(forKey: Keys.notificationStacks)}
         set { set(newValue, forKey: Keys.notificationStacks)}
+    }
+
+    var continueApp: Bool {
+        get { bool(forKey: Keys.continueApp)}
+        set { set(newValue, forKey: Keys.continueApp)}
     }
 }

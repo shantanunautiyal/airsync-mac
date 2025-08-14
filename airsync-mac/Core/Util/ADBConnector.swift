@@ -257,6 +257,7 @@ Raw output:
         let noAudio = UserDefaults.standard.noAudio
         let manualPosition = UserDefaults.standard.manualPosition
         let manualPositionCoords = UserDefaults.standard.manualPositionCoords
+        let continueApp = UserDefaults.standard.continueApp
 
         var args = [
             "--window-title=\(deviceNameFormatted)",
@@ -296,10 +297,14 @@ Raw output:
             args.append(contentsOf: [
                 "--new-display=\(appRes ?? "900x2100")",
                 "--start-app=\(pkg)",
-                "--no-vd-system-decorations",
-                "--no-vd-destroy-content"
+                "--no-vd-system-decorations"
             ])
+
+            if continueApp {
+                args.append("--no-vd-destroy-content")
+            }
         }
+
 
         logBinaryDetection("Launching scrcpy: \(scrcpyPath) \(args.joined(separator: " "))")
 
