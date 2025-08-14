@@ -80,6 +80,7 @@ struct SidebarView: View {
                     value: AppState.shared.adbConnected
                 )
                 .padding(.bottom, 20)
+                .offset(y: 12)
             }
         }
     }
