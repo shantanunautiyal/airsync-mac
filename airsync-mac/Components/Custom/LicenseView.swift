@@ -11,7 +11,7 @@ struct LicenseView: View {
     var body: some View {
         VStack{
             // Expandable license sections
-            ExpandableLicenseSection(title: "Library: AirSync License", content: """
+            ExpandableLicenseSection(title: "AirSync License", content: """
 Mozilla Public License Version 2.0
 ==================================
 
