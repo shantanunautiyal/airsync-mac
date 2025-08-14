@@ -16,6 +16,7 @@ struct SettingsFeaturesView: View {
     @AppStorage("noAudio") private var noAudio = false
     @AppStorage("manualPosition") private var manualPosition = false
     @AppStorage("continueApp") private var continueApp = false
+    @AppStorage("directKeyInput") private var directKeyInput = true
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
@@ -184,11 +185,20 @@ struct SettingsFeaturesView: View {
                                 Toggle("", isOn: $noAudio)
                                     .toggleStyle(.switch)
                             }
+
                             HStack {
                                 Text("Continue app after closing")
                                 Spacer()
 
                                 Toggle("", isOn: $continueApp)
+                                    .toggleStyle(.switch)
+                            }
+
+                            HStack {
+                                Text("Direct keyboard input")
+                                Spacer()
+
+                                Toggle("", isOn: $directKeyInput)
                                     .toggleStyle(.switch)
                             }
 

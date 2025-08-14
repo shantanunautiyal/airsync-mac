@@ -22,6 +22,7 @@ extension UserDefaults {
         static let manualPosition = "manualPosition"
         static let manualPositionCoords = "manualPositionCoords"
         static let continueApp = "continueApp"
+        static let directKeyInput = "directKeyInput"
 
 
         static let notificationStacks = "notificationStacks"
@@ -100,5 +101,10 @@ extension UserDefaults {
     var continueApp: Bool {
         get { bool(forKey: Keys.continueApp)}
         set { set(newValue, forKey: Keys.continueApp)}
+    }
+
+    var directKeyInput: Bool {
+        get { bool(forKey: Keys.directKeyInput)}
+        set { set(newValue, forKey: Keys.directKeyInput)}
     }
 }

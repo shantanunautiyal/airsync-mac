@@ -258,6 +258,7 @@ Raw output:
         let manualPosition = UserDefaults.standard.manualPosition
         let manualPositionCoords = UserDefaults.standard.manualPositionCoords
         let continueApp = UserDefaults.standard.continueApp
+        let directKeyInput = UserDefaults.standard.directKeyInput
 
         var args = [
             "--window-title=\(deviceNameFormatted)",
@@ -287,6 +288,10 @@ Raw output:
 
         if noAudio {
             args.append("--no-audio")
+        }
+
+        if directKeyInput {
+            args.append("--keyboard=uhid")
         }
 
         if desktop ?? true {
