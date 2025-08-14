@@ -17,6 +17,7 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
             orderNumber: 0,
             purchaserID: "tester",
             usesCount: 0,
+            initialUseCount: 0,
             price: 0,
             currency: "usd",
             saleTimestamp: "",
@@ -84,6 +85,15 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
         return false
     }
 
+    // check device limit
+    let currentUsesCount = json["uses"] as? Int ?? 0
+    let previousUsesCount = AppState.shared.licenseDetails?.usesCount ?? currentUsesCount
+
+    if (currentUsesCount - previousUsesCount) > 3 {
+        AppState.shared.isPlus = false
+        if save { AppState.shared.licenseDetails = nil }
+        return false
+    }
     // Passed all checks
     AppState.shared.isPlus = true
 
