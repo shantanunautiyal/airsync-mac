@@ -19,6 +19,8 @@ extension UserDefaults {
         static let turnScreenOff = "turnScreenOff"
         static let noAudio = "noAudio"
         static let hasPairedDeviceOnce = "hasPairedDeviceOnce"
+        static let manualPosition = "manualPosition"
+        static let manualPositionCoords = "manualPositionCoords"
 
 
         static let notificationStacks = "notificationStacks"
@@ -54,6 +56,16 @@ extension UserDefaults {
         set { set(newValue, forKey: Keys.lastADBCommand) }
     }
 
+    var manualPositionCoords: [String] {
+        get {
+            return object(forKey: "manualPositionCoords") as? [String] ?? ["0", "0"]
+        }
+        set {
+            set(newValue, forKey: "manualPositionCoords")
+        }
+    }
+
+
     var stayAwake: Bool {
         get { bool(forKey: Keys.stayAwake)}
         set { set(newValue, forKey: Keys.stayAwake)}
@@ -69,10 +81,15 @@ extension UserDefaults {
         set { set(newValue, forKey: Keys.noAudio)}
     }
 
-		var hasPairedDeviceOnce: Bool {
-			get { bool(forKey: Keys.hasPairedDeviceOnce) }
-			set { set(newValue, forKey: Keys.hasPairedDeviceOnce) }
-		}
+    var manualPosition: Bool {
+        get { bool(forKey: Keys.manualPosition)}
+        set { set(newValue, forKey: Keys.manualPosition)}
+    }
+
+    var hasPairedDeviceOnce: Bool {
+        get { bool(forKey: Keys.hasPairedDeviceOnce) }
+        set { set(newValue, forKey: Keys.hasPairedDeviceOnce) }
+    }
 
     var notificationStacks: Bool {
         get { bool(forKey: Keys.notificationStacks)}

@@ -14,12 +14,15 @@ struct SettingsFeaturesView: View {
     @AppStorage("stayAwake") private var stayAwake = false
     @AppStorage("turnScreenOff") private var turnScreenOff = false
     @AppStorage("noAudio") private var noAudio = false
+    @AppStorage("manualPosition") private var manualPosition = false
 
     @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
     @State private var tempBitrate: Double = 4.00
     @State private var tempResolution: Double = 1200.00
     @State private var isDragging = false
+    @State private var xCoords: String = "0"
+    @State private var yCoords: String = "0"
 
     @State var isExpanded = false
 
@@ -203,6 +206,42 @@ struct SettingsFeaturesView: View {
                                 }
                                 .pickerStyle(MenuPickerStyle())
                             }
+
+                            HStack{
+                                Text("Manual positioning (x,y)")
+                                Spacer()
+
+                                TextField("x", text: $xCoords)
+                                    .textFieldStyle(.roundedBorder)
+                                    .onChange(of: xCoords) { oldValue, newValue in
+                                        xCoords = newValue.filter { "0123456789".contains($0) }
+                                    }
+                                    .disabled(
+                                        !manualPosition
+                                    )
+
+                                TextField("y", text: $yCoords)
+                                    .textFieldStyle(.roundedBorder)
+                                    .onChange(of: yCoords) { oldValue, newValue in
+                                        yCoords = newValue.filter { "0123456789".contains($0) }
+                                    }
+                                    .disabled(
+                                        !manualPosition
+                                    )
+
+                                GlassButtonView(
+                                    label: "Set",
+                                    action: {
+                                        UserDefaults.standard.manualPositionCoords = [xCoords, yCoords]
+                                    }
+                                )
+                                .disabled(
+                                    xCoords.isEmpty || yCoords.isEmpty || !manualPosition
+                                )
+
+                                Toggle("", isOn: $manualPosition)
+                                    .toggleStyle(.switch)
+                            }
                         }
                     } label: {
                         Label("Mirroring Settings", systemImage: "gear")
@@ -233,6 +272,8 @@ struct SettingsFeaturesView: View {
         .onAppear{
 
             adbPortString = String(appState.adbPort)
+            xCoords = UserDefaults.standard.manualPositionCoords[0]
+            yCoords = UserDefaults.standard.manualPositionCoords[1]
         }
 
 

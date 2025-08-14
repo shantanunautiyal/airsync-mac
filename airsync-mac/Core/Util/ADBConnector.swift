@@ -255,6 +255,8 @@ Raw output:
         let turnScreenOff = UserDefaults.standard.turnScreenOff
         let appRes = UserDefaults.standard.scrcpyShareRes ? UserDefaults.standard.scrcpyDesktopMode : "900x2100"
         let noAudio = UserDefaults.standard.noAudio
+        let manualPosition = UserDefaults.standard.manualPosition
+        let manualPositionCoords = UserDefaults.standard.manualPositionCoords
 
         var args = [
             "--window-title=\(deviceNameFormatted)",
@@ -264,6 +266,11 @@ Raw output:
             "--max-size=\(resolution)",
             "--no-power-on"
         ]
+
+        if manualPosition {
+            args.append("--window-x=\(manualPositionCoords[0])")
+            args.append("--window-y=\(manualPositionCoords[1])")
+        }
 
         if alwaysOnTop {
             args.append("--always-on-top")
