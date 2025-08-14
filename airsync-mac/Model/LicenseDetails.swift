@@ -11,4 +11,16 @@ struct LicenseDetails: Equatable, Codable {
     let productName: String
     let orderNumber: Int
     let purchaserID: String
+
+    // Additional fields from Gumroad
+    let usesCount: Int
+    let price: Int
+    let currency: String
+    let saleTimestamp: String
+    let subscriptionCancelledAt: String?
+    let subscriptionEndedAt: String?
+    let subscriptionFailedAt: String?
+    let refunded: Bool
+    let disputed: Bool
+    let chargebacked: Bool
 }

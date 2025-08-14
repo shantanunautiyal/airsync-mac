@@ -452,16 +452,15 @@ class AppState: ObservableObject {
             print("Error loading apps: \(error)")
         }
     }
-
     func checkLicenseIfNeeded() async {
         let now = Date()
+        let calendar = Calendar.current
 
-        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate {
-            let daysSinceLastCheck = Calendar.current.dateComponents([.day], from: lastCheck, to: now).day ?? 0
-            if daysSinceLastCheck < 1 { // only check once a day
-                print("License was already checked today")
-                return
-            }
+        // Compare just the year/month/day, ignoring time
+        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate,
+           calendar.isDate(lastCheck, inSameDayAs: now) {
+            print("License was already checked today")
+            return
         }
 
         await checkLicense()
@@ -470,32 +469,39 @@ class AppState: ObservableObject {
 
     @MainActor
     func checkLicense() async {
-        guard let key = self.licenseDetails?.key,
-              !key.isEmpty else {
+        guard let key = self.licenseDetails?.key, !key.isEmpty else {
             self.isPlus = false
-            resetLicenseIfNeeded()
+            incrementLicenseFailCount()
             return
         }
 
-        let result = try? await checkLicenseKeyValidity(key: key, save: false)
+        let result = try? await checkLicenseKeyValidity(
+            key: key,
+            save: false,
+            isNewRegistration: false
+        )
 
         if result == true {
             // License valid — reset fail count
             UserDefaults.standard.consecutiveLicenseFailCount = 0
             self.isPlus = true
         } else {
-            // License invalid — increment fail count
-            let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
-            UserDefaults.standard.consecutiveLicenseFailCount = failCount
+            // License invalid
+            incrementLicenseFailCount()
             self.isPlus = false
-
-            if failCount >= 3 {
-                clearLicenseDetails()
-                print("License check failed 3 days in a row — license removed")
-            }
         }
 
         print("License checked, validity:", isPlus)
+    }
+
+    private func incrementLicenseFailCount() {
+        let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
+        UserDefaults.standard.consecutiveLicenseFailCount = failCount
+
+        if failCount >= 3 {
+            clearLicenseDetails()
+            print("License check failed \(failCount) times — license removed")
+        }
     }
 
     private func clearLicenseDetails() {
@@ -504,13 +510,6 @@ class AppState: ObservableObject {
         UserDefaults.standard.consecutiveLicenseFailCount = 0
     }
 
-    private func resetLicenseIfNeeded() {
-        let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
-        UserDefaults.standard.consecutiveLicenseFailCount = failCount
-        if failCount >= 3 {
-            clearLicenseDetails()
-        }
-    }
 
 }
 

@@ -7,7 +7,7 @@
 
 import Foundation
 
-func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
+func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) async throws -> Bool {
     if key == "i-am-a-tester" {
         AppState.shared.setPlusTemporarily(true)
         AppState.shared.licenseDetails = LicenseDetails(
@@ -15,7 +15,17 @@ func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
             email: "tester@example.com",
             productName: "Test Mode",
             orderNumber: 0,
-            purchaserID: "tester"
+            purchaserID: "tester",
+            usesCount: 0,
+            price: 0,
+            currency: "usd",
+            saleTimestamp: "",
+            subscriptionCancelledAt: nil,
+            subscriptionEndedAt: nil,
+            subscriptionFailedAt: nil,
+            refunded: false,
+            disputed: false,
+            chargebacked: false
         )
         return true
     }
@@ -25,15 +35,17 @@ func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
 
-    let bodyComponents = [
+    let bodyComponents: [String: String] = [
         "product_id": productID,
-        "license_key": key
+        "license_key": key,
+        "increment_uses_count": isNewRegistration ? "true" : "false"
     ]
-    let bodyString = bodyComponents
+
+    request.httpBody = bodyComponents
         .map { "\($0.key)=\($0.value)" }
         .joined(separator: "&")
+        .data(using: .utf8)
 
-    request.httpBody = bodyString.data(using: .utf8)
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -44,7 +56,7 @@ func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
 
     if httpResponse.statusCode == 404 {
         AppState.shared.isPlus = false
-        AppState.shared.licenseDetails = nil
+        if save { AppState.shared.licenseDetails = nil }
         return false
     }
 
@@ -55,22 +67,45 @@ func checkLicenseKeyValidity(key: String, save: Bool) async throws -> Bool {
         let purchase = json["purchase"] as? [String: Any]
     else {
         AppState.shared.isPlus = false
-        if (save) {
-            AppState.shared.licenseDetails = nil
-        }
+        if save { AppState.shared.licenseDetails = nil }
         return false
     }
 
+    let cancelledAt = purchase["subscription_cancelled_at"] as? String
+    let endedAt = purchase["subscription_ended_at"] as? String
+    let failedAt = purchase["subscription_failed_at"] as? String
+
+    if [cancelledAt, endedAt, failedAt].contains(where: { dateStr in
+        if let s = dateStr, !s.isEmpty { return true }
+        return false
+    }) {
+        AppState.shared.isPlus = false
+        if save { AppState.shared.licenseDetails = nil }
+        return false
+    }
+
+    // Passed all checks
     AppState.shared.isPlus = true
 
-    if (save) {
-        AppState.shared.licenseDetails = LicenseDetails(
+    if save {
+        let details = LicenseDetails(
             key: key,
             email: purchase["email"] as? String ?? "unknown",
             productName: purchase["product_name"] as? String ?? "unknown",
             orderNumber: purchase["order_number"] as? Int ?? 0,
-            purchaserID: purchase["purchaser_id"] as? String ?? ""
+            purchaserID: purchase["purchaser_id"] as? String ?? "",
+            usesCount: json["uses"] as? Int ?? 0,
+            price: purchase["price"] as? Int ?? 0,
+            currency: purchase["currency"] as? String ?? "usd",
+            saleTimestamp: purchase["sale_timestamp"] as? String ?? "",
+            subscriptionCancelledAt: cancelledAt,
+            subscriptionEndedAt: endedAt,
+            subscriptionFailedAt: failedAt,
+            refunded: purchase["refunded"] as? Bool ?? false,
+            disputed: purchase["disputed"] as? Bool ?? false,
+            chargebacked: purchase["chargebacked"] as? Bool ?? false
         )
+        AppState.shared.licenseDetails = details
     }
 
     return true

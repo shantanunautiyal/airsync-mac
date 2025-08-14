@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsPlusView: View {
     @ObservedObject var appState = AppState.shared
-    
+
     @State private var licenseKey: String = ""
     @State private var isCheckingLicense = false
     @State private var licenseValid: Bool? = nil
@@ -23,21 +23,22 @@ struct SettingsPlusView: View {
                 Label("AirSync+", systemImage: "key")
                 Spacer()
                 if appState.isPlus {
-                    Button("Unregister", systemImage: "key.slash", action: {
+                    Button("Unregister", systemImage: "key.slash") {
                         appState.licenseDetails = nil
                         appState.isPlus = false
-                    })
+                    }
                     .buttonStyle(.plain)
                 }
             }
             .padding()
 
+            // License input + check
             if !appState.isPlus {
                 TextField("Enter license key", text: $licenseKey)
                     .textFieldStyle(.roundedBorder)
                     .disabled(isCheckingLicense)
 
-                HStack{
+                HStack {
                     GlassButtonView(
                         label: "Check License",
                         systemImage: "checkmark.seal",
@@ -47,21 +48,18 @@ struct SettingsPlusView: View {
                                 licenseValid = nil
                                 let result = try? await checkLicenseKeyValidity(
                                     key: licenseKey,
-                                    save: true
+                                    save: true,
+                                    isNewRegistration: true // NEW: First time check
                                 )
                                 licenseValid = result ?? false
                                 isCheckingLicense = false
                             }
                         }
                     )
-                    .disabled(
-                        licenseKey.isEmpty || isCheckingLicense
-                    )
-
+                    .disabled(licenseKey.isEmpty || isCheckingLicense)
 
                     if isCheckingLicense {
-                        ProgressView()
-                            .scaleEffect(0.6)
+                        ProgressView().scaleEffect(0.6)
                     } else if let valid = licenseValid {
                         Image(systemName: valid ? "checkmark.circle.fill" : "xmark.octagon.fill")
                             .foregroundColor(valid ? .green : .red)
@@ -82,53 +80,44 @@ struct SettingsPlusView: View {
                 }
             }
 
+            // License info display
             if let details = appState.licenseDetails {
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack{
+                    HStack {
                         Text("License Info")
                             .font(.headline)
-                            .padding(.bottom, 4)
-
                         Spacer()
-
-                        Text("Thank you <3")
+                        Text(appState.isPlus ? "Thank you <3" : "License inactive")
                             .font(.subheadline)
-                            .padding(.bottom, 4)
+                            .foregroundColor(appState.isPlus ? .green : .red)
                     }
 
                     Divider()
 
-                    HStack {
-                        Label("Email", systemImage: "envelope")
-                        Spacer()
-                        Text(details.email)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    infoRow(label: "Email", icon: "envelope", value: details.email)
+                    infoRow(label: "Product", icon: "shippingbox", value: details.productName)
+                    infoRow(label: "Order #", icon: "number", value: "\(details.orderNumber)")
+                    infoRow(label: "Purchaser ID", icon: "person.fill", value: details.purchaserID)
+                    infoRow(label: "Uses Count", icon: "number.square", value: "\(details.usesCount)")
+                    infoRow(label: "Price", icon: "dollarsign.circle", value: "\(Double(details.price) / 100.0) \(details.currency.uppercased())")
+                    infoRow(label: "Sale Date", icon: "calendar", value: details.saleTimestamp)
+
+                    if let cancelled = details.subscriptionCancelledAt, !cancelled.isEmpty {
+                        infoRow(label: "Cancelled At", icon: "xmark.circle", value: cancelled, color: .red)
+                    }
+                    if let ended = details.subscriptionEndedAt, !ended.isEmpty {
+                        infoRow(label: "Ended At", icon: "calendar.badge.exclamationmark", value: ended, color: .orange)
+                    }
+                    if let failed = details.subscriptionFailedAt, !failed.isEmpty {
+                        infoRow(label: "Failed At", icon: "exclamationmark.triangle", value: failed, color: .orange)
                     }
 
-                    HStack {
-                        Label("Product", systemImage: "shippingbox")
-                        Spacer()
-                        Text(details.productName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    HStack {
-                        Label("Order #", systemImage: "number")
-                        Spacer()
-                        Text("\(details.orderNumber)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    HStack {
-                        Label("Purchaser ID", systemImage: "person.fill")
-                        Spacer()
-                        Text(details.purchaserID)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    infoRow(label: "Refunded", icon: details.refunded ? "checkmark.circle" : "xmark.circle",
+                            value: details.refunded ? "Yes" : "No", color: details.refunded ? .red : .secondary)
+                    infoRow(label: "Disputed", icon: details.disputed ? "checkmark.circle" : "xmark.circle",
+                            value: details.disputed ? "Yes" : "No", color: details.disputed ? .red : .secondary)
+                    infoRow(label: "Chargebacked", icon: details.chargebacked ? "checkmark.circle" : "xmark.circle",
+                            value: details.chargebacked ? "Yes" : "No", color: details.chargebacked ? .red : .secondary)
 
                     HStack {
                         Label("License Key", systemImage: "key")
@@ -151,36 +140,31 @@ struct SettingsPlusView: View {
                             }
                         }
                     }
-
                 }
                 .padding()
                 .background(Color.secondary.opacity(0.05))
                 .cornerRadius(10)
                 .transition(.opacity.combined(with: .move(edge: .top)))
-                .animation(.easeInOut(duration: 0.3), value: appState.licenseDetails)
 
-                if (appState.licenseDetails?.key != nil && !appState.isPlus){
+                if details.key != "" && !appState.isPlus {
                     Label("License invalid, expired or network error", systemImage: "xmark.circle")
                         .foregroundColor(.red)
                 }
             }
-
         }
 
-
+        // Why Plus section
         DisclosureGroup(isExpanded: $isExpanded) {
-            Text(
-                            """
-Keeps me inspired to continue and maybe even to publish to the Apple app store and google play store. Think of it as a little donation to keep this project alive and evolving.
+            Text("""
+Keeps me inspired to continue and maybe even to publish to the Apple app store and Google Play Store. Think of it as a little donation to keep this project alive and evolving.
 That said, I know not everyone who wants the full experience can afford it. If that’s you, please don’t hesitate to reach out. 😊
 
-The source code is available on GitHub, and you're more than welcome to build with all Plus features free—for personal use which also opens for contributions which is a win win!.
+The source code is available on GitHub, and you're more than welcome to build with all Plus features free — for personal use which also opens for contributions which is a win-win!.
 As a thank-you for supporting the app, AirSync+ unlocks some nice extras: media controls, synced widgets, low battery alerts, wireless ADB, and more to come as I keep adding new features.
 
 Enjoy the app!
 (っ◕‿◕)っ
-"""
-            )
+""")
             .font(.footnote)
             .multilineTextAlignment(.leading)
             .padding()
@@ -193,7 +177,17 @@ Enjoy the app!
         }
         .padding(.horizontal)
         .focusEffectDisabled()
+    }
 
+    @ViewBuilder
+    private func infoRow(label: String, icon: String, value: String, color: Color = .secondary) -> some View {
+        HStack {
+            Label(label, systemImage: icon)
+            Spacer()
+            Text(value)
+                .font(.caption)
+                .foregroundColor(color)
+        }
     }
 }
 
