@@ -30,11 +30,10 @@ struct SidebarView: View {
             PhoneView()
                 .transition(.scale)
 
-        }
+
         .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
         .frame(minWidth: 270, minHeight: 420)
         .safeAreaInset(edge: .bottom) {
-            VStack{
                 HStack{
 
                     if appState.adbConnected{
@@ -79,8 +78,7 @@ struct SidebarView: View {
                     .easeInOut(duration: 0.35),
                     value: AppState.shared.adbConnected
                 )
-                .padding(.bottom, 20)
-                .offset(y: 12)
+                .padding(.bottom, 10)
             }
         }
     }

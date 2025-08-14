@@ -25,10 +25,13 @@ struct MenubarView: View {
         }
 
         static var availableTabs: [Tab] {
-            var tabs: [Tab] = [.home]
+            var tabs: [Tab] = []
             if AppState.shared.device != nil {
+                tabs.append(.home)
                 tabs.append(.notifications)
                 tabs.append(.apps)
+            } else {
+                tabs.removeAll()
             }
             return tabs
         }
@@ -46,6 +49,11 @@ struct MenubarView: View {
 
     var body: some View {
         VStack(spacing: 12) {
+
+            // Header
+            Text("AirSync - \(getDeviceName())")
+                .font(.headline)
+
             Picker("", selection: $selectedTab) {
                 ForEach(Tab.availableTabs) { tab in
                     Label(tab.rawValue.capitalized, systemImage: tab.icon)
@@ -55,10 +63,6 @@ struct MenubarView: View {
                 }
             }
             .pickerStyle(.palette)
-
-            // Header
-            Text("AirSync - \(getDeviceName())")
-                .font(.headline)
 
             ZStack {
                 switch selectedTab {
@@ -87,12 +91,16 @@ struct MenubarView: View {
                     .transition(.opacity.combined(with: .blurReplace))
 
                 case .notifications:
-                    NotificationView()
-                        .transition(.opacity.combined(with: .blurReplace))
+                    if let _ = appState.device {
+                        NotificationView()
+                            .transition(.opacity.combined(with: .blurReplace))
+                    }
 
                 case .apps:
-                    AppsView()
-                        .transition(.opacity.combined(with: .blurReplace))
+                    if let _ = appState.device {
+                        AppsView()
+                            .transition(.opacity.combined(with: .blurReplace))
+                    }
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: selectedTab)
