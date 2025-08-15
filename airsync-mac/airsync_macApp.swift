@@ -74,7 +74,7 @@ struct airsync_macApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        WindowGroup(id: "main") {
+        Window("AirSync", id: "main") {
             if #available(macOS 15.0, *) {
                 HomeView()
                     .containerBackground(.ultraThinMaterial, for: .window)
@@ -100,8 +100,13 @@ struct airsync_macApp: App {
                     }
                 }
                 .keyboardShortcut("u", modifiers: [.command])
+
             }
         }
+        .commands {
+            CommandGroup(replacing: .newItem) { }
+        }
+
     }
 
     func checkForUpdatesManually(presentingWindow: NSWindow?) {

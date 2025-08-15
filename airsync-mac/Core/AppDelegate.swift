@@ -16,6 +16,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ADBConnector.disconnectADB()
         WebSocketServer.shared.stop()
     }
+
+    func applicationDidFinishLaunching() {
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
 }
 
 // Helper to grab NSWindow from SwiftUI:
