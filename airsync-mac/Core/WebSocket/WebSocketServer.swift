@@ -6,6 +6,11 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
+#if canImport(MobileCoreServices)
+import MobileCoreServices
+#endif
+import UserNotifications
 import Swifter
 internal import Combine
 import CryptoKit
@@ -35,10 +40,31 @@ class WebSocketServer: ObservableObject {
     private var networkMonitorTimer: Timer?
     private let networkCheckInterval: TimeInterval = 10.0 // seconds
 
+    // Incoming file transfers (Android -> Mac) — keep only IO here; state lives in AppState
+    private struct IncomingFileIO {
+        var tempUrl: URL
+        var fileHandle: FileHandle?
+    }
+    private var incomingFiles: [String: IncomingFileIO] = [:]
+    private var incomingFilesChecksum: [String: String] = [:]
+    // Outgoing transfer ack tracking
+    private var outgoingAcks: [String: Set<Int>] = [:]
+
+    private let maxChunkRetries = 3
+    private let ackWaitMs: UInt32 = 2000 // 2s
+
 
     init() {
         loadOrGenerateSymmetricKey()
         setupWebSocket()
+        // Request notification permission so we can show incoming file alerts
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if let err = error {
+                print("Notification auth error: \(err)")
+            } else {
+                print("Notification permission granted: \(granted)")
+            }
+        }
     }
 
     func start(port: UInt16 = Defaults.serverPort) {
@@ -383,6 +409,124 @@ class WebSocketServer: ObservableObject {
                let text = dict["text"] as? String {
                 AppState.shared.updateClipboardFromAndroid(text)
             }
+        
+        // File transfer messages (Android -> Mac)
+        case .fileTransferInit:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let name = dict["name"] as? String,
+               let size = dict["size"] as? Int,
+               let mime = dict["mime"] as? String {
+                let checksum = dict["checksum"] as? String
+
+                let tempDir = FileManager.default.temporaryDirectory
+                let safeName = name.replacingOccurrences(of: "/", with: "_")
+                let tempFile = tempDir.appendingPathComponent("incoming_\(id)_\(safeName)")
+                FileManager.default.createFile(atPath: tempFile.path, contents: nil, attributes: nil)
+                let handle = try? FileHandle(forWritingTo: tempFile)
+
+                let io = IncomingFileIO(tempUrl: tempFile, fileHandle: handle)
+                incomingFiles[id] = io
+                if let checksum = checksum {
+                    incomingFilesChecksum[id] = checksum
+                }
+                // Start tracking incoming transfer in AppState
+                AppState.shared.startIncomingTransfer(id: id, name: name, size: size, mime: mime)
+            }
+
+        case .fileChunk:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let chunkBase64 = dict["chunk"] as? String,
+               let io = incomingFiles[id],
+               let data = Data(base64Encoded: chunkBase64) {
+
+                io.fileHandle?.seekToEndOfFile()
+                io.fileHandle?.write(data)
+                // Update incoming progress in AppState (increment)
+                let prev = AppState.shared.transfers[id]?.bytesTransferred ?? 0
+                let newBytes = prev + data.count
+                AppState.shared.updateIncomingProgress(id: id, receivedBytes: newBytes)
+            }
+
+        case .fileChunkAck:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let index = dict["index"] as? Int {
+                var set = outgoingAcks[id] ?? []
+                set.insert(index)
+                outgoingAcks[id] = set
+                print("Received ack for id=\(id) index=\(index) totalAcked=\(set.count)")
+            }
+
+        case .fileTransferComplete:
+                if let dict = message.data.value as? [String: Any],
+                    let id = dict["id"] as? String,
+                    let state = incomingFiles[id] {
+                    state.fileHandle?.closeFile()
+
+                    // Resolve a name for notifications and final filename. Prefer AppState metadata; fall back to temp filename.
+                    let resolvedName = AppState.shared.transfers[id]?.name ?? state.tempUrl.lastPathComponent
+
+                    // Verify checksum if present
+                    if let expected = incomingFilesChecksum[id] {
+                        if let fileData = try? Data(contentsOf: state.tempUrl) {
+                            let computed = SHA256.hash(data: fileData).compactMap { String(format: "%02x", $0) }.joined()
+                            if computed != expected {
+                                print("Checksum mismatch for incoming file id=\(id), expected=\(expected), computed=\(computed)")
+                                // Post notification about checksum mismatch via AppState util
+                                AppState.shared.postNativeNotification(
+                                    id: "incoming_file_\(id)_mismatch",
+                                    appName: "AirSync",
+                                    title: "Received: \(resolvedName)",
+                                    body: "Saved to Downloads (checksum mismatch)"
+                                )
+                            }
+                        }
+                        incomingFilesChecksum.removeValue(forKey: id)
+                    }
+
+                    // Move to Downloads
+                    if let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first {
+                        do {
+                            let finalDest = downloads.appendingPathComponent(resolvedName)
+                            if FileManager.default.fileExists(atPath: finalDest.path) {
+                                try FileManager.default.removeItem(at: finalDest)
+                            }
+                            try FileManager.default.moveItem(at: state.tempUrl, to: finalDest)
+
+                            // Optionally: show a user notification (simple print for now)
+                            print("Saved incoming file to \(finalDest.path)")
+                        
+                            // Mark as completed in AppState and post notification via AppState util
+                            AppState.shared.completeIncoming(id: id, verified: nil)
+                            AppState.shared.postNativeNotification(
+                                id: "incoming_file_\(id)",
+                                appName: "AirSync",
+                                title: "Received: \(resolvedName)",
+                                body: "Saved to Downloads"
+                            )
+                        } catch {
+                            print("Failed to move incoming file: \(error)")
+                        }
+                    }
+
+                    incomingFiles.removeValue(forKey: id)
+            }
+        case .transferVerified:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let verified = dict["verified"] as? Bool {
+                print("Received transferVerified for id=\(id) verified=\(verified)")
+                // Update AppState and show a confirmation notification via AppState util
+                AppState.shared.completeOutgoingVerified(id: id, verified: verified)
+                AppState.shared.postNativeNotification(
+                    id: "transfer_verified_\(id)",
+                    appName: "AirSync",
+                    title: "Transfer verified",
+                    body: verified ? "Receiver verified the file checksum" : "Receiver reported checksum mismatch"
+                )
+            }
         }
 
         
@@ -490,6 +634,115 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    // MARK: - File transfer (Mac -> Android)
+    func sendFile(url: URL, chunkSize: Int = 64 * 1024) {
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        guard let data = try? Data(contentsOf: url) else { return }
+        // compute checksum
+        let checksum = FileTransferProtocol.sha256Hex(data)
+
+    let transferId = UUID().uuidString
+        let fileName = url.lastPathComponent
+        let totalSize = data.count
+        let mime = mimeType(for: url) ?? "application/octet-stream"
+
+    // Track in AppState
+    AppState.shared.startOutgoingTransfer(id: transferId, name: fileName, size: totalSize, mime: mime, chunkSize: chunkSize)
+
+    // Send init message
+    let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: totalSize, mime: mime, checksum: checksum)
+    sendToFirstAvailable(message: initMessage)
+
+        // Send chunks using a simple sliding window to allow multiple in-flight chunks
+        let windowSize = 8
+        var totalChunks = (totalSize + chunkSize - 1) / chunkSize
+        outgoingAcks[transferId] = []
+
+        // Keep a buffer of sent chunks for potential retransmit: index -> (payloadBase64, attempts, lastSent)
+        var sentBuffer: [Int: (payload: String, attempts: Int, lastSent: Date)] = [:]
+
+        var nextIndexToSend = 0
+        let startTime = Date()
+
+        func sendChunkAt(_ idx: Int) {
+            let start = idx * chunkSize
+            let end = min(start + chunkSize, totalSize)
+            let chunk = data.subdata(in: start..<end)
+            let base64 = chunk.base64EncodedString()
+            let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: idx, base64Chunk: base64)
+            sendToFirstAvailable(message: chunkMessage)
+            sentBuffer[idx] = (payload: base64, attempts: 1, lastSent: Date())
+        }
+
+        // Prime the window
+        while nextIndexToSend < totalChunks && nextIndexToSend < windowSize {
+            sendChunkAt(nextIndexToSend)
+            nextIndexToSend += 1
+        }
+
+        // Loop until all chunks are acked
+        while true {
+            let acked = outgoingAcks[transferId] ?? []
+
+            // compute baseIndex = lowest unacked index (first missing starting from 0)
+            var baseIndex = 0
+            while acked.contains(baseIndex) {
+                // free memory for acknowledged chunks
+                sentBuffer.removeValue(forKey: baseIndex)
+                baseIndex += 1
+            }
+
+            // Update progress in AppState
+            let bytesAcked = min(acked.count * chunkSize, totalSize)
+            AppState.shared.updateOutgoingProgress(id: transferId, bytesTransferred: bytesAcked)
+
+            // completion when baseIndex reached totalChunks
+            if baseIndex >= totalChunks {
+                break
+            }
+
+            // send new chunks while window has space
+            while nextIndexToSend < totalChunks && (nextIndexToSend - baseIndex) < windowSize {
+                sendChunkAt(nextIndexToSend)
+                nextIndexToSend += 1
+            }
+
+            // Retransmit chunks that haven't been acked and exceeded timeout
+            let now = Date()
+            for (idx, entry) in sentBuffer {
+                if acked.contains(idx) { continue }
+                let elapsedMs = now.timeIntervalSince(entry.lastSent) * 1000.0
+                if elapsedMs > Double(ackWaitMs) {
+                    if entry.attempts >= maxChunkRetries {
+                        print("Failed to get ack for chunk \(idx) after \(maxChunkRetries) attempts")
+                        outgoingAcks.removeValue(forKey: transferId)
+                        return
+                    }
+                    // retransmit
+                    let start = idx * chunkSize
+                    let end = min(start + chunkSize, totalSize)
+                    let chunk = data.subdata(in: start..<end)
+                    let base64 = chunk.base64EncodedString()
+                    let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: idx, base64Chunk: base64)
+                    sendToFirstAvailable(message: chunkMessage)
+                    sentBuffer[idx] = (payload: base64, attempts: entry.attempts + 1, lastSent: Date())
+                }
+            }
+
+            // brief sleep to avoid busy-looping
+            usleep(50_000) // 50ms
+        }
+
+    // Ensure progress shows 100%
+    AppState.shared.updateOutgoingProgress(id: transferId, bytesTransferred: totalSize)
+    let elapsed = Date().timeIntervalSince(startTime)
+        print("Completed sending \(totalSize) bytes in \(elapsed) s")
+
+        // Send complete
+    let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: totalSize, checksum: checksum)
+        sendToFirstAvailable(message: completeMessage)
+    }
+
     func toggleNotification(for package: String, to state: Bool) {
         guard var app = AppState.shared.androidApps[package] else { return }
 
@@ -546,6 +799,30 @@ class WebSocketServer: ObservableObject {
             symmetricKey = SymmetricKey(data: data)
             print("Encryption key set")
         }
+    }
+
+    // Helper: determine mime type for a file URL
+    func mimeType(for url: URL) -> String? {
+        let ext = url.pathExtension
+        if ext.isEmpty { return nil }
+
+        if #available(macOS 11.0, *) {
+            if let ut = UTType(filenameExtension: ext) {
+                return ut.preferredMIMEType
+            }
+        } else {
+#if canImport(MobileCoreServices)
+            // Fallback to MobileCoreServices APIs
+            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, ext as CFString, nil)?.takeRetainedValue() {
+                if let mime = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() as String? {
+                    return mime
+                }
+            }
+#else
+            // No fallback available on this SDK
+#endif
+        }
+        return nil
     }
 
     func startNetworkMonitoring() {

@@ -73,6 +73,24 @@ struct SidebarView: View {
                             }
                         )
                         .transition(.identity)
+                        GlassButtonView(
+                            label: "Share file",
+                            systemImage: "square.and.arrow.up",
+                            action: {
+                                let panel = NSOpenPanel()
+                                panel.canChooseFiles = true
+                                panel.canChooseDirectories = false
+                                panel.allowsMultipleSelection = false
+                                panel.begin { response in
+                                    if response == .OK, let url = panel.url {
+                                        DispatchQueue.global(qos: .userInitiated).async {
+                                            WebSocketServer.shared.sendFile(url: url)
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        .transition(.identity)
                 }
                 .animation(
                     .easeInOut(duration: 0.35),
