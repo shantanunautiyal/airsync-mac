@@ -10,6 +10,7 @@ import SwiftUI
 struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
     @StateObject private var appState = AppState.shared
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     enum Tab: String, CaseIterable, Identifiable {
         case home, notifications, apps
@@ -117,7 +118,16 @@ struct MenubarView: View {
                     label: "Open App",
                     systemImage: "arrow.up.forward.app"
                 ) {
-                    openWindow(id: "main")
+                    if let window = appDelegate.mainWindow {
+                        if window.isMiniaturized {
+                            window.deminiaturize(nil)
+                        }
+                        window.makeKeyAndOrderFront(nil)
+                        NSApp.activate(ignoringOtherApps: true)
+                    } else {
+                        openWindow(id: "main")
+                    }
+
                 }
 
                 GlassButtonView(label: "Quit", systemImage: "power") {

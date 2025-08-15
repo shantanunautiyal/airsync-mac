@@ -78,8 +78,16 @@ struct airsync_macApp: App {
             if #available(macOS 15.0, *) {
                 HomeView()
                     .containerBackground(.ultraThinMaterial, for: .window)
+                    .background(WindowAccessor { window in
+                        window.identifier = NSUserInterfaceItemIdentifier("main")
+                        appDelegate.mainWindow = window
+                    })
             } else {
                 HomeView()
+                    .background(WindowAccessor { window in
+                        window.identifier = NSUserInterfaceItemIdentifier("main")
+                        appDelegate.mainWindow = window
+                    })
             }
         }
         .commands {
