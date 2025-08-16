@@ -10,15 +10,17 @@ import SwiftUI
 enum TabIdentifier: String, CaseIterable, Identifiable {
     case notifications = "Notifications"
         case apps = "Apps"
+    case transfers = "Transfers"
     case settings = "Settings"
 
     var id: String { rawValue }
 
     var icon: String {
-        switch self {
-        case .notifications: return "bell.badge"
-        case .apps: return "app.badge"
-        case .settings: return "gear"
+    switch self {
+    case .notifications: return "bell.badge"
+    case .apps: return "app.badge"
+    case .transfers: return "tray.and.arrow.down.fill"
+    case .settings: return "gear"
         }
     }
 
@@ -27,6 +29,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
         if AppState.shared.device != nil {
             tabs.insert(.notifications, at: 0)
             tabs.insert(.apps, at: 1)
+            tabs.insert(.transfers, at: 2)
         }
         return tabs
     }
@@ -71,6 +74,20 @@ struct AppContentView: View {
                     .font(.largeTitle)
                     .transition(.blurReplace)
 
+                case .transfers:
+                    TransfersView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    AppState.shared.removeCompletedTransfers()
+                                } label: {
+                                    Label("Clear completed", systemImage: "trash")
+                                }
+                                .help("Remove all completed transfers from the list")
+                            }
+                        }
+
                 case .settings:
                     SettingsView()
                         .transition(.blurReplace)
@@ -107,15 +124,26 @@ struct AppContentView: View {
         }
         .toolbar {
             ToolbarItem(placement: .secondaryAction) {
+                // Compute number of in-progress transfers for badge
+                let inProgressCount = AppState.shared.transfers.values.reduce(0) { acc, s in
+                    acc + (s.status == .inProgress ? 1 : 0)
+                }
+
                 Picker("Tab", selection: $appState.selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
-//                        Label(tab.rawValue, systemImage: tab.icon)
-//                            .labelStyle(.iconOnly)
-//                            .tag(tab)
-                        Button(tab.rawValue, systemImage: tab.icon){}
-                            .labelStyle(.iconOnly)
-                            .tag(tab)
-                            .help(tab.rawValue)
+                        // For the Transfers tab, show a badge with the in-progress count when > 0
+                        if tab == .transfers && inProgressCount > 0 {
+                            Button(tab.rawValue, systemImage: tab.icon){}
+                                .labelStyle(.iconOnly)
+                                .tag(tab)
+                                .help(tab.rawValue)
+                                .badge(inProgressCount)
+                        } else {
+                            Button(tab.rawValue, systemImage: tab.icon){}
+                                .labelStyle(.iconOnly)
+                                .tag(tab)
+                                .help(tab.rawValue)
+                        }
                     }
                 }
                 .pickerStyle(.palette)
