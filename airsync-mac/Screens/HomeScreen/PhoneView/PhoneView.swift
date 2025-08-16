@@ -131,8 +131,61 @@ struct ScreenView: View {
                 Spacer()
             }
 
+            HStack(spacing: 10){
+                GlassButtonView(
+                    label: "Send",
+                    systemImage: "square.and.arrow.up",
+                    iconOnly: appState.adbConnected,
+                    action: {
+                        let panel = NSOpenPanel()
+                        panel.canChooseFiles = true
+                        panel.canChooseDirectories = false
+                        panel.allowsMultipleSelection = false
+                        panel.begin { response in
+                            if response == .OK, let url = panel.url {
+                                DispatchQueue.global(qos: .userInitiated).async {
+                                    WebSocketServer.shared.sendFile(url: url)
+                                }
+                            }
+                        }
+                    }
+                )
+                .transition(.identity)
+
+
+                if appState.adbConnected{
+                    GlassButtonView(
+                        label: "Mirror",
+                        systemImage: "apps.iphone",
+                        action: {
+                            ADBConnector
+                                .startScrcpy(
+                                    ip: appState.device?.ipAddress ?? "",
+                                    port: appState.adbPort,
+                                    deviceName: appState.device?.name ?? "My Phone"
+                                )
+                        }
+                    )
+                    .transition(.identity)
+                    .contextMenu {
+                        Button("Desktop Mode") {
+                            ADBConnector.startScrcpy(
+                                ip: appState.device?.ipAddress ?? "",
+                                port: appState.adbPort,
+                                deviceName: appState.device?.name ?? "My Phone",
+                                desktop: true
+                            )
+                        }
+                    }
+                }
+            }
+
         }
         .frame(maxWidth: 175, maxHeight: 390)
+        .animation(
+            .easeInOut(duration: 0.35),
+            value: AppState.shared.adbConnected
+        )
     }
 }
 

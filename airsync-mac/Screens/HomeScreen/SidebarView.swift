@@ -35,61 +35,13 @@ struct SidebarView: View {
         .frame(minWidth: 270, minHeight: 420)
         .safeAreaInset(edge: .bottom) {
                 HStack{
-
-                    if appState.adbConnected{
-                            GlassButtonView(
-                                label: "Mirror",
-                                systemImage: "apps.iphone",
-                                action: {
-                                    ADBConnector
-                                        .startScrcpy(
-                                            ip: appState.device?.ipAddress ?? "",
-                                            port: appState.adbPort,
-                                            deviceName: appState.device?.name ?? "My Phone"
-                                        )
-                                }
-                            )
-                            .transition(.identity)
-                            .contextMenu {
-                                Button("Desktop Mode") {
-                                    ADBConnector.startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone",
-                                        desktop: true
-                                    )
-                                }
-                            }
-                    }
-
                         GlassButtonView(
                             label: "Disconnect",
                             systemImage: "xmark",
-                            iconOnly: appState.adbConnected,
                             action: {
                                 appState.disconnectDevice()
                                 ADBConnector.disconnectADB()
                                 appState.adbConnected = false
-                            }
-                        )
-                        .transition(.identity)
-
-                        GlassButtonView(
-                            label: "Share file",
-                            systemImage: "square.and.arrow.up",
-                            iconOnly: appState.adbConnected,
-                            action: {
-                                let panel = NSOpenPanel()
-                                panel.canChooseFiles = true
-                                panel.canChooseDirectories = false
-                                panel.allowsMultipleSelection = false
-                                panel.begin { response in
-                                    if response == .OK, let url = panel.url {
-                                        DispatchQueue.global(qos: .userInitiated).async {
-                                            WebSocketServer.shared.sendFile(url: url)
-                                        }
-                                    }
-                                }
                             }
                         )
                         .transition(.identity)
@@ -98,7 +50,6 @@ struct SidebarView: View {
                     .easeInOut(duration: 0.35),
                     value: AppState.shared.adbConnected
                 )
-                .padding(.bottom, 10)
             }
         }
     }

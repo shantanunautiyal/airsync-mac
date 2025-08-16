@@ -18,8 +18,8 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
     var icon: String {
     switch self {
     case .notifications: return "bell.badge"
-    case .apps: return "app.badge"
-    case .transfers: return "tray.and.arrow.down.fill"
+    case .apps: return "app"
+    case .transfers: return "tray.and.arrow.up"
     case .settings: return "gear"
         }
     }

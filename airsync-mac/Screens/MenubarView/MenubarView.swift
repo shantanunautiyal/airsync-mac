@@ -45,7 +45,7 @@ struct MenubarView: View {
     }
 
     // Constants for min height
-    private let minHeightTabs: CGFloat = 520
+    private let minHeightTabs: CGFloat = 500
     private let minWidthTabs: CGFloat = 280
 
     var body: some View {
@@ -73,21 +73,6 @@ struct MenubarView: View {
                             DeviceStatusView()
                             PhoneView()
                         }
-
-                        if appState.adbConnected && appState.isPlus {
-                            HStack {
-                                GlassButtonView(
-                                    label: "Android Mirror",
-                                    systemImage: "iphone.gen3.badge.play"
-                                ) {
-                                    ADBConnector.startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone"
-                                    )
-                                }
-                            }
-                        }
                     }
                     .transition(.opacity.combined(with: .blurReplace))
 
@@ -114,24 +99,6 @@ struct MenubarView: View {
 
             // Footer
             HStack {
-                if appState.device != nil {
-                    GlassButtonView(
-                        label: "Share File",
-                        systemImage: "square.and.arrow.up"
-                    ) {
-                        let panel = NSOpenPanel()
-                        panel.canChooseFiles = true
-                        panel.canChooseDirectories = false
-                        panel.allowsMultipleSelection = false
-                        panel.begin { resp in
-                            if resp == .OK, let url = panel.url {
-                                DispatchQueue.global(qos: .userInitiated).async {
-                                    WebSocketServer.shared.sendFile(url: url)
-                                }
-                            }
-                        }
-                    }
-                }
 
                 GlassButtonView(
                     label: "Open App",

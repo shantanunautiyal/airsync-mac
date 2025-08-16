@@ -68,6 +68,7 @@ private struct TransferRow: View {
                 }
             }
         }
+        .padding()
     }
 
     private var bytesText: String {
