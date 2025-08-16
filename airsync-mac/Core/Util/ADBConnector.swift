@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AppKit
 
 struct ADBConnector {
 
@@ -135,6 +136,21 @@ Raw `adb mdns services` output:
 \(trimmedMDNSOutput)
 """
                     AppState.shared.adbConnected = false
+
+                    // Present alert only for this specific error case
+                    let alert = NSAlert()
+                    alert.alertStyle = .warning
+                    alert.addButton(withTitle: "OK")
+                    alert.messageText = "Failed to connect to ADB."
+                    alert.informativeText = """
+Suggestions:
+- Ensure your Android device is in Wireless debugging mode
+- Try toggling Wireless Debugging off and on again
+- Reconnect to the same Wi-Fi as your Mac
+
+Please see the ADB console for more details.
+"""
+                    alert.runModal()
                 }
                 return
             }
