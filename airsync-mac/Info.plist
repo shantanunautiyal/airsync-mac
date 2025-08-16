@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AndroidVersion</key>
-	<string>2.0.19</string>
+	<string>2.0.20</string>
 	<key>UpdateFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
 </dict>
