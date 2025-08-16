@@ -73,9 +73,11 @@ struct SidebarView: View {
                             }
                         )
                         .transition(.identity)
+
                         GlassButtonView(
                             label: "Share file",
                             systemImage: "square.and.arrow.up",
+                            iconOnly: appState.adbConnected,
                             action: {
                                 let panel = NSOpenPanel()
                                 panel.canChooseFiles = true
