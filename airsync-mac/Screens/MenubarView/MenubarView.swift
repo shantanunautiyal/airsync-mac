@@ -114,6 +114,25 @@ struct MenubarView: View {
 
             // Footer
             HStack {
+                if appState.device != nil {
+                    GlassButtonView(
+                        label: "Share File",
+                        systemImage: "square.and.arrow.up"
+                    ) {
+                        let panel = NSOpenPanel()
+                        panel.canChooseFiles = true
+                        panel.canChooseDirectories = false
+                        panel.allowsMultipleSelection = false
+                        panel.begin { resp in
+                            if resp == .OK, let url = panel.url {
+                                DispatchQueue.global(qos: .userInitiated).async {
+                                    WebSocketServer.shared.sendFile(url: url)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 GlassButtonView(
                     label: "Open App",
                     systemImage: "arrow.up.forward.app"

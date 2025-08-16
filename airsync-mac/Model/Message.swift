@@ -14,6 +14,12 @@ enum MessageType: String, Codable {
     case mediaControlResponse
     case appIcons
     case clipboardUpdate
+    // file transfer
+    case fileTransferInit
+    case fileChunk
+    case fileTransferComplete
+    case fileChunkAck
+    case transferVerified
 }
 
 struct Message: Codable {
