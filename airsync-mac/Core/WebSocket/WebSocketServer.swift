@@ -199,8 +199,17 @@ class WebSocketServer: ObservableObject {
                     let ip = String(cString: hostname)
                     print("Checking adapter: \(name), IP: \(ip), target: \(adapterName ?? "N/A")")
 
-                    if ip == "127.0.0.1" {
-                        continue // Skip loopback
+                    // Skip loopback
+                    if ip.hasPrefix("127.") {
+                        continue
+                    }
+
+                    // Skip Docker / VPN style private ranges
+                    if ip.hasPrefix("172.") {
+                        let parts = ip.split(separator: ".")
+                        if let second = Int(parts[1]), (16...31).contains(second) {
+                            continue
+                        }
                     }
 
                     // Exact match
@@ -222,6 +231,7 @@ class WebSocketServer: ObservableObject {
                 }
             }
         }
+
 
         // Return fallback if specific adapter wasn't found
         if let fallback = fallbackIP {
