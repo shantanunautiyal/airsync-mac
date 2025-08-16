@@ -26,7 +26,10 @@ struct TransfersView: View {
                             .padding(.vertical, 6)
                     }
                 }
-                .listStyle(PlainListStyle())
+                .scrollContentBackground(.hidden)
+                .background(.clear)
+                .transition(.blurReplace)
+                .listStyle(.sidebar)
             }
         }
         .frame(minWidth: 360, minHeight: 160)
@@ -68,7 +71,7 @@ private struct TransferRow: View {
                 }
             }
         }
-        .padding()
+        .applyGlassViewIfAvailable()
     }
 
     private var bytesText: String {
