@@ -71,6 +71,7 @@ private struct TransferRow: View {
                 }
             }
         }
+        .padding()
         .applyGlassViewIfAvailable()
     }
 
