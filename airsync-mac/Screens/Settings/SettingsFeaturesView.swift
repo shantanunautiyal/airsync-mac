@@ -78,19 +78,21 @@ struct SettingsFeaturesView: View {
 
                     } else {
                         GlassButtonView(
-                            label: "Connect ADB",
-                            systemImage: "play.circle",
+                            label: appState.adbConnecting ? "Connecting..." : "Connect ADB",
+                            systemImage: appState.adbConnecting ? "hourglass" : "play.circle",
                             action: {
-                                let ip = appState.device?.ipAddress ?? ""
-                                ADBConnector.connectToADB(ip: ip)
+                                if !appState.adbConnecting {
+                                    let ip = appState.device?.ipAddress ?? ""
+                                    ADBConnector.connectToADB(ip: ip)
+                                }
                             }
                         )
                         .disabled(
-                            adbPortString.isEmpty || appState.device == nil
+                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting
                         )
                     }
                 }
-                
+
                 HStack{
                     Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
                     Spacer()

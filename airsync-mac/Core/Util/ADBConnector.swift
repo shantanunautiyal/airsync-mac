@@ -70,10 +70,12 @@ struct ADBConnector {
     }
 
     static func connectToADB(ip: String) {
+        DispatchQueue.main.async { AppState.shared.adbConnecting = true }
         // Find adb
         guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
             AppState.shared.adbConnectionResult = "ADB not found. Please install via Homebrew: brew install android-platform-tools"
             AppState.shared.adbConnected = false
+            DispatchQueue.main.async { AppState.shared.adbConnecting = false }
             return
         }
 
@@ -82,7 +84,7 @@ struct ADBConnector {
         logBinaryDetection("Running: \(adbPath) mdns services")
 
         // Step 1: Discover devices
-        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
+    runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
             let trimmedMDNSOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
             if trimmedMDNSOutput.isEmpty {
@@ -100,6 +102,7 @@ Raw output:
 """
                     AppState.shared.adbConnected = false
                 }
+                DispatchQueue.main.async { AppState.shared.adbConnecting = false }
                 return
             }
 
@@ -152,6 +155,7 @@ Please see the ADB console for more details.
 """
                     alert.runModal()
                 }
+                DispatchQueue.main.async { AppState.shared.adbConnecting = false }
                 return
             }
 
@@ -208,6 +212,7 @@ Raw output:
 \(trimmedOutput)
 """
                         }
+                        AppState.shared.adbConnecting = false
                     }
                 }
             }
@@ -225,6 +230,7 @@ Raw output:
         runADBCommand(adbPath: adbPath, arguments: ["kill-server"])
         UserDefaults.standard.lastADBCommand = "adb kill-server"
         AppState.shared.adbConnected = false
+    AppState.shared.adbConnecting = false
     }
 
     private static func runADBCommand(adbPath: String, arguments: [String], completion: ((String) -> Void)? = nil) {

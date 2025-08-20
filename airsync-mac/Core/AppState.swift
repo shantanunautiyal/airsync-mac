@@ -101,6 +101,7 @@ class AppState: ObservableObject {
     @Published var selectedTab: TabIdentifier = .settings
 
     @Published var adbConnected: Bool = false
+    @Published var adbConnecting: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
     @Published var selectedNetworkAdapterName: String? // e.g., "en0"
     @Published var showMenubarText: Bool {
