@@ -81,12 +81,14 @@ struct airsync_macApp: App {
                     .background(WindowAccessor { window in
                         window.identifier = NSUserInterfaceItemIdentifier("main")
                         appDelegate.mainWindow = window
+                        window.collectionBehavior.insert(.moveToActiveSpace)
                     })
             } else {
                 HomeView()
                     .background(WindowAccessor { window in
                         window.identifier = NSUserInterfaceItemIdentifier("main")
                         appDelegate.mainWindow = window
+                        window.collectionBehavior.insert(.moveToActiveSpace)
                     })
             }
         }
@@ -129,6 +131,5 @@ struct airsync_macApp: App {
             }
         }
     }
-    
-}
 
+}

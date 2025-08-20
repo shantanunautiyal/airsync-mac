@@ -10,7 +10,8 @@ import SwiftUI
 struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
     @StateObject private var appState = AppState.shared
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    // Avoid creating another AppDelegate instance here; use the shared one
+    private var appDelegate: AppDelegate? { AppDelegate.shared }
 
     enum Tab: String, CaseIterable, Identifiable {
         case home, notifications, apps
@@ -39,6 +40,39 @@ struct MenubarView: View {
     }
 
     @State private var selectedTab: Tab = .home
+
+    private func focus(window: NSWindow) {
+    if window.isMiniaturized { window.deminiaturize(nil) }
+    window.collectionBehavior.insert(.moveToActiveSpace)
+    NSApp.unhide(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    window.makeKeyAndOrderFront(nil)
+    window.orderFrontRegardless()
+    }
+
+    private func openAndFocusMainWindow() {
+        // If window already exists, focus immediately + a follow-up retry
+        if let existing = appDelegate?.mainWindow {
+            focus(window: existing)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                self.appDelegate?.showAndActivateMainWindow()
+            }
+            return
+        }
+
+        // Trigger creation
+        openWindow(id: "main")
+
+        // Retry a few times until WindowAccessor supplies the reference
+        for i in 0..<8 {
+            let delay = Double(i) * 0.08
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                if let w = self.appDelegate?.mainWindow {
+                    self.appDelegate?.showAndActivateMainWindow()
+                }
+            }
+        }
+    }
 
     private func getDeviceName() -> String {
         appState.device?.name ?? "Ready"
@@ -104,15 +138,7 @@ struct MenubarView: View {
                     label: "Open App",
                     systemImage: "arrow.up.forward.app"
                 ) {
-                    if let window = appDelegate.mainWindow {
-                        if window.isMiniaturized {
-                            window.deminiaturize(nil)
-                        }
-                        window.makeKeyAndOrderFront(nil)
-                        NSApp.activate(ignoringOtherApps: true)
-                    } else {
-                        openWindow(id: "main")
-                    }
+                    openAndFocusMainWindow()
 
                 }
 
