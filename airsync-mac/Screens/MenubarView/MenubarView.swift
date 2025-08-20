@@ -69,7 +69,7 @@ struct MenubarView: View {
         for i in 0..<8 {
             let delay = Double(i) * 0.08
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                if let w = self.appDelegate?.mainWindow {
+                if (self.appDelegate?.mainWindow) != nil {
                     self.appDelegate?.showAndActivateMainWindow()
                 }
             }

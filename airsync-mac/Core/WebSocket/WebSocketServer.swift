@@ -665,7 +665,7 @@ class WebSocketServer: ObservableObject {
 
         // Send chunks using a simple sliding window to allow multiple in-flight chunks
         let windowSize = 8
-        var totalChunks = (totalSize + chunkSize - 1) / chunkSize
+        let totalChunks = (totalSize + chunkSize - 1) / chunkSize
         outgoingAcks[transferId] = []
 
         // Keep a buffer of sent chunks for potential retransmit: index -> (payloadBase64, attempts, lastSent)
