@@ -10,6 +10,8 @@ import SwiftUI
 struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
     @StateObject private var appState = AppState.shared
+    @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
+    @State private var didTriggerFirstLaunchOpen = false
     // Avoid creating another AppDelegate instance here; use the shared one
     private var appDelegate: AppDelegate? { AppDelegate.shared }
 
@@ -148,6 +150,16 @@ struct MenubarView: View {
             }
         }
         .padding()
+        .onAppear {
+            // On first launch (onboarding not completed), automatically open main window
+            if !hasPairedDeviceOnce && !didTriggerFirstLaunchOpen {
+                didTriggerFirstLaunchOpen = true
+                // Slight delay to ensure menu bar extra finished mounting
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    openAndFocusMainWindow()
+                }
+            }
+        }
     }
 }
 
