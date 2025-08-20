@@ -257,7 +257,13 @@ Raw output:
         package: String? = nil
     ) {
         guard let scrcpyPath = findExecutable(named: "scrcpy", fallbackPaths: possibleScrcpyPaths) else {
-            AppState.shared.adbConnectionResult = "scrcpy not found. Please install via Homebrew: brew install scrcpy"
+            DispatchQueue.main.async {
+                AppState.shared.adbConnectionResult = "scrcpy not found. Please install via Homebrew: brew install scrcpy"
+
+                presentScrcpyAlert(
+                    title: "scrcpy Not Found",
+                    informative: "AirSync couldn't find the scrcpy binary.\n\nFix suggestions:\n• Install via Homebrew: brew install scrcpy\n.\n\nAfter installing, try mirroring again. Might need the app to be restarted.")
+            }
             return
         }
 
@@ -329,9 +335,9 @@ Raw output:
 
         logBinaryDetection("Launching scrcpy: \(scrcpyPath) \(args.joined(separator: " "))")
 
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: scrcpyPath)
-        task.arguments = args
+    let task = Process()
+    task.executableURL = URL(fileURLWithPath: scrcpyPath)
+    task.arguments = args
 
         //  Inject adb into scrcpy's environment
         if let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) {
@@ -349,11 +355,33 @@ Raw output:
         task.standardOutput = pipe
         task.standardError = pipe
 
-        task.terminationHandler = { _ in
+        task.terminationHandler = { process in
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: data, encoding: .utf8) ?? "No output"
             DispatchQueue.main.async {
                 AppState.shared.adbConnectionResult = "scrcpy exited:\n" + output
+
+                let lowered = output.lowercased()
+                let errorKeywords = ["error", "failed", "not found", "refused", "denied", "cannot", "unable", "protocol", "disconnected", "permission"]
+                let hasErrorKeyword = errorKeywords.contains { lowered.contains($0) }
+                let nonZero = process.terminationStatus != 0
+
+                if nonZero || hasErrorKeyword {
+                    var hint = "General troubleshooting:\n• Ensure only one mirroring/ADB tool is using the device\n• adb kill-server then retry\n• Re‑enable Wireless debugging\n• If using Desktop/App mode, ensure Android 15+ / vendor support\n• Try a lower resolution or bitrate.\n\nSee ADB Console in Settings for full output."
+
+                    if lowered.contains("protocol fault") || lowered.contains("connection reset") {
+                        hint = "Another active ADB/scrcpy session is likely holding the device.\n• Close any existing scrcpy or Android Studio emulator sessions\n• Run: adb kill-server\n• Retry mirroring."
+                    } else if lowered.contains("permission denied") {
+                        hint = "Permission denied starting scrcpy.\n• Verify scrcpy binary has execute permission (chmod +x)\n• Reinstall via Homebrew (brew reinstall scrcpy)."
+                    } else if lowered.contains("could not"), lowered.contains("configure") || lowered.contains("video") {
+                        hint = "Video initialization failed.\n• Lower bitrate or resolution in Settings\n• Toggle Desktop/App mode off\n• Reconnect ADB then retry."
+                    }
+
+                    presentScrcpyAlert(
+                        title: "Mirroring Ended With Errors",
+                        informative: hint
+                    )
+                }
             }
         }
 
@@ -365,7 +393,24 @@ Raw output:
         } catch {
             DispatchQueue.main.async {
                 AppState.shared.adbConnectionResult = "┐('～`；)┌ Failed to start scrcpy: \(error.localizedDescription)"
+                presentScrcpyAlert(
+                    title: "Failed to Start Mirroring",
+                    informative: "scrcpy couldn't launch.\nReason: \(error.localizedDescription)\n\nFix suggestions:\n• Ensure the device is still connected via ADB (reconnect if needed)\n• Close other scrcpy/ADB sessions\n• Reinstall scrcpy if the binary is corrupt\n• Lower bitrate/resolution then retry."
+                )
             }
         }
+    }
+}
+
+// MARK: - Alert Helper
+private extension ADBConnector {
+    static func presentScrcpyAlert(title: String, informative: String) {
+        // Present immediately on main thread (caller ensures main queue)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = informative + "\n\nCheck the ADB Console in Settings for detailed logs."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
