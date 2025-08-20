@@ -93,8 +93,8 @@ struct AppContentView: View {
                         .transition(.blurReplace)
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
-                                Button("Feedback", systemImage: "exclamationmark.bubble"){
-                                    if let url = URL(string: "https://github.com/sameerasw/airsync-mac/issues/new/choose") {
+                                Button("Help", systemImage: "questionmark.circle"){
+                                    if let url = URL(string: "https://airsync.notion.site") {
                                         NSWorkspace.shared.open(url)
                                     }
                                 }

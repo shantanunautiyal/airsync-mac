@@ -104,9 +104,17 @@ struct airsync_macApp: App {
                 .keyboardShortcut("u", modifiers: [.command])
 
             }
-        }
-        .commands {
             CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .help) {
+                Button(action: {
+                    if let url = URL(string: "https://airsync.notion.site") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }, label: {
+                    Text("Help")
+                })
+                .keyboardShortcut("/")
+            }
         }
 
     }
