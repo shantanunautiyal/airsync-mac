@@ -87,18 +87,32 @@ struct OnboardingView: View {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 520)
 
-                        GlassButtonView(
-                            label: "Let's Start!",
-                            systemImage: "arrow.right.circle",
-                            size: .extraLarge,
-                            primary: true,
-                            action: {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    showQR = true
+                        HStack{
+                            GlassButtonView(
+                                label: "How to use?",
+                                systemImage: "questionmark.circle",
+                                size: .extraLarge,
+                                action: {
+                                    if let url = URL(string: "https://airsync.notion.site") {
+                                        NSWorkspace.shared.open(url)
+                                    }
                                 }
-                            }
-                        )
-                        .transition(.identity)
+                            )
+                            .transition(.identity)
+
+                            GlassButtonView(
+                                label: "Let's Start!",
+                                systemImage: "arrow.right.circle",
+                                size: .extraLarge,
+                                primary: true,
+                                action: {
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        showQR = true
+                                    }
+                                }
+                            )
+                            .transition(.identity)
+                        }
                     }
                 }
             }

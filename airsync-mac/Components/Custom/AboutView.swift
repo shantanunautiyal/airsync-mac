@@ -43,6 +43,18 @@ struct AboutView: View {
                         .padding(.horizontal)
 
                     HStack{
+
+                            GlassButtonView(
+                                label: "How to use?",
+                                systemImage: "questionmark.circle",
+                                primary: true,
+                                action: {
+                                    if let url = URL(string: "https://airsync.notion.site") {
+                                        NSWorkspace.shared.open(url)
+                                    }
+                                }
+                            )
+
                             GlassButtonView(
                                 label: "Website",
                                 systemImage: "globe",
@@ -52,7 +64,6 @@ struct AboutView: View {
                                     }
                                 }
                             )
-
 
                             GlassButtonView(
                                 label: "GitHub",
@@ -107,7 +118,7 @@ struct AboutView: View {
             }
             .padding([.horizontal, .bottom])
         }
-        .frame(width: 400, height: 500)
+        .frame(width: 600, height: 600)
     }
 }
 
