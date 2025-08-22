@@ -43,6 +43,10 @@ struct MediaPlayerView: View {
                                         WebSocketServer.shared.skipPrevious()
                                     }
                                 )
+                                .keyboardShortcut(
+                                    .leftArrow,
+                                    modifiers: .control
+                                )
                                 GlassButtonView(
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",
@@ -51,6 +55,10 @@ struct MediaPlayerView: View {
                                     action: {
                                         WebSocketServer.shared.togglePlayPause()
                                     }
+                                )
+                                .keyboardShortcut(
+                                    .space,
+                                    modifiers: .control
                                 )
 
                                 GlassButtonView(
@@ -61,6 +69,10 @@ struct MediaPlayerView: View {
                                     action: {
                                         WebSocketServer.shared.skipNext()
                                     }
+                                )
+                                .keyboardShortcut(
+                                    .rightArrow,
+                                    modifiers: .control
                                 )
                         }
                     }

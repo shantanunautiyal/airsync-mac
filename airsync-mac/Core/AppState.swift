@@ -289,7 +289,7 @@ class AppState: ObservableObject {
         if let pkg = package { content.userInfo["package"] = pkg }
 
         // Build action list (Android actions + optional View action if mirroring conditions)
-        var actionDefinitions: [NotificationAction] = actions
+        let actionDefinitions: [NotificationAction] = actions
         var includeView = false
         if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected, mirroringPlus {
             includeView = true

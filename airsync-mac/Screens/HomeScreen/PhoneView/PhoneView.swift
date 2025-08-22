@@ -145,6 +145,10 @@ struct ScreenView: View {
                     }
                 )
                 .transition(.identity)
+                .keyboardShortcut(
+                    "f",
+                    modifiers: .command
+                )
 
 
                 if appState.adbConnected{
@@ -161,6 +165,10 @@ struct ScreenView: View {
                         }
                     )
                     .transition(.identity)
+                    .keyboardShortcut(
+                        "p",
+                        modifiers: .command
+                    )
                     .contextMenu {
                         Button("Desktop Mode") {
                             ADBConnector.startScrcpy(
@@ -171,6 +179,10 @@ struct ScreenView: View {
                             )
                         }
                     }
+                    .keyboardShortcut(
+                        "p",
+                        modifiers: [.command, .shift]
+                    )
                 }
             }
 

@@ -24,6 +24,15 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
         }
     }
 
+    var shortcut: KeyEquivalent {
+        switch self {
+            case .notifications: return "1"
+            case .apps: return "2"
+            case .transfers: return "3"
+            case .settings: return ","
+        }
+    }
+
     static var availableTabs: [TabIdentifier] {
         var tabs: [TabIdentifier] = [.settings]
         if AppState.shared.device != nil {
@@ -64,6 +73,10 @@ struct AppContentView: View {
                                         Label("Clear", systemImage: "wind")
                                     }
                                     .help("Clear all notifications")
+                                    .keyboardShortcut(
+                                        .delete,
+                                        modifiers: .command
+                                    )
                                 .badge(appState.notifications.count)
                                 }
                             }
@@ -85,6 +98,10 @@ struct AppContentView: View {
                                     Label("Clear completed", systemImage: "trash")
                                 }
                                 .help("Remove all completed transfers from the list")
+                                .keyboardShortcut(
+                                    .delete,
+                                    modifiers: .command
+                                )
                             }
                         }
 
@@ -124,26 +141,16 @@ struct AppContentView: View {
         }
         .toolbar {
             ToolbarItem(placement: .secondaryAction) {
-                // Compute number of in-progress transfers for badge
-                let inProgressCount = AppState.shared.transfers.values.reduce(0) { acc, s in
-                    acc + (s.status == .inProgress ? 1 : 0)
-                }
-
                 Picker("Tab", selection: $appState.selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
-                        // For the Transfers tab, show a badge with the in-progress count when > 0
-                        if tab == .transfers && inProgressCount > 0 {
                             Button(tab.rawValue, systemImage: tab.icon){}
                                 .labelStyle(.iconOnly)
                                 .tag(tab)
                                 .help(tab.rawValue)
-                                .badge(inProgressCount)
-                        } else {
-                            Button(tab.rawValue, systemImage: tab.icon){}
-                                .labelStyle(.iconOnly)
-                                .tag(tab)
-                                .help(tab.rawValue)
-                        }
+                                .keyboardShortcut(
+                                    tab.shortcut,
+                                    modifiers: tab == .settings ? .command : .control
+                                )
                     }
                 }
                 .pickerStyle(.palette)
