@@ -33,7 +33,8 @@ struct MockData{
         body: "Sample text body",
         app: "AirSync",
         nid: "23987423984789234",
-        package: "sameerasw.airsync"
+        package: "sameerasw.airsync",
+        actions: []
     )
 
     static let sampleMusic: DeviceStatus.Music = .init(

@@ -43,6 +43,16 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             } else {
                 print("Missing device details or package for scrcpy.")
             }
+        } else if response.actionIdentifier.hasPrefix("ACT_") {
+            let actionName = String(response.actionIdentifier.dropFirst(4))
+            let userInfo = response.notification.request.content.userInfo
+            let nid = userInfo["nid"] as? String ?? response.notification.request.identifier
+
+            var replyText: String? = nil
+            if let textResp = response as? UNTextInputNotificationResponse {
+                replyText = textResp.userText
+            }
+            WebSocketServer.shared.sendNotificationAction(id: nid, name: actionName, text: replyText)
         }
 
         completionHandler()

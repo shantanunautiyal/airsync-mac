@@ -22,19 +22,12 @@ struct airsync_macApp: App {
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
 
-        // Register "View" button
-        let viewAction = UNNotificationAction(
-            identifier: "VIEW_ACTION",
-            title: "View",
-            options: []
-        )
-        let category = UNNotificationCategory(
-            identifier: "DEFAULT_CATEGORY",
-            actions: [viewAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        center.setNotificationCategories([category])
+        // Register base default category with generic View action; dynamic per-notification categories added later
+        let viewAction = UNNotificationAction(identifier: "VIEW_ACTION", title: "View", options: [])
+        let defaultCategory = UNNotificationCategory(identifier: "DEFAULT_CATEGORY", actions: [viewAction], intentIdentifiers: [], options: [])
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union([defaultCategory]))
+        }
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
                 print("Notification permission error: \(error)")

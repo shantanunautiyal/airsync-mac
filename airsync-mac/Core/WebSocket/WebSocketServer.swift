@@ -318,12 +318,31 @@ class WebSocketServer: ObservableObject {
                let title = dict["title"] as? String,
                let body = dict["body"] as? String,
                let app = dict["app"] as? String,
-               let package = dict["package"] as? String{
-                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package)
+               let package = dict["package"] as? String {
+                var actions: [NotificationAction] = []
+                if let arr = dict["actions"] as? [[String: Any]] {
+                    for a in arr {
+                        if let name = a["name"] as? String, let typeStr = a["type"] as? String,
+                           let t = NotificationAction.ActionType(rawValue: typeStr) {
+                            actions.append(NotificationAction(name: name, type: t))
+                        }
+                    }
+                }
+                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package, actions: actions)
                 DispatchQueue.main.async {
                     AppState.shared.addNotification(notif)
                 }
             }
+        case .notificationActionResponse:
+            if let dict = message.data.value as? [String: Any],
+               let id = dict["id"] as? String,
+               let action = dict["action"] as? String,
+               let success = dict["success"] as? Bool {
+                let msg = dict["message"] as? String ?? ""
+                print("Notification action response id=\(id) action=\(action) success=\(success) message=\(msg)")
+            }
+        case .notificationAction:
+            print("Warning: received 'notificationAction' from remote (ignored).")
 
         case .status:
             if let dict = message.data.value as? [String: Any],
@@ -419,7 +438,7 @@ class WebSocketServer: ObservableObject {
                let text = dict["text"] as? String {
                 AppState.shared.updateClipboardFromAndroid(text)
             }
-        
+
         // File transfer messages (Android -> Mac)
         case .fileTransferInit:
             if let dict = message.data.value as? [String: Any],
@@ -507,7 +526,7 @@ class WebSocketServer: ObservableObject {
 
                             // Optionally: show a user notification (simple print for now)
                             print("Saved incoming file to \(finalDest.path)")
-                        
+
                             // Mark as completed in AppState and post notification via AppState util
                             AppState.shared.completeIncoming(id: id, verified: nil)
                             AppState.shared.postNativeNotification(
@@ -539,7 +558,7 @@ class WebSocketServer: ObservableObject {
             }
         }
 
-        
+
     }
 
     // MARK: - Sending Helpers
@@ -569,6 +588,15 @@ class WebSocketServer: ObservableObject {
         }
         """
         sendToFirstAvailable(message: message)
+    }
+
+    func sendNotificationAction(id: String, name: String, text: String? = nil) {
+        var data: [String: Any] = ["id": id, "name": name]
+        if let t = text, !t.isEmpty { data["text"] = t }
+        if let jsonData = try? JSONSerialization.data(withJSONObject: ["type": "notificationAction", "data": data], options: []),
+           let json = String(data: jsonData, encoding: .utf8) {
+            sendToFirstAvailable(message: json)
+        }
     }
 
     // MARK: - Media Controls

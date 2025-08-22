@@ -9,6 +9,8 @@ import Foundation
 enum MessageType: String, Codable {
     case device
     case notification
+    case notificationAction
+    case notificationActionResponse
     case status
     case dismissalResponse
     case mediaControlResponse

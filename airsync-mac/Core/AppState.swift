@@ -264,7 +264,8 @@ class AppState: ObservableObject {
                 title: notif.title,
                 body: notif.body,
                 appIcon: appIcon,
-                package: notif.package
+                package: notif.package,
+                actions: notif.actions
             )
         }
     }
@@ -275,7 +276,8 @@ class AppState: ObservableObject {
         title: String,
         body: String,
         appIcon: NSImage? = nil,
-        package: String? = nil
+        package: String? = nil,
+        actions: [NotificationAction] = []
     ) {
         let content = UNMutableNotificationContent()
         content.title = "\(appName) - \(title)"
@@ -283,8 +285,39 @@ class AppState: ObservableObject {
         content.sound = .default
 
         if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected, mirroringPlus {
-            content.categoryIdentifier = "DEFAULT_CATEGORY"
+            // Dynamic category per notification if actions present
+            if actions.isEmpty {
+                content.categoryIdentifier = "DEFAULT_CATEGORY"
+            } else {
+                // Build category identifier unique to this notification's actions layout
+                let catId = "DYN_\(actions.map { $0.name }.joined(separator: "_"))".replacingOccurrences(of: " ", with: "_")
+                content.categoryIdentifier = catId
+
+                // Register category if not yet registered
+                let center = UNUserNotificationCenter.current()
+                center.getNotificationCategories { existing in
+                    if existing.first(where: { $0.identifier == catId }) == nil {
+                        var unActions: [UNNotificationAction] = []
+                        for a in actions.prefix(4) { // macOS shows limited actions
+                            switch a.type {
+                            case .button:
+                                unActions.append(UNNotificationAction(identifier: "ACT_\(a.name)", title: a.name, options: []))
+                            case .reply:
+                                if #available(macOS 13.0, *) {
+                                    unActions.append(UNTextInputNotificationAction(identifier: "ACT_\(a.name)", title: a.name, options: [], textInputButtonTitle: "Send", textInputPlaceholder: a.name))
+                                } else {
+                                    unActions.append(UNNotificationAction(identifier: "ACT_\(a.name)", title: a.name, options: []))
+                                }
+                            }
+                        }
+                        let cat = UNNotificationCategory(identifier: catId, actions: unActions, intentIdentifiers: [], options: [])
+                        center.setNotificationCategories(existing.union([cat]))
+                    }
+                }
+            }
             content.userInfo["package"] = pkg
+            content.userInfo["nid"] = id
+            content.userInfo["actions"] = actions.map { ["name": $0.name, "type": $0.type.rawValue] }
         }
 
         // Attach app icon if available
@@ -395,7 +428,7 @@ class AppState: ObservableObject {
         }
         return dir
     }
-    
+
     var currentWallpaperPath: String? {
         guard let device = myDevice else { return nil }
         let key = "\(device.name)-\(device.ipAddress)"

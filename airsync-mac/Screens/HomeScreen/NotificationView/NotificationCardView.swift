@@ -27,6 +27,23 @@ struct NotificationCardView: View {
 
                     Text(notification.body)
                         .font(.body)
+
+                    if !notification.actions.isEmpty {
+                        HStack(spacing: 8) {
+                            ForEach(notification.actions) { action in
+                                if action.type == .reply {
+                                    ReplyActionButton(notification: notification, action: action)
+                                } else {
+                                    Button(action.name) {
+                                        WebSocketServer.shared.sendNotificationAction(id: notification.nid, name: action.name)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.small)
+                                }
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
                 }
 
                 Spacer()
@@ -68,6 +85,37 @@ struct NotificationCardView: View {
 
 
 
+}
+
+private struct ReplyActionButton: View {
+    @State private var showingField = false
+    @State private var replyText = ""
+    let notification: Notification
+    let action: NotificationAction
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if showingField {
+                TextField(action.name, text: $replyText, onCommit: send)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 160)
+                Button("Send") { send() }
+                    .disabled(replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            } else {
+                Button(action.name) { withAnimation { showingField = true } }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
+        }
+    }
+
+    private func send() {
+        let text = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        WebSocketServer.shared.sendNotificationAction(id: notification.nid, name: action.name, text: text)
+        replyText = ""
+        showingField = false
+    }
 }
 
 #Preview {

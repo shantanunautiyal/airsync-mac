@@ -7,6 +7,13 @@
 
 import Foundation
 
+struct NotificationAction: Codable, Hashable, Identifiable {
+    enum ActionType: String, Codable { case button, reply }
+    var id: String { name }
+    let name: String
+    let type: ActionType
+}
+
 struct Notification: Codable, Identifiable, Equatable {
     let id = UUID()
     let title: String
@@ -14,9 +21,9 @@ struct Notification: Codable, Identifiable, Equatable {
     let app: String
     let nid: String
     let package: String
+    let actions: [NotificationAction]
 
     private enum CodingKeys: String, CodingKey {
-        case title, body, app, nid, package
-        // id is omitted — won't be decoded or encoded
+        case title, body, app, nid, package, actions
     }
 }
