@@ -17,8 +17,8 @@ struct PhoneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let cardWidth: CGFloat = 180
-            let cardHeight: CGFloat = 400
+            let cardWidth: CGFloat = 200
+            let cardHeight: CGFloat = 440
             let corner: CGFloat = 24
             ZStack {
                 // Wallpaper background layer(s) WITH 3D tilt
@@ -83,7 +83,6 @@ struct PhoneView: View {
             .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { updateImage() }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 180, height: 400)
     }
 
     private func updateImage() {
@@ -107,6 +106,10 @@ struct ScreenView: View {
     @ObservedObject var appState = AppState.shared
     var body: some View {
         VStack{
+            if (appState.status != nil){
+                DeviceStatusView()
+                    .transition(.opacity.combined(with: .scale))
+            }
 
             Spacer()
 
@@ -187,7 +190,7 @@ struct ScreenView: View {
             }
 
         }
-        .frame(maxWidth: 175, maxHeight: 390)
+        .padding(8)
         .animation(
             .easeInOut(duration: 0.35),
             value: AppState.shared.adbConnected

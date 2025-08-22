@@ -15,10 +15,6 @@ struct SidebarView: View {
 
     var body: some View {
         VStack{
-            if (appState.status != nil){
-                    DeviceStatusView()
-                        .transition(.opacity.combined(with: .scale))
-                }
 
             if let deviceVersion = appState.device?.version,
                isVersion(deviceVersion, lessThan: appState.minAndroidVersion) {
@@ -32,25 +28,7 @@ struct SidebarView: View {
 
 
         .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
-        .frame(minWidth: 270, minHeight: 420)
-        .safeAreaInset(edge: .bottom) {
-                HStack{
-                        GlassButtonView(
-                            label: "Disconnect",
-                            systemImage: "xmark",
-                            action: {
-                                appState.disconnectDevice()
-                                ADBConnector.disconnectADB()
-                                appState.adbConnected = false
-                            }
-                        )
-                        .transition(.identity)
-                }
-                .animation(
-                    .easeInOut(duration: 0.35),
-                    value: AppState.shared.adbConnected
-                )
-            }
+        .frame(minWidth: 230, minHeight: 480)
         }
     }
 }

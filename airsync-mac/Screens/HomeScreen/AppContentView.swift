@@ -109,23 +109,34 @@ struct AppContentView: View {
                     SettingsView()
                         .transition(.blurReplace)
                         .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Help", systemImage: "questionmark.circle"){
-                                    if let url = URL(string: "https://airsync.notion.site") {
-                                        NSWorkspace.shared.open(url)
+                                ToolbarItemGroup{
+                                    Button("Help", systemImage: "questionmark.circle"){
+                                        if let url = URL(string: "https://airsync.notion.site") {
+                                            NSWorkspace.shared.open(url)
+                                        }
+                                    }
+                                    .help("Report issues or suggest features")
+
+                                    Button {
+                                        showAboutSheet = true
+                                    } label: {
+                                        Label("About", systemImage: "info")
+                                    }
+                                    .help("View app information and version details")
+                                }
+
+                                if appState.device != nil {
+                                    ToolbarItemGroup{
+                                        Button {
+                                            appState.disconnectDevice()
+                                            ADBConnector.disconnectADB()
+                                            appState.adbConnected = false
+                                        } label: {
+                                            Label("Disconnect", systemImage: "iphone.slash")
+                                        }
+                                        .help("Disconnect Device")
                                     }
                                 }
-                                .help("Report issues or suggest features")
-                            }
-
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    showAboutSheet = true
-                                } label: {
-                                    Label("About", systemImage: "info")
-                                }
-                                .help("View app information and version details")
-                            }
                         }
                 }
             }

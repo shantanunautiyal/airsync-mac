@@ -106,7 +106,6 @@ struct MenubarView: View {
                 case .home:
                     VStack(alignment: .center, spacing: 12) {
                         if let _ = appState.device {
-                            DeviceStatusView()
                             PhoneView()
                         }
                     }
