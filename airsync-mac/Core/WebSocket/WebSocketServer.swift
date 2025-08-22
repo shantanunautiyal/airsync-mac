@@ -406,24 +406,24 @@ class WebSocketServer: ObservableObject {
         case .appIcons:
             if let dict = message.data.value as? [String: [String: Any]] {
                 DispatchQueue.global(qos: .background).async {
+                    let incomingPackages = Set(dict.keys)
+                    let existingPackages = Set(AppState.shared.androidApps.keys)
+
+                    // Decode & write/update icons
                     for (package, details) in dict {
                         guard let name = details["name"] as? String,
                               let iconBase64 = details["icon"] as? String,
                               let systemApp = details["systemApp"] as? Bool,
-                              let listening = details["listening"] as? Bool else {
-                            continue
-                        }
+                              let listening = details["listening"] as? Bool else { continue }
 
                         var cleaned = iconBase64
-                        if let range = cleaned.range(of: "base64,") {
-                            cleaned = String(cleaned[range.upperBound...])
-                        }
+                        if let range = cleaned.range(of: "base64,") { cleaned = String(cleaned[range.upperBound...]) }
 
                         var iconPath: String? = nil
                         if let data = Data(base64Encoded: cleaned) {
                             let fileURL = appIconsDirectory().appendingPathComponent("\(package).png")
                             do {
-                                try data.write(to: fileURL)
+                                try data.write(to: fileURL, options: .atomic)
                                 iconPath = fileURL.path
                             } catch {
                                 print("Failed to write icon for \(package): \(error)")
@@ -440,9 +440,26 @@ class WebSocketServer: ObservableObject {
 
                         DispatchQueue.main.async {
                             AppState.shared.androidApps[package] = app
-                            AppState.shared
-                                .androidApps[package]?.iconUrl = iconPath ?? ""
+                            if let iconPath { AppState.shared.androidApps[package]?.iconUrl = iconPath }
                         }
+                    }
+
+                    // Remove apps (and their icon files) that are no longer present on the device
+                    let toRemove = existingPackages.subtracting(incomingPackages)
+                    if !toRemove.isEmpty {
+                        DispatchQueue.main.async {
+                            for pkg in toRemove {
+                                if let iconPath = AppState.shared.androidApps[pkg]?.iconUrl {
+                                    try? FileManager.default.removeItem(atPath: iconPath)
+                                }
+                                AppState.shared.androidApps.removeValue(forKey: pkg)
+                            }
+                        }
+                    }
+
+                    // Persist updated snapshot
+                    DispatchQueue.main.async {
+                        AppState.shared.saveAppsToDisk()
                     }
                 }
             }
