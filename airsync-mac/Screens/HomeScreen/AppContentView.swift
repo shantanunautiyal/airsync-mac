@@ -160,7 +160,7 @@ struct AppContentView: View {
                                 .help(tab.rawValue)
                                 .keyboardShortcut(
                                     tab.shortcut,
-                                    modifiers: tab == .settings ? .command : .control
+                                    modifiers: .command
                                 )
                     }
                 }
