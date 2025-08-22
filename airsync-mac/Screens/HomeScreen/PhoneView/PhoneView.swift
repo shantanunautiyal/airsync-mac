@@ -9,10 +9,7 @@ import SwiftUI
 
 struct PhoneView: View {
     @ObservedObject var appState = AppState.shared
-
-    @State private var currentImage: NSImage?
-    @State private var nextImage: NSImage?
-    @State private var nextImageOpacity: Double = 0.0
+    @State private var displayedImage: NSImage?
     // 3D tilt state
     @State private var tiltX: Double = 0
     @State private var tiltY: Double = 0
@@ -25,30 +22,13 @@ struct PhoneView: View {
             let corner: CGFloat = 24
             ZStack {
                 // Wallpaper background layer(s) WITH 3D tilt
-                ZStack {
-                    Group {
-                        if let image = currentImage {
-                            Image(nsImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .transition(.blurReplace)
-                        }
-                        if let image = nextImage {
-                            Image(nsImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .opacity(nextImageOpacity)
-                                .transition(.blurReplace)
-                        }
-                    }
+                FadingImageView(image: displayedImage, duration: 0.75)
                     .overlay(
-                        // Subtle gradient for readability
                         LinearGradient(
                             colors: [Color.black.opacity(0.35), Color.black.opacity(0.05)],
                             startPoint: .top, endPoint: .bottom
                         )
                     )
-                }
                 .scaleEffect(isInteracting ? 1.085 : 1.035)
                 .rotation3DEffect(.degrees(tiltX), axis: (x: 1, y: 0, z: 0))
                 .rotation3DEffect(.degrees(tiltY), axis: (x: 0, y: 1, z: 0))
@@ -97,44 +77,25 @@ struct PhoneView: View {
                         }
                     }
             )
-            .onAppear { updateImage(animated: false) }
-            .onChange(of: appState.status?.music.isPlaying) { updateImage(animated: true) }
-            .onChange(of: appState.status?.music.albumArt) { updateImage(animated: true) }
-            .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { updateImage(animated: true) }
+            .onAppear { updateImage() }
+            .onChange(of: appState.status?.music.isPlaying) { _ in updateImage() }
+            .onChange(of: appState.status?.music.albumArt) { _ in updateImage() }
+            .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { _ in updateImage() }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 180, height: 400)
     }
 
-    private func updateImage(animated: Bool) {
+    private func updateImage() {
         let base64 = (appState.status?.music.isPlaying ?? false)
-        ? appState.status?.music.albumArt
-        : AppState.shared.currentDeviceWallpaperBase64
+            ? appState.status?.music.albumArt
+            : AppState.shared.currentDeviceWallpaperBase64
 
         guard let base64 = base64,
               let data = Data(base64Encoded: base64.stripBase64Prefix()),
               let nsImage = NSImage(data: data) else { return }
-
-        if !animated || currentImage == nil {
-            currentImage = nsImage
-            nextImage = nil
-            nextImageOpacity = 0.0
-            return
-        }
-
-        // Crossfade
-        nextImage = nsImage
-        nextImageOpacity = 0.0
-
-        withAnimation(.easeInOut(duration: 0.75)) {
-            nextImageOpacity = 1.0
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-            currentImage = nsImage
-            nextImage = nil
-            nextImageOpacity = 0.0
-        }
+        // Setting displayedImage triggers fade in representable
+        displayedImage = nsImage
     }
 }
 
@@ -142,25 +103,10 @@ struct PhoneView: View {
     PhoneView()
 }
 
-
-struct StatusBarView: View {
-    var body: some View {
-            HStack{
-                Spacer()
-                Circle()
-                    .fill(.background.opacity(0.6))
-                    .frame(width: 15, height: 15)
-                    .padding(5)
-                Spacer()
-            }
-    }
-}
-
 struct ScreenView: View {
     @ObservedObject var appState = AppState.shared
     var body: some View {
         VStack{
-            StatusBarView()
 
             Spacer()
 
@@ -234,5 +180,69 @@ struct ScreenView: View {
             .easeInOut(duration: 0.35),
             value: AppState.shared.adbConnected
         )
+    }
+}
+
+// MARK: - Fading Image Backed by NSView for smoother layer transitions
+private struct FadingImageView: NSViewRepresentable {
+    let image: NSImage?
+    let duration: TimeInterval
+
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+        container.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        return container
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let layer = nsView.layer else { return }
+        layer.masksToBounds = true
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        // Remove old image sublayers beyond top 2 to avoid buildup
+        if let sublayers = layer.sublayers, sublayers.count > 2 {
+            sublayers.dropLast(2).forEach { $0.removeFromSuperlayer() }
+        }
+
+        let newContents = image
+        if let newContents, let cg = newContents.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            let newLayer = CALayer()
+            newLayer.contents = cg
+            newLayer.frame = layer.bounds
+            newLayer.contentsGravity = .resizeAspectFill
+            newLayer.opacity = 0
+            layer.addSublayer(newLayer)
+
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 0
+            fade.toValue = 1
+            fade.duration = duration
+            fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            newLayer.add(fade, forKey: "fade")
+            newLayer.opacity = 1
+
+            // Fade out previous top layer (excluding this one)
+            if let sublayers = layer.sublayers, sublayers.count > 1 {
+                let previous = sublayers[sublayers.count - 2]
+                let fadeOut = CABasicAnimation(keyPath: "opacity")
+                fadeOut.fromValue = previous.opacity
+                fadeOut.toValue = 0
+                fadeOut.duration = duration
+                fadeOut.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                previous.add(fadeOut, forKey: "fadeOut")
+                previous.opacity = 0
+                DispatchQueue.main.asyncAfter(deadline: .now() + duration + 0.1) {
+                    previous.removeFromSuperlayer()
+                }
+            }
+        }
+        CATransaction.commit()
+        // Keep layer resized on parent layout changes
+        DispatchQueue.main.async {
+            layer.sublayers?.forEach { $0.frame = layer.bounds }
+        }
     }
 }
