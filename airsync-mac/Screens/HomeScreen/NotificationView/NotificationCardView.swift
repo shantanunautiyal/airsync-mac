@@ -34,11 +34,12 @@ struct NotificationCardView: View {
                                 if action.type == .reply {
                                     ReplyActionButton(notification: notification, action: action)
                                 } else {
-                                    Button(action.name) {
-                                        WebSocketServer.shared.sendNotificationAction(id: notification.nid, name: action.name)
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
+                                    GlassButtonView(
+                                        label: action.name,
+                                        action: {
+                                            WebSocketServer.shared.sendNotificationAction(id: notification.nid, name: action.name)
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -99,12 +100,28 @@ private struct ReplyActionButton: View {
                 TextField(action.name, text: $replyText, onCommit: send)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 160)
-                Button("Send") { send() }
-                    .disabled(replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+
+                GlassButtonView(
+                    label: "Send",
+                    systemImage: "paperplane",
+                    primary: true,
+                    action: {
+                        send()
+                    }
+                )
+                .disabled(replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
             } else {
-                Button(action.name) { withAnimation { showingField = true } }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+
+                GlassButtonView(
+                    label: action.name,
+                    systemImage: "paperplane",
+                    primary: true,
+                    action: {
+                        withAnimation { showingField = true }
+                    }
+                )
             }
         }
     }
