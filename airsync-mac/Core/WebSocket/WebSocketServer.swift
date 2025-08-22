@@ -343,6 +343,21 @@ class WebSocketServer: ObservableObject {
             }
         case .notificationAction:
             print("Warning: received 'notificationAction' from remote (ignored).")
+        case .notificationUpdate:
+            if let dict = message.data.value as? [String: Any],
+               let nid = dict["id"] as? String {
+                if let action = dict["action"] as? String, action.lowercased() == "dismiss" || dict["dismissed"] as? Bool == true {
+                    DispatchQueue.main.async {
+                        // Remove from in-memory list if present; ignore if not found.
+                        let existed = AppState.shared.notifications.contains { $0.nid == nid }
+                        if existed {
+                            AppState.shared.removeNotificationById(nid)
+                        }
+                        // Ensure system notification also removed.
+                        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [nid])
+                    }
+                }
+            }
 
         case .status:
             if let dict = message.data.value as? [String: Any],

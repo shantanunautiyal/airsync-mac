@@ -11,6 +11,7 @@ enum MessageType: String, Codable {
     case notification
     case notificationAction
     case notificationActionResponse
+    case notificationUpdate
     case status
     case dismissalResponse
     case mediaControlResponse
