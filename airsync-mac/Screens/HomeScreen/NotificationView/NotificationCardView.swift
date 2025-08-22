@@ -105,7 +105,6 @@ private struct ReplyActionButton: View {
                 GlassButtonView(
                     label: "Send",
                     systemImage: "paperplane",
-                    iconOnly: true,
                     primary: true,
                     action: {
                         send()
@@ -117,8 +116,7 @@ private struct ReplyActionButton: View {
 
                 GlassButtonView(
                     label: action.name,
-                    systemImage: "arrowshape.turn.up.left",
-                    iconOnly: true,
+                    systemImage: "paperplane",
                     primary: true,
                     action: {
                         withAnimation { showingField = true }
