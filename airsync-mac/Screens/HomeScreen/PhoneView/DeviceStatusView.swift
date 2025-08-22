@@ -59,8 +59,8 @@ struct DeviceStatusView: View {
 
                             Image(systemName: "speaker.wave.3.fill")
                         }
-                        .padding()
                     }
+                    .padding()
                     .frame(width: 200)
                 }
                 .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
