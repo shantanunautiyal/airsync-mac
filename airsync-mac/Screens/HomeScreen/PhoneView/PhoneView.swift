@@ -78,9 +78,9 @@ struct PhoneView: View {
                     }
             )
             .onAppear { updateImage() }
-            .onChange(of: appState.status?.music.isPlaying) { _ in updateImage() }
-            .onChange(of: appState.status?.music.albumArt) { _ in updateImage() }
-            .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { _ in updateImage() }
+            .onChange(of: appState.status?.music.isPlaying) { updateImage() }
+            .onChange(of: appState.status?.music.albumArt) { updateImage() }
+            .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { updateImage() }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 180, height: 400)
