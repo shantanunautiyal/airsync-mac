@@ -17,11 +17,32 @@ struct SettingsPlusView: View {
     @State private var isExpanded: Bool = false
     @State private var isLicenseVisible = false
 
+    @State private var selectedPlan: LicensePlanType = UserDefaults.standard.licensePlanType
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Label("AirSync+", systemImage: "key")
                 Spacer()
+
+                if !appState.isPlus {
+                    // Plan selection
+                    HStack {
+                        Spacer()
+                        Picker("Plan", selection: $selectedPlan) {
+                            ForEach(LicensePlanType.allCases) { plan in
+                                Text(plan.displayName).tag(plan)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: selectedPlan) { _, newValue in
+                            UserDefaults.standard.licensePlanType = newValue
+                        }
+                        .labelStyle(.iconOnly)
+                    }
+                    .padding(.bottom, 4)
+                }
+
                 if appState.isPlus {
                     Button("Unregister", systemImage: "key.slash") {
                         appState.licenseDetails = nil
@@ -32,6 +53,7 @@ struct SettingsPlusView: View {
             }
             .padding()
 
+
             // License input + check
             if !appState.isPlus {
                 TextField("Enter license key", text: $licenseKey)
@@ -40,16 +62,17 @@ struct SettingsPlusView: View {
 
                 HStack {
                     GlassButtonView(
-                        label: "Check License",
+                        label: "Activate",
                         systemImage: "checkmark.seal",
                         action: {
                             Task {
                                 isCheckingLicense = true
                                 licenseValid = nil
+                                UserDefaults.standard.licensePlanType = selectedPlan
                                 let result = try? await checkLicenseKeyValidity(
                                     key: licenseKey,
                                     save: true,
-                                    isNewRegistration: true // NEW: First time check
+                                    isNewRegistration: true
                                 )
                                 licenseValid = result ?? false
                                 isCheckingLicense = false

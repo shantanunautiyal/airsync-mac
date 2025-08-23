@@ -30,7 +30,11 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
         return true
     }
 
-    let productID = "smrIThhDxoQI33gQm3wwxw=="
+    // Select product id based on chosen plan
+    let selectedPlan = UserDefaults.standard.licensePlanType
+    let membershipProductID = "smrIThhDxoQI33gQm3wwxw=="
+    let oneTimeProductID = "3HkBPf4ovp7KiVISJS6N5A=="
+    let productID = (selectedPlan == .oneTime) ? oneTimeProductID : membershipProductID
     let url = URL(string: "https://api.gumroad.com/v2/licenses/verify")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -71,17 +75,20 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
         return false
     }
 
+    // Subscription-only fields — for one-time purchase these may be nil/empty.
     let cancelledAt = purchase["subscription_cancelled_at"] as? String
     let endedAt = purchase["subscription_ended_at"] as? String
     let failedAt = purchase["subscription_failed_at"] as? String
 
-    if [cancelledAt, endedAt, failedAt].contains(where: { dateStr in
-        if let s = dateStr, !s.isEmpty { return true }
-        return false
-    }) {
-        AppState.shared.isPlus = false
-        if save { AppState.shared.licenseDetails = nil }
-        return false
+    if selectedPlan == .membership {
+        if [cancelledAt, endedAt, failedAt].contains(where: { dateStr in
+            if let s = dateStr, !s.isEmpty { return true }
+            return false
+        }) {
+            AppState.shared.isPlus = false
+            if save { AppState.shared.licenseDetails = nil }
+            return false
+        }
     }
 
     // check device limit
