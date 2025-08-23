@@ -11,11 +11,10 @@ struct NotificationView: View {
     @ObservedObject var appState = AppState.shared
     @AppStorage("notificationStacks") private var notificationStacks = true
     @State private var expandedPackages: Set<String> = []
+    var emptyViewEnabled: Bool = true
 
     var body: some View {
-        if appState.notifications.isEmpty {
-            NotificationEmptyView()
-        } else {
+        if !appState.notifications.isEmpty {
             ZStack {
                 // stacked view on top when notificationStacks == true
                 stackedList
@@ -31,6 +30,8 @@ struct NotificationView: View {
                     .accessibilityHidden(notificationStacks)
                     .animation(.easeInOut(duration: 0.5), value: notificationStacks)
             }
+        } else if (emptyViewEnabled) {
+            NotificationEmptyView()
         }
     }
 
