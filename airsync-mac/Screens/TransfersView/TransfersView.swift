@@ -13,12 +13,9 @@ struct TransfersView: View {
         VStack(alignment: .leading, spacing: 8) {
             if sessions.isEmpty {
                 VStack {
-                    Spacer()
-                    Text("No active transfers")
-                        .foregroundColor(.secondary)
-                    Spacer()
+                    Label("Nothing transferred yet", systemImage: "tray.and.arrow.up")
+                    .padding()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
                     ForEach(sessions) { session in

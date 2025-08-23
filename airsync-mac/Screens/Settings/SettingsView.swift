@@ -77,6 +77,7 @@ struct SettingsView: View {
                                 .onChange(of: port) { oldValue, newValue in
                                     port = newValue.filter { "0123456789".contains($0) }
                                 }
+                                .frame(maxWidth: 100)
                         }
 
                         ConnectionInfoText(

@@ -10,9 +10,9 @@ import SwiftUI
 struct NotificationEmptyView: View {
     var body: some View {
         VStack {
-            // Text("└(=^‥^=)┐")
-            //     .font(.title)
-            //     .padding()
+            Text("└(=^‥^=)┐")
+                .font(.title)
+                .padding()
             Label("You're all caught up!", systemImage: "tray")
             .padding()
         }
