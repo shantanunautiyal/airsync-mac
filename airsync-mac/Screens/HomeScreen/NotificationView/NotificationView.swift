@@ -11,7 +11,6 @@ struct NotificationView: View {
     @ObservedObject var appState = AppState.shared
     @AppStorage("notificationStacks") private var notificationStacks = true
     @State private var expandedPackages: Set<String> = []
-    var emptyViewEnabled: Bool = true
 
     var body: some View {
         if !appState.notifications.isEmpty {
@@ -30,7 +29,7 @@ struct NotificationView: View {
                     .accessibilityHidden(notificationStacks)
                     .animation(.easeInOut(duration: 0.5), value: notificationStacks)
             }
-        } else if (emptyViewEnabled) {
+        } else {
             NotificationEmptyView()
         }
     }

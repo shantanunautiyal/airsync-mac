@@ -161,8 +161,9 @@ struct MenubarView: View {
             }
             .padding(10)
 
-            NotificationView(emptyViewEnabled: false)
-                .transition(.opacity.combined(with: .blurReplace))
+            if appState.device != nil {
+                MenuBarNotificationsListView()
+            }
 
         }
         .onAppear {
@@ -173,6 +174,33 @@ struct MenubarView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     openAndFocusMainWindow()
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Menu Bar Notifications (List variant with swipe actions)
+private struct MenuBarNotificationsListView: View {
+    @ObservedObject private var appState = AppState.shared
+    private let maxItems = 10
+
+    var body: some View {
+        Group {
+            if !appState.notifications.isEmpty {
+                List {
+                    ForEach(appState.notifications.prefix(maxItems)) { notif in
+                        NotificationCardView(
+                            notification: notif,
+                            deleteNotification: { appState.removeNotification(notif) },
+                            hideNotification: { appState.hideNotification(notif) }
+                        )
+                        .animation(nil, value: appState.notifications.count)
+                    }
+                }
+                .listStyle(.sidebar)
+                .scrollContentBackground(.hidden)
+                .frame(minWidth: 260, maxWidth: 320, maxHeight: 360)
+                .transaction { txn in txn.animation = nil }
             }
         }
     }
