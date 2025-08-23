@@ -19,9 +19,13 @@ struct DeviceStatusView: View {
             HStack(spacing: 12) {
                 let batteryLevel = appState.status?.battery.level ?? 100
                 let batteryIsCharging = appState.status?.battery.isCharging ?? false
-                Image(systemName: batteryIcon(for: batteryLevel, isCharging: batteryIsCharging))
-                    .help("\(batteryLevel)%")
-                    .contentTransition(.symbolEffect)
+                HStack{
+                    Image(systemName: batteryIcon(for: batteryLevel, isCharging: batteryIsCharging))
+                        .help("\(batteryLevel)%")
+                        .contentTransition(.symbolEffect)
+                    Text("\(batteryLevel)%")
+                        .font(.caption2)
+                }
 
                 let volume = appState.status?.music.volume ?? 100
                 let isMuted = appState.status?.music.isMuted ?? false
