@@ -16,13 +16,12 @@ struct MenubarView: View {
     private var appDelegate: AppDelegate? { AppDelegate.shared }
 
     enum Tab: String, CaseIterable, Identifiable {
-        case home, notifications, apps
+        case notifications, apps
 
         var id: String { rawValue }
 
         var icon: String {
             switch self {
-            case .home: return "house.fill"
             case .notifications: return "bell.fill"
             case .apps: return "app.fill"
             }
@@ -31,7 +30,6 @@ struct MenubarView: View {
         static var availableTabs: [Tab] {
             var tabs: [Tab] = []
             if AppState.shared.device != nil {
-                tabs.append(.home)
                 tabs.append(.notifications)
                 tabs.append(.apps)
             } else {
@@ -41,7 +39,7 @@ struct MenubarView: View {
         }
     }
 
-    @State private var selectedTab: Tab = .home
+    @State private var selectedTab: Tab = .notifications
 
     private func focus(window: NSWindow) {
     if window.isMiniaturized { window.deminiaturize(nil) }
@@ -91,6 +89,105 @@ struct MenubarView: View {
             Text("AirSync - \(getDeviceName())")
                 .font(.headline)
 
+
+            HStack(spacing: 10){
+                GlassButtonView(
+                    label: "Open App",
+                    systemImage: "arrow.up.forward.app",
+                    iconOnly: true
+                ) {
+                    openAndFocusMainWindow()
+                }
+                .frame(width: 40, height: 40)
+
+                if (appState.device != nil){
+                    GlassButtonView(
+                        label: "Send",
+                        systemImage: "square.and.arrow.up",
+                        iconOnly: true,
+                        action: {
+                            let panel = NSOpenPanel()
+                            panel.canChooseFiles = true
+                            panel.canChooseDirectories = false
+                            panel.allowsMultipleSelection = false
+                            panel.begin { response in
+                                if response == .OK, let url = panel.url {
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        WebSocketServer.shared.sendFile(url: url)
+                                    }
+                                }
+                            }
+                        }
+                    )
+                    .transition(.identity)
+                    .keyboardShortcut(
+                        "f",
+                        modifiers: .command
+                    )
+                .frame(width: 40, height: 40)
+                }
+
+
+                if appState.adbConnected{
+                    GlassButtonView(
+                        label: "Mirror",
+                        systemImage: "apps.iphone",
+                        iconOnly: true,
+                        action: {
+                            ADBConnector
+                                .startScrcpy(
+                                    ip: appState.device?.ipAddress ?? "",
+                                    port: appState.adbPort,
+                                    deviceName: appState.device?.name ?? "My Phone"
+                                )
+                        }
+                    )
+                    .transition(.identity)
+                    .keyboardShortcut(
+                        "p",
+                        modifiers: .command
+                    )
+                    .contextMenu {
+                        Button("Desktop Mode") {
+                            ADBConnector.startScrcpy(
+                                ip: appState.device?.ipAddress ?? "",
+                                port: appState.adbPort,
+                                deviceName: appState.device?.name ?? "My Phone",
+                                desktop: true
+                            )
+                        }
+                    }
+                    .keyboardShortcut(
+                        "p",
+                        modifiers: [.command, .shift]
+                    )
+                .frame(width: 40, height: 40)
+                }
+
+                GlassButtonView(label: "Quit",
+                systemImage: "power",
+                iconOnly: true
+                ) {
+                    NSApplication.shared.terminate(nil)
+                }
+                .frame(width: 40, height: 40)
+            }
+
+            if (appState.status != nil){
+                DeviceStatusView()
+                    .transition(.opacity.combined(with: .scale))
+            }
+
+            if let music = appState.status?.music,
+               let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+               !title.isEmpty {
+
+                MediaPlayerView(music: music)
+                    .transition(.opacity.combined(with: .scale))
+            } else {
+                Spacer()
+            }
+
             Picker("", selection: $selectedTab) {
                 ForEach(Tab.availableTabs) { tab in
                     Label(tab.rawValue.capitalized, systemImage: tab.icon)
@@ -103,14 +200,6 @@ struct MenubarView: View {
 
             ZStack {
                 switch selectedTab {
-                case .home:
-                    VStack(alignment: .center, spacing: 12) {
-                        if let _ = appState.device {
-                            PhoneView()
-                        }
-                    }
-                    .transition(.opacity.combined(with: .blurReplace))
-
                 case .notifications:
                     if let _ = appState.device {
                         NotificationView()
@@ -132,21 +221,6 @@ struct MenubarView: View {
                 : 0
             )
 
-            // Footer
-            HStack {
-
-                GlassButtonView(
-                    label: "Open App",
-                    systemImage: "arrow.up.forward.app"
-                ) {
-                    openAndFocusMainWindow()
-
-                }
-
-                GlassButtonView(label: "Quit", systemImage: "power") {
-                    NSApplication.shared.terminate(nil)
-                }
-            }
         }
         .padding()
         .onAppear {
