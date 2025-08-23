@@ -27,8 +27,23 @@ struct SidebarView: View {
                 .transition(.scale)
 
 
-        .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
-        .frame(minWidth: 230, minHeight: 480)
+            .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
+            .frame(minWidth: 230, minHeight: 380)
+            .safeAreaInset(edge: .bottom) {
+                HStack{
+                    GlassButtonView(
+                        label: "Disconnect",
+                        systemImage: "xmark",
+                        action: {
+                            appState.disconnectDevice()
+                            ADBConnector.disconnectADB()
+                            appState.adbConnected = false
+                        }
+                    )
+                    .transition(.identity)
+                }
+                .padding()
+            }
         }
     }
 }
