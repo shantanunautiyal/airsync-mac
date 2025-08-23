@@ -194,6 +194,7 @@ private struct MenuBarNotificationsListView: View {
                             deleteNotification: { appState.removeNotification(notif) },
                             hideNotification: { appState.hideNotification(notif) }
                         )
+                        .applyGlassViewIfAvailable()
                         .animation(nil, value: appState.notifications.count)
                     }
                 }
