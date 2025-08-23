@@ -81,6 +81,7 @@ struct MenubarView: View {
     // Constants for min height
     private let minHeightTabs: CGFloat = 500
     private let minWidthTabs: CGFloat = 280
+    private let toolButtonSize: CGFloat = 38
 
     var body: some View {
         VStack(spacing: 12) {
@@ -94,17 +95,18 @@ struct MenubarView: View {
                 GlassButtonView(
                     label: "Open App",
                     systemImage: "arrow.up.forward.app",
-                    iconOnly: true
+                    iconOnly: true,
+                    circleSize: toolButtonSize
                 ) {
                     openAndFocusMainWindow()
                 }
-                .frame(width: 40, height: 40)
 
                 if (appState.device != nil){
                     GlassButtonView(
                         label: "Send",
                         systemImage: "square.and.arrow.up",
                         iconOnly: true,
+                        circleSize: toolButtonSize,
                         action: {
                             let panel = NSOpenPanel()
                             panel.canChooseFiles = true
@@ -124,7 +126,6 @@ struct MenubarView: View {
                         "f",
                         modifiers: .command
                     )
-                .frame(width: 40, height: 40)
                 }
 
 
@@ -133,6 +134,7 @@ struct MenubarView: View {
                         label: "Mirror",
                         systemImage: "apps.iphone",
                         iconOnly: true,
+                        circleSize: toolButtonSize,
                         action: {
                             ADBConnector
                                 .startScrcpy(
@@ -161,16 +163,16 @@ struct MenubarView: View {
                         "p",
                         modifiers: [.command, .shift]
                     )
-                .frame(width: 40, height: 40)
                 }
 
-                GlassButtonView(label: "Quit",
-                systemImage: "power",
-                iconOnly: true
+                GlassButtonView(
+                    label: "Quit",
+                    systemImage: "power",
+                    iconOnly: true,
+                    circleSize: toolButtonSize
                 ) {
                     NSApplication.shared.terminate(nil)
                 }
-                .frame(width: 40, height: 40)
             }
 
             if (appState.status != nil){

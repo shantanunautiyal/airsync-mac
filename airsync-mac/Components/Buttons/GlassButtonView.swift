@@ -7,26 +7,75 @@ struct GlassButtonView: View {
     var iconOnly: Bool = false
     var size: ControlSize = .large
     var primary: Bool = false
+    var circleSize: CGFloat? = nil
+    var fixedIconSize: CGFloat? = nil
     var action: () -> Void = {}
 
     var body: some View {
-        Button(action: action) {
-            labelContent
-        }
-        .controlSize(size)
-        .modifier(LabelStyleModifier(iconOnly: iconOnly))
-        .applyGlassButtonStyle(primary: primary)
-        .contentTransition(.symbolEffect)
+        Button(action: action) { labelContent }
+            .controlSize(size)
+            .modifier(LabelStyleModifier(iconOnly: iconOnly && useSystemLabelStyle))
+            .applyGlassButtonStyle(primary: primary)
+            .contentTransition(.symbolEffect)
+            .ifLet(circleSize) { view, dim in
+                view.frame(width: dim, height: dim)
+                    .contentShape(Circle())
+                    .clipShape(Circle())
+            }
     }
 
     @ViewBuilder
     private var labelContent: some View {
-        if let systemImage {
-            Label(label, systemImage: systemImage)
-        } else if let image {
-            Label(label, image: image)
+        if customIconSizingActive, iconOnly, let (imgView, altText) = iconImageView() {
+            imgView.accessibilityLabel(Text(altText))
         } else {
-            Text(label)
+            if let systemImage { Label(label, systemImage: systemImage) }
+            else if let image { Label(label, image: image) }
+            else { Text(label) }
+        }
+    }
+    // Use native system Label sizing when custom sizing is not active
+    private var useSystemLabelStyle: Bool { !customIconSizingActive }
+
+    // Activate custom icon sizing only if explicit circle or fixed icon size provided
+    private var customIconSizingActive: Bool { circleSize != nil || fixedIconSize != nil }
+
+    private func iconImageView() -> (AnyView, String)? {
+        let resolvedSize: CGFloat = fixedIconSize
+            ?? (circleSize.map { max(16, $0 * 0.5) })
+            ?? 18 // default when custom sizing explicitly active without sizes
+
+        if let system = systemImage {
+            let v = Image(systemName: system)
+                .resizable()
+                .scaledToFit()
+                .frame(width: resolvedSize, height: resolvedSize)
+                .font(.system(size: resolvedSize, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .padding(.zero)
+            return (AnyView(v), label)
+        }
+        if let imgName = image {
+            let v = Image(imgName)
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .scaledToFit()
+                .frame(width: resolvedSize, height: resolvedSize)
+                .padding(.zero)
+            return (AnyView(v), label)
+        }
+        return nil
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func ifLet<T, Content: View>(_ value: T?, transform: (Self, T) -> Content) -> some View {
+        if let value = value {
+            transform(self, value)
+        } else {
+            self
         }
     }
 }
