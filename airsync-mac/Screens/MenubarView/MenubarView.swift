@@ -200,7 +200,7 @@ private struct MenuBarNotificationsListView: View {
                 }
                 .listStyle(.sidebar)
                 .scrollContentBackground(.hidden)
-                .frame(minWidth: 260, maxWidth: 320, maxHeight: 360)
+                .frame(maxHeight: 750)
                 .transaction { txn in txn.animation = nil }
             }
         }
