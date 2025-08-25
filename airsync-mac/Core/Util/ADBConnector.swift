@@ -26,7 +26,8 @@ struct ADBConnector {
         // Step 1: Try direct execution from PATH
         if isExecutableAvailable(name) {
             logBinaryDetection("\(name) found in system PATH — using direct command.")
-            return name
+            let path = getExecutablePath(name)
+            return path
         }
 
         // Step 2: Try fallback paths
@@ -41,8 +42,7 @@ struct ADBConnector {
         return nil
     }
 
-    // Check if binary is available in PATH
-    private static func isExecutableAvailable(_ name: String) -> Bool {
+    private static func getExecutablePath(_ name: String) -> String {
         let process = Process()
         process.launchPath = "/usr/bin/which"
         process.arguments = [name]
@@ -54,12 +54,17 @@ struct ADBConnector {
             try process.run()
             process.waitUntilExit()
         } catch {
-            return false
+            return ""
         }
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return !output.isEmpty
+        return output
+    }
+    // Check if binary is available in PATH
+    private static func isExecutableAvailable(_ name: String) -> Bool {
+        let data = getExecutablePath(name)
+        return !data.isEmpty
     }
 
     private static func logBinaryDetection(_ message: String) {
