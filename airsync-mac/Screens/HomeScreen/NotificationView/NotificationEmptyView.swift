@@ -10,10 +10,10 @@ import SwiftUI
 struct NotificationEmptyView: View {
     var body: some View {
         VStack {
-            Text("└(=^‥^=)┐")
+            Text(loc: "notifications.empty.emoji")
                 .font(.title)
                 .padding()
-            Label("You're all caught up!", systemImage: "tray")
+            Label(L("notifications.empty.title"), systemImage: "tray")
             .padding()
         }
     }

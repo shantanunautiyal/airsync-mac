@@ -1,0 +1,18 @@
+###############################################
+# Crowdin configuration for GitHub integration
+###############################################
+
+files:
+  - source: /airsync-mac/Localization/en.json
+    translation: /airsync-mac/Localization/%two_letters_code%.json
+    type: json
+    languages_mapping:
+      two_letters_code:
+        zh-CN: zh-Hans
+        zh-TW: zh-Hant
+
+preserve_hierarchy: true
+# If you want to restrict exported translations to only approved ones, uncomment:
+# export_only_approved: true
+
+# You can also add placeholders or a header line to exported files if desired.

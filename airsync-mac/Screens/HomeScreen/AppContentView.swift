@@ -8,19 +8,19 @@
 import SwiftUI
 
 enum TabIdentifier: String, CaseIterable, Identifiable {
-    case notifications = "Notifications"
-        case apps = "Apps"
-    case transfers = "Transfers"
-    case settings = "Settings"
+    case notifications = "notifications.tab"
+    case apps = "apps.tab"
+    case transfers = "transfers.tab"
+    case settings = "settings.tab"
 
     var id: String { rawValue }
 
     var icon: String {
-    switch self {
-    case .notifications: return "bell.badge"
-    case .apps: return "app"
-    case .transfers: return "tray.and.arrow.up"
-    case .settings: return "gear"
+        switch self {
+        case .notifications: return "bell.badge"
+        case .apps: return "app"
+        case .transfers: return "tray.and.arrow.up"
+        case .settings: return "gear"
         }
     }
 
@@ -154,10 +154,10 @@ struct AppContentView: View {
             ToolbarItem(placement: .secondaryAction) {
                 Picker("Tab", selection: $appState.selectedTab) {
                     ForEach(TabIdentifier.availableTabs) { tab in
-                            Button(tab.rawValue, systemImage: tab.icon){}
+                        Button(L(tab.rawValue), systemImage: tab.icon) {}
                                 .labelStyle(.iconOnly)
                                 .tag(tab)
-                                .help(tab.rawValue)
+                            .help(L(tab.rawValue))
                                 .keyboardShortcut(
                                     tab.shortcut,
                                     modifiers: .command

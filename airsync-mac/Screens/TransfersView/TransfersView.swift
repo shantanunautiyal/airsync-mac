@@ -13,8 +13,8 @@ struct TransfersView: View {
         VStack(alignment: .leading, spacing: 8) {
             if sessions.isEmpty {
                 VStack {
-                    Label("Nothing transferred yet", systemImage: "tray.and.arrow.up")
-                    .padding()
+                    Label(L("transfers.empty"), systemImage: "tray.and.arrow.up")
+                        .padding()
                 }
             } else {
                 List {

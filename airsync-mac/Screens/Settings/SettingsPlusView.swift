@@ -22,7 +22,7 @@ struct SettingsPlusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("AirSync+", systemImage: "key")
+                Label(L("plus.title"), systemImage: "key")
                 Spacer()
 
                 if !appState.isPlus {
@@ -56,7 +56,7 @@ struct SettingsPlusView: View {
 
             // License input + check
             if !appState.isPlus {
-                TextField("Enter license key", text: $licenseKey)
+                TextField(L("license.enterKey"), text: $licenseKey)
                     .textFieldStyle(.roundedBorder)
                     .disabled(isCheckingLicense)
 
@@ -194,7 +194,7 @@ Enjoy the app!
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(8)
         } label: {
-            Text("Why plus?")
+            Text(L("plus.why"))
                 .font(.subheadline)
                 .bold()
         }

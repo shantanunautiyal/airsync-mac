@@ -55,14 +55,14 @@ struct NotificationCardView: View {
             Button(role: .cancel) {
                 hideNotification()
             } label: {
-                Label("Hide", systemImage: "xmark")
+                Label(L("notifications.actions.hide"), systemImage: "xmark")
             }
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 deleteNotification()
             } label: {
-                Label("Dismiss", systemImage: "trash")
+                Label(L("notifications.actions.dismiss"), systemImage: "trash")
             }
         }
         .listRowSeparator(.hidden)
