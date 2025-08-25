@@ -53,6 +53,7 @@ class WebSocketServer: ObservableObject {
     private let maxChunkRetries = 3
     private let ackWaitMs: UInt32 = 2000 // 2s
 
+    private var lastKnownAdapters: [(name: String, address: String)] = []
 
     init() {
         loadOrGenerateSymmetricKey()
@@ -171,88 +172,47 @@ class WebSocketServer: ObservableObject {
     }
 
 
-    // MARK: - Local IP
+    // MARK: - Local IP handling
 
     func getLocalIPAddress(adapterName: String?) -> String? {
-        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        let adapters = getAvailableNetworkAdapters()
 
-        guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
-            return nil
+        if let adapterName = adapterName {
+            if let exact = adapters.first(where: { $0.name == adapterName }) {
+                print("Selected adapter match: \(exact.name) -> \(exact.address)")
+                return exact.address
+            }
+            print("Adapter \(adapterName) not found, falling back")
         }
 
-        defer { freeifaddrs(ifaddr) }
-
-        var fallbackIP: String? = nil
-
-        for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
-            let interface = ptr.pointee
-            let addrFamily = interface.ifa_addr.pointee.sa_family
-            let name = String(cString: interface.ifa_name)
-
-            if addrFamily == UInt8(AF_INET) {
-                var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                let result = getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-                                         &hostname, socklen_t(hostname.count),
-                                         nil, socklen_t(0), NI_NUMERICHOST)
-
-                if result == 0 {
-                    let ip = String(cString: hostname)
-                    print("Checking adapter: \(name), IP: \(ip), target: \(adapterName ?? "N/A")")
-
-                    // Skip loopback
-                    if ip.hasPrefix("127.") {
-                        continue
-                    }
-
-                    // Skip Docker / VPN style private ranges
-                    if ip.hasPrefix("172.") {
-                        let parts = ip.split(separator: ".")
-                        if let second = Int(parts[1]), (16...31).contains(second) {
-                            continue
-                        }
-                    }
-
-                    // Exact match
-                    if adapterName != nil, name == adapterName {
-                        print("Selected adapter match: \(name) -> \(ip)")
-                        return ip
-                    }
-
-                    // If no adapter specified, return first valid
-                    if adapterName == nil {
-                        print("Auto-selected adapter: \(name) -> \(ip)")
-                        return ip
-                    }
-
-                    // Keep as fallback in case selected adapter not found
-                    if fallbackIP == nil {
-                        fallbackIP = ip
-                    }
-                }
+        // Auto mode
+        if adapterName == nil {
+            // Priority 1: Wi-Fi/Ethernet (en0, en1, en2…)
+            if let primary = adapters.first(where: { $0.name.hasPrefix("en") }) {
+                print("Auto-selected Wi-Fi/Ethernet adapter: \(primary.name) -> \(primary.address)")
+                return primary.address
+            }
+            // Priority 2: Standard private ranges (192.168, 10.x, 172.16–31)
+            if let privateIP = adapters.first(where: { ipIsPrivatePreferred($0.address) }) {
+                print("Auto-selected private adapter: \(privateIP.name) -> \(privateIP.address)")
+                return privateIP.address
+            }
+            // Priority 3: Any other adapter
+            if let any = adapters.first {
+                print("Auto-selected fallback adapter: \(any.name) -> \(any.address)")
+                return any.address
             }
         }
 
-
-        // Return fallback if specific adapter wasn't found
-        if let fallback = fallbackIP {
-            print("Falling back to: \(fallback)")
-            return fallback
-        }
-
-        return "N/A - No local IP found ;("
+        return nil
     }
-
-
 
     func getAvailableNetworkAdapters() -> [(name: String, address: String)] {
         var adapters: [(String, String)] = []
         var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
 
         if getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr {
-            var ptr = firstAddr
-            while ptr.pointee.ifa_next != nil {
-                defer { ptr = ptr.pointee.ifa_next! }
-
+            for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
                 let interface = ptr.pointee
                 let addrFamily = interface.ifa_addr.pointee.sa_family
 
@@ -260,20 +220,37 @@ class WebSocketServer: ObservableObject {
                    let name = String(validatingUTF8: interface.ifa_name) {
                     var addr = interface.ifa_addr.pointee
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    getnameinfo(&addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-                                &hostname, socklen_t(hostname.count),
-                                nil, socklen_t(0), NI_NUMERICHOST)
-                    let address = String(cString: hostname)
-                    if address != "127.0.0.1" {
-                        adapters.append((name, address))
+                    let result = getnameinfo(&addr,
+                                             socklen_t(interface.ifa_addr.pointee.sa_len),
+                                             &hostname,
+                                             socklen_t(hostname.count),
+                                             nil,
+                                             socklen_t(0),
+                                             NI_NUMERICHOST)
+                    if result == 0 {
+                        let address = String(cString: hostname)
+                        if address != "127.0.0.1" {
+                            adapters.append((name, address))
+                        }
                     }
-
                 }
             }
             freeifaddrs(ifaddr)
         }
 
         return adapters
+    }
+
+    private func ipIsPrivatePreferred(_ ip: String) -> Bool {
+        if ip.hasPrefix("192.168.") { return true }
+        if ip.hasPrefix("10.") { return true }
+        if ip.hasPrefix("172.") {
+            let parts = ip.split(separator: ".")
+            if parts.count > 1, let second = Int(parts[1]), (16...31).contains(second) {
+                return true
+            }
+        }
+        return false
     }
 
 
@@ -894,7 +871,6 @@ class WebSocketServer: ObservableObject {
         }
         return nil
     }
-
     func startNetworkMonitoring() {
         networkMonitorTimer = Timer.scheduledTimer(withTimeInterval: networkCheckInterval, repeats: true) { [weak self] _ in
             self?.checkNetworkChange()
@@ -906,21 +882,42 @@ class WebSocketServer: ObservableObject {
     func stopNetworkMonitoring() {
         networkMonitorTimer?.invalidate()
         networkMonitorTimer = nil
+        lastKnownAdapters = []
     }
 
     private func checkNetworkChange() {
-        let currentIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
-        if let lastIP = lastKnownIP, currentIP != lastIP {
-            print("Network IP changed from \(lastIP) to \(currentIP ?? "N/A"), restarting WebSocket in 5 seconds")
-            lastKnownIP = currentIP
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                self.stop()
-                self.start(port: Defaults.serverPort)
+        let adapters = getAvailableNetworkAdapters()
+        let chosenIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
+
+        // Compare by addresses to detect any change
+        let adapterAddresses = adapters.map { $0.address }
+        let lastAddresses = lastKnownAdapters.map { $0.address }
+
+        if adapterAddresses != lastAddresses {
+            lastKnownAdapters = adapters
+
+            for adapter in adapters {
+                let activeMark = (adapter.address == chosenIP) ? " [ACTIVE]" : ""
+                print("[Network] \(adapter.name) -> \(adapter.address)\(activeMark)")
             }
-        } else if lastKnownIP == nil {
-            // First run
-            lastKnownIP = currentIP
+
+            // Restart if the IP changed
+            if let lastIP = lastKnownIP, lastIP != chosenIP {
+                print("Network IP changed from \(lastIP) to \(chosenIP ?? "N/A"), restarting WebSocket in 5 seconds")
+                lastKnownIP = chosenIP
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    self.stop()
+                    self.start(port: Defaults.serverPort)
+                }
+            } else if lastKnownIP == nil {
+                // First run
+                lastKnownIP = chosenIP
+            }
+        } else {
+            print("[Network] No change detected")
         }
     }
+
+
 
 }
