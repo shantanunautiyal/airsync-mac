@@ -6,6 +6,8 @@ Min : macOS 14.5
 
 ### During beta testing, You can use the code ```i-am-a-tester``` to try out and test AirSync+ features. Also these + features are subject to change and currently they are limited because to test if the workflow works.
 
+## [Help translating AirSync to your language on crowdin!](https://crwd.in/airsync/612ea64319db322fa1ed070574109c242534446)
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42" width="30%" />
   <img src="https://github.com/user-attachments/assets/58996c84-083f-4464-b0a5-bce069935898" width="30%" />
