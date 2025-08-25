@@ -39,7 +39,11 @@ struct MenuBarLabelView: View {
                   : "iphone.slash")
 
             if appState.showMenubarText, let text = deviceStatusText {
-                Text(text)
+                let maxLength = appState.menubarTextMaxLength
+                let truncatedText = text.count > maxLength
+                    ? String(text.prefix(maxLength - 1)) + "…"
+                    : text
+                Text(truncatedText)
             }
         }
     }

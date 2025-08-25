@@ -6,7 +6,6 @@ struct SettingsView: View {
 
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
-    @AppStorage("showMenubarText") private var showMenubarText = true
     @State private var availableAdapters: [(name: String, address: String)] = []
 
     // New state for notification permissions
@@ -147,8 +146,27 @@ struct SettingsView: View {
                         HStack{
                             Label("Menubar text", systemImage: "menubar.arrow.up.rectangle")
                             Spacer()
-                            Toggle("", isOn: $showMenubarText)
+                            Toggle("", isOn: $appState.showMenubarText)
                                 .toggleStyle(.switch)
+                        }
+
+                        if appState.showMenubarText {
+                            HStack {
+                                Label("Menubar Text length", systemImage: "textformat.123")
+                                Spacer()
+                                Slider(
+                                    value: Binding(
+                                        get: { Double(appState.menubarTextMaxLength) },
+                                        set: { appState.menubarTextMaxLength = Int($0) }
+                                    ),
+                                    in: 10...80,
+                                    step: 5
+                                )
+                                .frame(width: 200)
+                                .controlSize(.small)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
                         }
                     }
                     .padding()

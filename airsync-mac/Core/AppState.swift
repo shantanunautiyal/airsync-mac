@@ -36,6 +36,9 @@ class AppState: ObservableObject {
         self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
         self.showMenubarText = UserDefaults.standard.bool(forKey: "showMenubarText")
 
+        let savedMaxLength = UserDefaults.standard.integer(forKey: "menubarTextMaxLength")
+        self.menubarTextMaxLength = savedMaxLength > 0 ? savedMaxLength : 30
+
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
         self.windowOpacity = UserDefaults.standard
             .double(forKey: "windowOpacity")
@@ -107,6 +110,12 @@ class AppState: ObservableObject {
     @Published var showMenubarText: Bool {
         didSet {
             UserDefaults.standard.set(showMenubarText, forKey: "showMenubarText")
+        }
+    }
+
+    @Published var menubarTextMaxLength: Int {
+        didSet {
+            UserDefaults.standard.set(menubarTextMaxLength, forKey: "menubarTextMaxLength")
         }
     }
 
