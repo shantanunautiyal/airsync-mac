@@ -65,6 +65,21 @@ struct NotificationCardView: View {
                 Label(L("notifications.actions.dismiss"), systemImage: "trash")
             }
         }
+        .contextMenu {
+            Button {
+                WebSocketServer.shared
+                    .toggleNotification(
+                        for: notification.package,
+                        to: false
+                    )
+                hideNotification()
+            } label: {
+                Label(
+                    "Mute app", systemImage: "bell.slash"
+                )
+
+            }
+        }
         .listRowSeparator(.hidden)
     }
 
