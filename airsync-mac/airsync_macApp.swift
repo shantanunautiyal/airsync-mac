@@ -8,6 +8,7 @@
 import SwiftUI
 import UserNotifications
 import AppKit
+import Sparkle
 
 @main
 struct airsync_macApp: App {
@@ -16,11 +17,13 @@ struct airsync_macApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
+    private let updaterController: SPUStandardUpdaterController
 
     init() {
 
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
         // Register base default category with generic View action; dynamic per-notification categories added later
         let viewAction = UNNotificationAction(identifier: "VIEW_ACTION", title: "View", options: [])
@@ -77,6 +80,9 @@ struct airsync_macApp: App {
             }
         }
     .commands {
+        CommandGroup(after: .appInfo) {
+            CheckForUpdatesView(updater: updaterController.updater)
+        }
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .help) {
                 Button(action: {
