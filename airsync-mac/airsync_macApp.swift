@@ -8,6 +8,7 @@
 import SwiftUI
 import UserNotifications
 import AppKit
+import Sparkle
 
 @main
 struct airsync_macApp: App {
@@ -16,11 +17,13 @@ struct airsync_macApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
+    private let updaterController: SPUStandardUpdaterController
 
     init() {
 
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
         // Register base default category with generic View action; dynamic per-notification categories added later
         let viewAction = UNNotificationAction(identifier: "VIEW_ACTION", title: "View", options: [])
@@ -46,15 +49,6 @@ struct airsync_macApp: App {
         loadCachedIcons()
         loadCachedWallpapers()
 
-        // Auto-check for update on launch
-        UpdateChecker.shared.checkForUpdateAndDownloadIfNeeded(presentingWindow: nil) { updated in
-            if updated {
-                print("Update downloaded, quitting app for user to install")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    NSApplication.shared.terminate(nil)
-                }
-            }
-        }
     }
 
     var body: some Scene {
@@ -85,18 +79,10 @@ struct airsync_macApp: App {
                     })
             }
         }
-        .commands {
-            CommandGroup(after: .appInfo) {
-                Button("Check for Updates...") {
-                    if let window = appDelegate.mainWindow {
-                        checkForUpdatesManually(presentingWindow: window)
-                    } else {
-                        checkForUpdatesManually(presentingWindow: nil)
-                    }
-                }
-                .keyboardShortcut("u", modifiers: [.command])
-
-            }
+    .commands {
+        CommandGroup(after: .appInfo) {
+            CheckForUpdatesView(updater: updaterController.updater)
+        }
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .help) {
                 Button(action: {
@@ -143,27 +129,6 @@ struct airsync_macApp: App {
             }
         }
 
-    }
-
-    func checkForUpdatesManually(presentingWindow: NSWindow?) {
-        UpdateChecker.shared.checkForUpdateAndDownloadIfNeeded(presentingWindow: presentingWindow) { updated in
-            DispatchQueue.main.async {
-                let alert = NSAlert()
-                alert.alertStyle = .informational
-                alert.addButton(withTitle: "OK")
-
-                if updated {
-                    alert.messageText = "Update downloaded"
-                    alert.informativeText = "A new version was downloaded to your Downloads folder. The app will quit now to let you install it."
-                    alert.runModal()
-                    NSApplication.shared.terminate(nil)
-                } else {
-                    alert.messageText = "No updates available"
-                    alert.informativeText = "Your app is up to date."
-                    alert.runModal()
-                }
-            }
-        }
     }
 
 }

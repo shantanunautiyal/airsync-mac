@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B995A3332E4D2B3F00FA7A41 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B995A3322E4D2B3F00FA7A41 /* AppIcon.icon */; };
+		B9AEBC0A2E6235D3006BA027 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B9AEBC092E6235D3006BA027 /* Sparkle */; };
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
 		B9D742FC2E39CF850053128A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = B9D742FB2E39CF850053128A /* Swifter */; };
 /* End PBXBuildFile section */
@@ -43,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9AEBC0A2E6235D3006BA027 /* Sparkle in Frameworks */,
 				B9D742FC2E39CF850053128A /* Swifter in Frameworks */,
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 			);
@@ -90,6 +92,7 @@
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9D742FB2E39CF850053128A /* Swifter */,
+				B9AEBC092E6235D3006BA027 /* Sparkle */,
 			);
 			productName = "airsync-mac";
 			productReference = B9673B572E35A2A1006D284A /* AirSync.app */;
@@ -122,6 +125,7 @@
 			packageReferences = (
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
 				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
+				B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9673B582E35A2A1006D284A /* Products */;
@@ -305,7 +309,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.0.25;
+				MARKETING_VERSION = 2.0.26;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -349,7 +353,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.0.25;
+				MARKETING_VERSION = 2.0.26;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -391,6 +395,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.1;
+			};
+		};
 		B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/dagronf/QRCode";
@@ -410,6 +422,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B9AEBC092E6235D3006BA027 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
 		B9C3181D2E37AA1D00367F16 /* QRCode */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */;
