@@ -3,12 +3,12 @@
     <channel>
         <title>AirSync</title>
         <item>
-            <title>2.0.26</title>
-            <pubDate>Sat, 30 Aug 2025 20:22:18 +0530</pubDate>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>2.0.26</sparkle:shortVersionString>
+            <title>2.0.27</title>
+            <pubDate>Sat, 30 Aug 2025 20:38:15 +0530</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>2.0.27</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.26-BETA/AirSync.dmg" length="6477784" type="application/octet-stream" sparkle:edSignature="ehflHObXZJ/rpb924UEAENSCzdi7bshWGWGvAa7Z4iPbrODr10n+njmEjkJpi4b9fBjNUYBMjiezspOJ8pweCA=="/>
+            <enclosure url="https://github.com/sameerasw/airsync-mac/releases/download/v2.0.27-BETA/AirSync.dmg" length="6478591" type="application/octet-stream" sparkle:edSignature="a7biDuTzXZgPqd8DrG3CE0VJjtFRlxnqqgYn6TYKRbLOcO5t9NH7U2QvdRpl8YRoU4KORqlFW03+Kh8nhNwMDQ=="/>
         </item>
     </channel>
 </rss>
