@@ -22,28 +22,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching() {
         NSWindow.allowsAutomaticWindowTabbing = false
+        NSApp.setActivationPolicy(.accessory) // hides Dock icon by default
     }
 
     // Configure and retain main window when captured
     func configureMainWindowIfNeeded(_ window: NSWindow) {
         if mainWindow == nil || mainWindow !== window {
             mainWindow = window
+            window.delegate = self
         }
-        // Ensure window isn't released and can move to active Space on activation
         window.isReleasedWhenClosed = false
         window.collectionBehavior.insert(.moveToActiveSpace)
     }
 
+
+
+
     // Public helper to bring the main window to the current Space and focus it
     func showAndActivateMainWindow() {
         guard let window = mainWindow else { return }
+
+        NSApp.setActivationPolicy(.regular)
+
         window.collectionBehavior.insert(.moveToActiveSpace)
         if window.isMiniaturized { window.deminiaturize(nil) }
         NSApp.unhide(nil)
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
-        // Second pass after a slight delay to overcome Space transition latency
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak window] in
             guard let w = window else { return }
             w.collectionBehavior.insert(.moveToActiveSpace)
@@ -51,8 +58,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
         }
     }
-
 }
+
+extension AppDelegate: NSWindowDelegate {
+    func windowWillClose(_ notification: Foundation.Notification) {
+        if let window = (notification as NSNotification).object as? NSWindow,
+           window === mainWindow {
+            DispatchQueue.main.async {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
+    }
+
+    func windowDidBecomeMain(_ notification: Foundation.Notification) {
+        if let window = (notification as NSNotification).object as? NSWindow,
+           window === mainWindow {
+            NSApp.setActivationPolicy(.regular)
+        }
+    }
+}
+
 
 // Helper to grab NSWindow from SwiftUI:
 struct WindowAccessor: NSViewRepresentable {
