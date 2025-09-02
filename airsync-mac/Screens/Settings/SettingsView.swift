@@ -19,7 +19,7 @@ struct SettingsView: View {
                     // Device Name Field
                     VStack {
                         HStack {
-                            Label("Device Name", systemImage: "pencil")
+                            Label("This \(DeviceTypeUtil.deviceTypeDescription()) name", systemImage: "pencil")
                             Spacer()
                         }
                         TextField("Device Name", text: $deviceName)
