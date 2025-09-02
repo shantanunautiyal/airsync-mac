@@ -15,6 +15,7 @@
   "apps.tab": "Apps",
   "transfers.tab": "Transférer",
   "settings.tab": "Paramètres",
+  "qr.tab": "Scan QR",
   "transfers.empty": "Rien à transférer pour l'instant",
   "plus.title": "AirSync+",
   "plus.why": "Pourquoi Plus?",
