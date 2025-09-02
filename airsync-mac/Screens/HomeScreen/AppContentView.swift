@@ -12,6 +12,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
     case apps = "apps.tab"
     case transfers = "transfers.tab"
     case settings = "settings.tab"
+    case qr = "qr.tab"
 
     var id: String { rawValue }
 
@@ -21,6 +22,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
         case .apps: return "app"
         case .transfers: return "tray.and.arrow.up"
         case .settings: return "gear"
+            case .qr: return "qrcode"
         }
     }
 
@@ -30,12 +32,14 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
             case .apps: return "2"
             case .transfers: return "3"
             case .settings: return ","
+            case .qr: return "."
         }
     }
 
     static var availableTabs: [TabIdentifier] {
-        var tabs: [TabIdentifier] = [.settings]
+        var tabs: [TabIdentifier] = [.qr, .settings]
         if AppState.shared.device != nil {
+            tabs.remove(at: 0)
             tabs.insert(.notifications, at: 0)
             tabs.insert(.apps, at: 1)
             tabs.insert(.transfers, at: 2)
@@ -137,6 +141,9 @@ struct AppContentView: View {
                                 }
                             }
                         }
+
+                case .qr:
+                    ScannerView()
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
@@ -144,7 +151,7 @@ struct AppContentView: View {
         }
         .onChange(of: appState.device) {
             if appState.device == nil {
-                AppState.shared.selectedTab = .settings
+                AppState.shared.selectedTab = .qr
             } else {
                 AppState.shared.selectedTab = .notifications
             }

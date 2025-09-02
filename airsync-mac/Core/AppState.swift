@@ -101,7 +101,7 @@ class AppState: ObservableObject {
     }
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
-    @Published var selectedTab: TabIdentifier = .settings
+    @Published var selectedTab: TabIdentifier = .qr
 
     @Published var adbConnected: Bool = false
     @Published var adbConnecting: Bool = false

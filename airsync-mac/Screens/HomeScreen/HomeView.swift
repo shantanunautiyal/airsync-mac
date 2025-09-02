@@ -53,9 +53,6 @@ struct HomeView: View {
                 if appState.device != nil {
                     SidebarView()
                         .transition(.opacity.combined(with: .scale))
-                } else {
-                    ScannerView()
-                        .transition(.opacity.combined(with: .scale))
                 }
             }
             .frame(minWidth: 270)
