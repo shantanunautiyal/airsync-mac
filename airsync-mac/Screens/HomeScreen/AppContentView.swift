@@ -151,6 +151,14 @@ struct AppContentView: View {
                                     showHelpSheet = true
                                 }
                                 .help("Feedback and How to?")
+
+
+                                Button("Refresh", systemImage: "repeat"){
+                                    WebSocketServer.shared.stop()
+                                    WebSocketServer.shared.start()
+                                    appState.shouldRefreshQR = true
+                                }
+                                .help("Refresh server")
                             }
                         }
                 }

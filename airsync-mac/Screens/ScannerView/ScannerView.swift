@@ -34,6 +34,7 @@ struct ScannerView: View {
 
         VStack {
             Text("Scan to connect")
+                .font(.title)
                 .padding()
 
             Spacer()
