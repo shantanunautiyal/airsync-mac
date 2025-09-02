@@ -11,7 +11,6 @@ struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
     @StateObject private var appState = AppState.shared
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
-    @State private var didTriggerFirstLaunchOpen = false
     // Avoid creating another AppDelegate instance here; use the shared one
     private var appDelegate: AppDelegate? { AppDelegate.shared }
 
@@ -34,18 +33,20 @@ struct MenubarView: View {
             return
         }
 
+        
+
         // Trigger creation
         openWindow(id: "main")
 
         // Retry a few times until WindowAccessor supplies the reference
-        for i in 0..<8 {
-            let delay = Double(i) * 0.08
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                if (self.appDelegate?.mainWindow) != nil {
-                    self.appDelegate?.showAndActivateMainWindow()
-                }
-            }
-        }
+//        for i in 0..<8 {
+//            let delay = Double(i) * 0.08
+//            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+//                if (self.appDelegate?.mainWindow) != nil {
+//                    self.appDelegate?.showAndActivateMainWindow()
+//                }
+//            }
+//        }
     }
 
     private func getDeviceName() -> String {
@@ -165,16 +166,6 @@ struct MenubarView: View {
                 MenuBarNotificationsListView()
             }
 
-        }
-        .onAppear {
-            // On first launch (onboarding not completed), automatically open main window
-            if !hasPairedDeviceOnce && !didTriggerFirstLaunchOpen {
-                didTriggerFirstLaunchOpen = true
-                // Slight delay to ensure menu bar extra finished mounting
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    openAndFocusMainWindow()
-                }
-            }
         }
     }
 }

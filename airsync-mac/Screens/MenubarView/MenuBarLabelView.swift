@@ -9,6 +9,9 @@ import SwiftUI
 
 struct MenuBarLabelView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.openWindow) var openWindow
+    @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
+    @State private var didTriggerFirstLaunchOpen = false
 
     var deviceStatusText: String? {
         guard let device = appState.device else { return nil }
@@ -44,6 +47,16 @@ struct MenuBarLabelView: View {
                     ? String(text.prefix(maxLength - 1)) + "…"
                     : text
                 Text(truncatedText)
+            }
+        }
+        .onAppear {
+            // On first launch (onboarding not completed), automatically open main window
+            if !hasPairedDeviceOnce && !didTriggerFirstLaunchOpen {
+                didTriggerFirstLaunchOpen = true
+                // Slight delay to ensure everything is set up
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    openWindow(id: "main")
+                }
             }
         }
     }
