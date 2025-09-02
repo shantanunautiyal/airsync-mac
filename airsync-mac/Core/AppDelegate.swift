@@ -22,7 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching() {
         NSWindow.allowsAutomaticWindowTabbing = false
-        NSApp.setActivationPolicy(.accessory) // hides Dock icon by default
+        // Dock icon visibility is now controlled by AppState.hideDockIcon
+        AppState.shared.updateDockIconVisibility()
     }
 
     // Configure and retain main window when captured
@@ -42,7 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func showAndActivateMainWindow() {
         guard let window = mainWindow else { return }
 
-        NSApp.setActivationPolicy(.regular)
+        if !AppState.shared.hideDockIcon {
+            NSApp.setActivationPolicy(.regular)
+        }
 
         window.collectionBehavior.insert(.moveToActiveSpace)
         if window.isMiniaturized { window.deminiaturize(nil) }
@@ -65,7 +68,9 @@ extension AppDelegate: NSWindowDelegate {
         if let window = (notification as NSNotification).object as? NSWindow,
            window === mainWindow {
             DispatchQueue.main.async {
-                NSApp.setActivationPolicy(.accessory)
+                if AppState.shared.hideDockIcon {
+                    NSApp.setActivationPolicy(.accessory)
+                }
             }
         }
     }
@@ -73,7 +78,9 @@ extension AppDelegate: NSWindowDelegate {
     func windowDidBecomeMain(_ notification: Foundation.Notification) {
         if let window = (notification as NSNotification).object as? NSWindow,
            window === mainWindow {
-            NSApp.setActivationPolicy(.regular)
+            if !AppState.shared.hideDockIcon {
+                NSApp.setActivationPolicy(.regular)
+            }
         }
     }
 }

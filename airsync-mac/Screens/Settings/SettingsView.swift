@@ -167,6 +167,15 @@ struct SettingsView: View {
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                             .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
+
+                            HStack{
+                                Label("Hide Dock Icon", systemImage: "dock.rectangle")
+                                Spacer()
+                                Toggle("", isOn: $appState.hideDockIcon)
+                                    .toggleStyle(.switch)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
                         }
                     }
                     .padding()

@@ -6,6 +6,7 @@
 //
 import SwiftUI
 import Foundation
+import Cocoa
 internal import Combine
 import UserNotifications
 
@@ -44,6 +45,8 @@ class AppState: ObservableObject {
             .double(forKey: "windowOpacity")
         self.toolbarContrast = UserDefaults.standard
             .bool(forKey: "toolbarContrast")
+        self.hideDockIcon = UserDefaults.standard
+            .bool(forKey: "hideDockIcon")
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
         if isClipboardSyncEnabled {
@@ -165,6 +168,13 @@ class AppState: ObservableObject {
     @Published var toolbarContrast: Bool {
         didSet {
             UserDefaults.standard.set(toolbarContrast, forKey: "toolbarContrast")
+        }
+    }
+
+    @Published var hideDockIcon: Bool {
+        didSet {
+            UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon")
+            updateDockIconVisibility()
         }
     }
 
@@ -563,5 +573,14 @@ class AppState: ObservableObject {
         UserDefaults.standard.consecutiveLicenseFailCount = 0
     }
 
+    func updateDockIconVisibility() {
+        DispatchQueue.main.async {
+            if self.hideDockIcon {
+                NSApp.setActivationPolicy(.accessory)
+            } else {
+                NSApp.setActivationPolicy(.regular)
+            }
+        }
+    }
 
 }
