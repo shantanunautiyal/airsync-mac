@@ -11,38 +11,42 @@ struct AboutView: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    Text("About AirSync BETA")
-                        .font(.title2)
-                        .bold()
 
-                    // Profile image
-                    Image("avatar")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                        .padding()
-                        .onLongPressGesture {
-                            if UserDefaults.standard.hasPairedDeviceOnce == true {
-                                UserDefaults.standard.hasPairedDeviceOnce = false
+        ZStack {
+            VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
+
+            VStack {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("About AirSync BETA")
+                            .font(.title2)
+                            .bold()
+
+                        // Profile image
+                        Image("avatar")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                            .padding()
+                            .onLongPressGesture {
+                                if UserDefaults.standard.hasPairedDeviceOnce == true {
+                                    UserDefaults.standard.hasPairedDeviceOnce = false
+                                }
                             }
-                        }
 
-                    Text("Developed by Sameera Wijerathna")
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                    Text("With ❤️ from 🇱🇰")
-                        .font(.callout)
-                        .multilineTextAlignment(.center)
+                        Text("Developed by Sameera Wijerathna")
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                        Text("With ❤️ from 🇱🇰")
+                            .font(.callout)
+                            .multilineTextAlignment(.center)
 
-                    Text("AirSync helps you achieving Apple continuity features of mac with Android. This is the macOS client which handles the server. It will utilize a websocket for connectivity between the Android device(s) in the local network.")
-                        .multilineTextAlignment(.leading)
-                        .padding(.horizontal)
+                        Text("AirSync helps you achieving Apple continuity features of mac with Android. This is the macOS client which handles the server. It will utilize a websocket for connectivity between the Android device(s) in the local network.")
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal)
 
-                    HStack{
+                        HStack{
 
                             GlassButtonView(
                                 label: "How to use?",
@@ -84,29 +88,29 @@ struct AboutView: View {
                                     }
                                 }
                             )
+                        }
+
+                        Divider()
+
+                        LicenseView()
+
                     }
-
-                    Divider()
-
-                    LicenseView()
-
+                    .padding()
                 }
-                .padding()
-            }
 
-            Divider()
+                Divider()
 
-            HStack {
-                Spacer()
-                        GlassButtonView(
-                            label: "My Website",
-                            systemImage: "link",
-                            action: {
-                                if let url = URL(string: "https://www.sameerasw.com") {
-                                    NSWorkspace.shared.open(url)
-                                }
+                HStack {
+                    Spacer()
+                    GlassButtonView(
+                        label: "My Website",
+                        systemImage: "link",
+                        action: {
+                            if let url = URL(string: "https://www.sameerasw.com") {
+                                NSWorkspace.shared.open(url)
                             }
-                        )
+                        }
+                    )
 
                     GlassButtonView(
                         label: "OK",
@@ -115,10 +119,15 @@ struct AboutView: View {
                         }
                     )
                     .keyboardShortcut(.defaultAction)
+                }
+                .padding([.horizontal, .bottom])
             }
-            .padding([.horizontal, .bottom])
+
         }
         .frame(width: 600, height: 600)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(radius: 20)
+
     }
 }
 
