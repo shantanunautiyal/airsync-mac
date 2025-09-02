@@ -47,6 +47,7 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
     @State private var showAboutSheet = false
+    @State private var showHelpSheet = false
     @AppStorage("notificationStacks") private var notificationStacks = true
 
     var body: some View {
@@ -109,34 +110,32 @@ struct AppContentView: View {
                     SettingsView()
                         .transition(.blurReplace)
                         .toolbar {
+                            ToolbarItemGroup{
+                                Button("Help", systemImage: "questionmark.circle"){
+                                    showHelpSheet = true
+                                }
+                                .help("Report issues or suggest features")
+
+                                Button {
+                                    showAboutSheet = true
+                                } label: {
+                                    Label("About", systemImage: "info")
+                                }
+                                .help("View app information and version details")
+                            }
+
+                            if appState.device != nil {
                                 ToolbarItemGroup{
-                                    Button("Help", systemImage: "questionmark.circle"){
-                                        if let url = URL(string: "https://airsync.notion.site") {
-                                            NSWorkspace.shared.open(url)
-                                        }
-                                    }
-                                    .help("Report issues or suggest features")
-
                                     Button {
-                                        showAboutSheet = true
+                                        appState.disconnectDevice()
+                                        ADBConnector.disconnectADB()
+                                        appState.adbConnected = false
                                     } label: {
-                                        Label("About", systemImage: "info")
+                                        Label("Disconnect", systemImage: "iphone.slash")
                                     }
-                                    .help("View app information and version details")
+                                    .help("Disconnect Device")
                                 }
-
-                                if appState.device != nil {
-                                    ToolbarItemGroup{
-                                        Button {
-                                            appState.disconnectDevice()
-                                            ADBConnector.disconnectADB()
-                                            appState.adbConnected = false
-                                        } label: {
-                                            Label("Disconnect", systemImage: "iphone.slash")
-                                        }
-                                        .help("Disconnect Device")
-                                    }
-                                }
+                            }
                         }
                 }
             }
@@ -174,9 +173,15 @@ struct AppContentView: View {
                 onClose: { showAboutSheet = false }
             )
         }
+        .sheet(isPresented: $showHelpSheet) {
+            HelpWebSheet(isPresented: $showHelpSheet)
+        }
     }
 }
+
+
 
 #Preview {
     AppContentView()
 }
+
