@@ -905,6 +905,7 @@ class WebSocketServer: ObservableObject {
             if let lastIP = lastKnownIP, lastIP != chosenIP {
                 print("Network IP changed from \(lastIP) to \(chosenIP ?? "N/A"), restarting WebSocket in 5 seconds")
                 lastKnownIP = chosenIP
+                AppState.shared.shouldRefreshQR = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     self.stop()
                     self.start(port: Defaults.serverPort)

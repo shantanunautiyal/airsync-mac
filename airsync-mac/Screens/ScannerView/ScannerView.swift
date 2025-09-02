@@ -33,6 +33,8 @@ struct ScannerView: View {
         let info = statusInfo(for: appState.webSocketStatus)
 
         VStack {
+            Spacer()
+
             Text("Scan to connect")
                 .font(.title)
                 .padding()
@@ -82,7 +84,6 @@ struct ScannerView: View {
                 }
             }
 
-            Spacer()
 
             if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
                 Label {
@@ -107,6 +108,7 @@ struct ScannerView: View {
                 .background(.thinMaterial, in: .rect(cornerRadius: 20))
                 .padding()
             }
+            Spacer()
         }
         .onAppear {
             generateQRAsync()
