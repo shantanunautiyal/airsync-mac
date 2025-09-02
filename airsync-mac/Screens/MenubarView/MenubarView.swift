@@ -11,7 +11,6 @@ struct MenubarView: View {
     @Environment(\.openWindow) var openWindow
     @StateObject private var appState = AppState.shared
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
-    // Avoid creating another AppDelegate instance here; use the shared one
     private var appDelegate: AppDelegate? { AppDelegate.shared }
 
     private func focus(window: NSWindow) {
@@ -27,7 +26,7 @@ struct MenubarView: View {
 
         DispatchQueue.main.async {
             if let window = self.appDelegate?.mainWindow {
-                // Just reuse the existing window
+                // Reuse the existing window
                 window.makeKeyAndOrderFront(nil)
             } else {
                 // Trigger creation
