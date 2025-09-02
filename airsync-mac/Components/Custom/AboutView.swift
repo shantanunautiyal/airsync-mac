@@ -83,7 +83,7 @@ struct AboutView: View {
                                 label: "Get for Android",
                                 systemImage: "iphone.gen3",
                                 action: {
-                                    if let url = URL(string: "https://github.com/sameerasw/airsync-android/releases/latest") {
+                                    if let url = URL(string: "https://groups.google.com/forum/#!forum/airsync-testing/join") {
                                         NSWorkspace.shared.open(url)
                                     }
                                 }

@@ -20,9 +20,8 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            Color.clear
-                .background(.background.opacity(appState.windowOpacity))
-                .ignoresSafeArea()
+            VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
+                .edgesIgnoringSafeArea(.all)
 
             Group {
                 if showQR {
@@ -31,6 +30,20 @@ struct OnboardingView: View {
                             .font(.title)
                             .multilineTextAlignment(.center)
                             .padding()
+                        Text("The app is currently pending approval on Google Play in Early Access.")
+                            .font(.callout)
+                            .multilineTextAlignment(.center)
+
+                        GlassButtonView(
+                            label: "First, Join the Google group",
+                            size: .extraLarge,
+                            action: {
+                                if let url = URL(string: "https://groups.google.com/forum/#!forum/airsync-testing/join") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                        )
+                        .transition(.identity)
 
                         if let qrImage = qrImage {
                             Image(decorative: qrImage, scale: 1.0)
@@ -45,9 +58,21 @@ struct OnboardingView: View {
                                 .frame(width: 100, height: 100)
                         }
 
-                        Text("Scan the QR code to download the app from GitHub.")
+                        Text("Scan the QR code to download the app from Google Play Early Access or use the below link.")
                             .multilineTextAlignment(.center)
                             .padding()
+
+
+                        GlassButtonView(
+                            label: "Enroll and install from web",
+                            size: .extraLarge,
+                            action: {
+                                if let url = URL(string: "https://play.google.com/apps/testing/com.sameerasw.airsync") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                        )
+                        .transition(.identity)
 
                         GlassButtonView(
                             label: "I'm ready",
@@ -123,7 +148,7 @@ struct OnboardingView: View {
 
     /// Generates a QR code for the Android app download link
     func generateQRAsync() {
-        let text = "https://github.com/sameerasw/airsync-android/releases/latest"
+        let text = "https://play.google.com/store/apps/details?id=com.sameerasw.airsync"
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
