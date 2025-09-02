@@ -13,9 +13,10 @@ struct HomeView: View {
     @State private var targetOpacity: Double = 0
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
     @State var showOnboarding = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             ZStack {
                 if let base64 = AppState.shared.currentDeviceWallpaperBase64,
                    let data = Data(base64Encoded: base64.stripBase64Prefix()),
@@ -49,11 +50,8 @@ struct HomeView: View {
                         }
                 }
 
-                // Sidebar or scanner depending on device state
-                if appState.device != nil {
-                    SidebarView()
-                        .transition(.opacity.combined(with: .scale))
-                }
+                SidebarView()
+                    .transition(.opacity.combined(with: .scale))
             }
             .frame(minWidth: 270)
         } detail: {
@@ -71,10 +69,20 @@ struct HomeView: View {
             if hasPairedDeviceOnce == false {
                 showOnboarding = true
             }
+            updateSidebarVisibility()
+        }
+        .onChange(of: appState.device) { _, _ in
+            updateSidebarVisibility()
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView()
                 .frame(minWidth: 640, minHeight: 420)
+        }
+    }
+
+    private func updateSidebarVisibility() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            columnVisibility = appState.device != nil ? .all : .detailOnly
         }
     }
 

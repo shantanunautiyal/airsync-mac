@@ -128,64 +128,67 @@ struct ScreenView: View {
                 Spacer()
             }
 
-            HStack(spacing: 10){
-                GlassButtonView(
-                    label: "Send",
-                    systemImage: "square.and.arrow.up",
-                    iconOnly: appState.adbConnected,
-                    action: {
-                        let panel = NSOpenPanel()
-                        panel.canChooseFiles = true
-                        panel.canChooseDirectories = false
-                        panel.allowsMultipleSelection = false
-                        panel.begin { response in
-                            if response == .OK, let url = panel.url {
-                                DispatchQueue.global(qos: .userInitiated).async {
-                                    WebSocketServer.shared.sendFile(url: url)
+            if appState.device != nil {
+
+                HStack(spacing: 10){
+                    GlassButtonView(
+                        label: "Send",
+                        systemImage: "square.and.arrow.up",
+                        iconOnly: appState.adbConnected,
+                        action: {
+                            let panel = NSOpenPanel()
+                            panel.canChooseFiles = true
+                            panel.canChooseDirectories = false
+                            panel.allowsMultipleSelection = false
+                            panel.begin { response in
+                                if response == .OK, let url = panel.url {
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        WebSocketServer.shared.sendFile(url: url)
+                                    }
                                 }
                             }
-                        }
-                    }
-                )
-                .transition(.identity)
-                .keyboardShortcut(
-                    "f",
-                    modifiers: .command
-                )
-
-
-                if appState.adbConnected{
-                    GlassButtonView(
-                        label: "Mirror",
-                        systemImage: "apps.iphone",
-                        action: {
-                            ADBConnector
-                                .startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? "My Phone"
-                                )
                         }
                     )
                     .transition(.identity)
                     .keyboardShortcut(
-                        "p",
+                        "f",
                         modifiers: .command
                     )
-                    .contextMenu {
-                        Button("Desktop Mode") {
-                            ADBConnector.startScrcpy(
-                                ip: appState.device?.ipAddress ?? "",
-                                port: appState.adbPort,
-                                deviceName: appState.device?.name ?? "My Phone",
-                                desktop: true
-                            )
+
+
+                    if appState.adbConnected{
+                        GlassButtonView(
+                            label: "Mirror",
+                            systemImage: "apps.iphone",
+                            action: {
+                                ADBConnector
+                                    .startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone"
+                                    )
+                            }
+                        )
+                        .transition(.identity)
+                        .keyboardShortcut(
+                            "p",
+                            modifiers: .command
+                        )
+                        .contextMenu {
+                            Button("Desktop Mode") {
+                                ADBConnector.startScrcpy(
+                                    ip: appState.device?.ipAddress ?? "",
+                                    port: appState.adbPort,
+                                    deviceName: appState.device?.name ?? "My Phone",
+                                    desktop: true
+                                )
+                            }
                         }
+                        .keyboardShortcut(
+                            "p",
+                            modifiers: [.command, .shift]
+                        )
                     }
-                    .keyboardShortcut(
-                        "p",
-                        modifiers: [.command, .shift]
-                    )
                 }
             }
 

@@ -25,22 +25,27 @@ struct SidebarView: View {
 
             PhoneView()
                 .transition(.scale)
+                .opacity(appState.device != nil ? 1 : 0.5)
 
 
             .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
             .frame(minWidth: 230, minHeight: 380)
             .safeAreaInset(edge: .bottom) {
                 HStack{
-                    GlassButtonView(
-                        label: "Disconnect",
-                        systemImage: "xmark",
-                        action: {
-                            appState.disconnectDevice()
-                            ADBConnector.disconnectADB()
-                            appState.adbConnected = false
-                        }
-                    )
-                    .transition(.identity)
+                    if appState.device != nil {
+                        GlassButtonView(
+                            label: "Disconnect",
+                            systemImage: "xmark",
+                            action: {
+                                appState.disconnectDevice()
+                                ADBConnector.disconnectADB()
+                                appState.adbConnected = false
+                            }
+                        )
+                        .transition(.identity)
+                    } else {
+                        Label("Connect your device", systemImage: "arrow.2.circlepath.circle")
+                    }
                 }
                 .padding()
             }
