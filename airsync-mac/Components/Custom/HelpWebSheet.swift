@@ -15,7 +15,7 @@ struct HelpWebSheet: View {
 
     var body: some View {
         ZStack {
-            VisualEffectBlur(material: .popover, blendingMode: .behindWindow)
+            VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
 
             VStack(spacing: 0) {
                 HStack {
@@ -69,7 +69,7 @@ struct HelpWebSheet: View {
             }
             .padding(3)
         }
-        .frame(width: 900, height: 600)
+        .frame(width: 850, height: 600)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(radius: 20)
     }
