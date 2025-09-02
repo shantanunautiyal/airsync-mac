@@ -118,7 +118,7 @@ struct AppContentView: View {
                                 Button("Help", systemImage: "questionmark.circle"){
                                     showHelpSheet = true
                                 }
-                                .help("Report issues or suggest features")
+                                .help("Feedback and How to?")
 
                                 Button {
                                     showAboutSheet = true
@@ -144,6 +144,15 @@ struct AppContentView: View {
 
                 case .qr:
                     ScannerView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItemGroup{
+                                Button("Help", systemImage: "questionmark.circle"){
+                                    showHelpSheet = true
+                                }
+                                .help("Feedback and How to?")
+                            }
+                        }
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)

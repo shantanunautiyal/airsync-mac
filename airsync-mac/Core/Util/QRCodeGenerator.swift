@@ -11,7 +11,7 @@ internal import SwiftImageReadWrite
 import CoreGraphics
 
 class QRCodeGenerator {
-    static func generateQRCode(for text: String, dimension: Int = 200) async -> CGImage? {
+    static func generateQRCode(for text: String, dimension: Int = 400) async -> CGImage? {
         do {
             let builder = try QRCode.build
                 .text(text)
@@ -20,7 +20,7 @@ class QRCodeGenerator {
                 .onPixels.shape(QRCode.PixelShape.Blob())
                 .foregroundColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1.0))
                 .backgroundColor(CGColor(srgbRed: 0.0, green: 0.0, blue: 0.0, alpha: 1.0))
-                .background.cornerRadius(4)
+                .background.cornerRadius(6)
 
             let imageData = try builder.generate.image(dimension: dimension, representation: .png())
 
