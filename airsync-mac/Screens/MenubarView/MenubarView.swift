@@ -24,30 +24,22 @@ struct MenubarView: View {
     }
 
     private func openAndFocusMainWindow() {
-        // If window already exists, focus immediately + a follow-up retry
-        if let existing = appDelegate?.mainWindow {
-            focus(window: existing)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                self.appDelegate?.showAndActivateMainWindow()
+
+        DispatchQueue.main.async {
+            if let window = self.appDelegate?.mainWindow {
+                // Just reuse the existing window
+                window.makeKeyAndOrderFront(nil)
+            } else {
+                // Trigger creation
+                self.openWindow(id: "main")
             }
-            return
+
+            // Bring app + window to the front once
+            NSApp.activate(ignoringOtherApps: true)
         }
-
-        
-
-        // Trigger creation
-        openWindow(id: "main")
-
-        // Retry a few times until WindowAccessor supplies the reference
-//        for i in 0..<8 {
-//            let delay = Double(i) * 0.08
-//            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-//                if (self.appDelegate?.mainWindow) != nil {
-//                    self.appDelegate?.showAndActivateMainWindow()
-//                }
-//            }
-//        }
     }
+
+
 
     private func getDeviceName() -> String {
         appState.device?.name ?? "Ready"
