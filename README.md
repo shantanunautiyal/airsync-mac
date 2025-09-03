@@ -36,12 +36,7 @@ Min : macOS 14.5
 
 ## Thanks!
 
-- To you, seriously…
-- To my community mostly known as TIDWIB (Things I Do When I’m Bored ….. see the connection)
-- May sound weird but AI, Yeah, without that deep research, assistant in helpless topics, explanations, occasional detonations and all lead to the rapid development of AirSync. Without this, how da hell do I implement a notification listener without weeks of study? Yeah, if you know how to use it efficiently, it is a damn good buddy to do things that you never could imagine.
-- All the reddit peeps for showing that this is actually a thing that they wanted.
-- All the libraries, apps and tools used for development and their creators. Issue volunteers, reddit community helpers…
-- My sleep schedule… the lack of.
+- To you, seriously… <3
 
 ### Libraries used
 
