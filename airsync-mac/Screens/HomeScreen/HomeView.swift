@@ -68,6 +68,7 @@ struct HomeView: View {
         .onAppear {
             if hasPairedDeviceOnce == false {
                 showOnboarding = true
+                appState.isOnboardingActive = true
             }
             updateSidebarVisibility()
         }
@@ -77,6 +78,14 @@ struct HomeView: View {
         .sheet(isPresented: $showOnboarding) {
             OnboardingView()
                 .frame(minWidth: 640, minHeight: 420)
+        }
+        .onChange(of: showOnboarding) { oldValue, newValue in
+            if !newValue {
+                appState.isOnboardingActive = false
+            }
+        }
+        .onChange(of: appState.isOnboardingActive) { oldValue, newValue in
+            // Force view update to refresh window properties
         }
     }
 

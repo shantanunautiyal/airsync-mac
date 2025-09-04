@@ -184,6 +184,16 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var isOnboardingActive: Bool = false {
+        didSet {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("OnboardingStateChanged"),
+                object: nil,
+                userInfo: ["isActive": isOnboardingActive]
+            )
+        }
+    }
+
     // File transfer tracking state
     @Published var transfers: [String: FileTransferSession] = [:]
 

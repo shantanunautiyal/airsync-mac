@@ -67,6 +67,7 @@ struct OnboardingView: View {
                 case .done:
                     Color.clear.onAppear {
                         hasPairedDeviceOnce = true
+                        AppState.shared.isOnboardingActive = false
                         dismiss()
                     }
                 }

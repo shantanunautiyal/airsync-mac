@@ -65,18 +65,60 @@ struct airsync_macApp: App {
             if #available(macOS 15.0, *) {
                 HomeView()
                     .containerBackground(.ultraThinMaterial, for: .window)
-                    .background(WindowAccessor { window in
+                    .background(WindowAccessor(callback: { window in
                         window.identifier = NSUserInterfaceItemIdentifier("main")
                         appDelegate.mainWindow = window
                         window.collectionBehavior.insert(.moveToActiveSpace)
-                    })
+                        // Make window transparent during onboarding
+                        if appState.isOnboardingActive {
+                            window.alphaValue = 0.0
+                            window.isOpaque = false
+                        } else {
+                            window.alphaValue = 1.0
+                            window.isOpaque = true
+                        }
+                    }, onOnboardingChange: { isActive in
+                        guard let window = appDelegate.mainWindow else { return }
+                        // Animate the transition
+                        NSAnimationContext.runAnimationGroup { context in
+                            context.duration = 0.3
+                            if isActive {
+                                window.animator().alphaValue = 0.0
+                                window.isOpaque = false
+                            } else {
+                                window.animator().alphaValue = 1.0
+                                window.isOpaque = true
+                            }
+                        }
+                    }))
             } else {
                 HomeView()
-                    .background(WindowAccessor { window in
+                    .background(WindowAccessor(callback: { window in
                         window.identifier = NSUserInterfaceItemIdentifier("main")
                         appDelegate.mainWindow = window
                         window.collectionBehavior.insert(.moveToActiveSpace)
-                    })
+                        // Make window transparent during onboarding
+                        if appState.isOnboardingActive {
+                            window.alphaValue = 0.0
+                            window.isOpaque = false
+                        } else {
+                            window.alphaValue = 1.0
+                            window.isOpaque = true
+                        }
+                    }, onOnboardingChange: { isActive in
+                        guard let window = appDelegate.mainWindow else { return }
+                        // Animate the transition
+                        NSAnimationContext.runAnimationGroup { context in
+                            context.duration = 0.3
+                            if isActive {
+                                window.animator().alphaValue = 0.0
+                                window.isOpaque = false
+                            } else {
+                                window.animator().alphaValue = 1.0
+                                window.isOpaque = true
+                            }
+                        }
+                    }))
             }
         }
     .commands {
