@@ -88,21 +88,23 @@ struct MirroringSetupView: View {
             }
 
             HStack(spacing: 16) {
-                GlassButtonView(
-                    label: "Skip",
-                    size: .large,
-                    action: onSkip
-                )
-                .transition(.identity)
-
-                GlassButtonView(
-                    label: "Continue",
-                    systemImage: "arrow.right.circle",
-                    size: .large,
-                    primary: true,
-                    action: onNext
-                )
-                .transition(.identity)
+                if adbAvailable && scrcpyAvailable {
+                    GlassButtonView(
+                        label: "Continue",
+                        systemImage: "arrow.right.circle",
+                        size: .large,
+                        primary: true,
+                        action: onNext
+                    )
+                    .transition(.identity)
+                } else {
+                    GlassButtonView(
+                        label: "Skip",
+                        size: .large,
+                        action: onSkip
+                    )
+                    .transition(.identity)
+                }
             }
         }
         .onAppear {
@@ -114,6 +116,8 @@ struct MirroringSetupView: View {
         DispatchQueue.global(qos: .background).async {
             let adbFound = ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil
             let scrcpyFound = ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil
+
+            // let scrcpyFound = false
 
             DispatchQueue.main.async {
                 self.adbAvailable = adbFound
