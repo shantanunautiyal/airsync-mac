@@ -14,6 +14,7 @@ enum OnboardingStep {
     case welcome
     case installAndroid
     case mirroringSetup
+    case plusFeatures
     case done
 }
 
@@ -37,9 +38,11 @@ struct OnboardingView: View {
                     InstallAndroidView(onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .mirroringSetup } })
                 case .mirroringSetup:
                     MirroringSetupView(
-                        onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .done } },
-                        onSkip: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .done } }
+                        onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .plusFeatures } },
+                        onSkip: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .plusFeatures } }
                     )
+                case .plusFeatures:
+                    PlusFeaturesView(onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .done } })
                 case .done:
                     Color.clear.onAppear {
                         hasPairedDeviceOnce = true
