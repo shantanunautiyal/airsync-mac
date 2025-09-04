@@ -150,6 +150,18 @@ struct MenubarView: View {
                     MediaPlayerView(music: music)
                         .transition(.opacity.combined(with: .scale))
                 }
+
+
+                if !appState.notifications.isEmpty {
+                    GlassButtonView(
+                        label: "Clear All",
+                        systemImage: "wind",
+                        action: {
+                            appState.clearNotifications()
+                        }
+                    )
+                    .help("Clear all notifications")
+                }
             }
             .padding(10)
 
