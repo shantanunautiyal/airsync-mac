@@ -1,6 +1,6 @@
 {
   "app.name": "AirSync",
-  "menu.mirror": "Дзеркало",
+  "menu.mirror": "Дублювання екрану",
   "menu.about": "Про AirSync",
   "menu.checkUpdates": "Перевірка оновлень…",
   "menu.quit": "Вийти",
@@ -15,6 +15,7 @@
   "apps.tab": "Застосунки",
   "transfers.tab": "Передача",
   "settings.tab": "Налаштування",
+  "qr.tab": "Scan QR",
   "transfers.empty": "Ще нічого не передано",
   "plus.title": "AirSync+",
   "plus.why": "Чому Plus?",

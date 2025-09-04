@@ -15,6 +15,7 @@
   "apps.tab": "Aplicacions",
   "transfers.tab": "Transferències",
   "settings.tab": "AirSync+",
+  "qr.tab": "Scan QR",
   "transfers.empty": "Encara no s'ha transferit res",
   "plus.title": "AirSync+",
   "plus.why": "Per què Plus?",
