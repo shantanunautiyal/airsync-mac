@@ -92,10 +92,9 @@ struct PlusFeaturesView: View {
                     Spacer()
                     Text("Soon")
                         .font(.caption2)
-                        .fontWeight(.bold)
-                        .padding(2)
-                        .background(Color.accentColor)
-                        .foregroundColor(.black)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.3))
                         .cornerRadius(8)
                 }
             }

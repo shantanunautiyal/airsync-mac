@@ -24,11 +24,32 @@ struct OnboardingView: View {
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
 
     @State private var currentStep: OnboardingStep = .welcome
+    @State private var hue: Double = 0
+    @State private var timer: Timer?
+    @State private var glowOpacity: Double = 0
 
     var body: some View {
         ZStack {
             VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
                 .edgesIgnoringSafeArea(.all)
+                .overlay(
+                    Group {
+                        if currentStep == .plusFeatures {
+                            AngularGradient(
+                                gradient: Gradient(colors: [
+                                    Color(hue: hue, saturation: 1, brightness: 1),
+                                    Color(hue: hue + 0.2, saturation: 1, brightness: 1),
+                                    Color(hue: hue + 0.4, saturation: 1, brightness: 1),
+                                    Color(hue: hue + 0.6, saturation: 1, brightness: 1),
+                                    Color(hue: hue + 0.8, saturation: 1, brightness: 1)
+                                ]),
+                                center: .center
+                            )
+                            .opacity(glowOpacity)
+                            .blur(radius: 100)
+                        }
+                    }
+                )
 
             Group {
                 switch currentStep {
@@ -52,6 +73,25 @@ struct OnboardingView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding()
+        }
+        .onChange(of: currentStep) { old, new in
+            if new == .plusFeatures {
+                timer?.invalidate()
+                timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                    hue += 0.01
+                }
+                withAnimation(.easeInOut(duration: 2.0)) {
+                    glowOpacity = 0.2
+                }
+            } else {
+                timer?.invalidate()
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    glowOpacity = 0
+                }
+            }
+        }
+        .onDisappear {
+            timer?.invalidate()
         }
     }
 }
