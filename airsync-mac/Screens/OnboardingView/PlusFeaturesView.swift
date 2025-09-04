@@ -16,7 +16,7 @@ struct PlusFeaturesView: View {
                 .font(.title)
                 .multilineTextAlignment(.center)
                 .padding()
-            
+
             Text("Getting AirSync+ supports the development and unlocks more features for you. But, AirSync's core features will always remain free. Appreciate your support. (っ◕‿◕)っ")
                 .font(.body)
                 .foregroundStyle(.secondary)
@@ -37,7 +37,7 @@ struct PlusFeaturesView: View {
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(12)
 
-            Text("During the beta period, you can use the code 'i-am-a-tester' to test AirSync+ for free.")
+            Text("During the beta period, you can use the code i-am-a-tester to test AirSync+ for free.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
