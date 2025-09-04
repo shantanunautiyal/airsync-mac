@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
-    @Binding var showQR: Bool
+    let onNext: () -> Void
 
     var body: some View {
         VStack(spacing: 20) {
@@ -49,11 +49,7 @@ struct WelcomeView: View {
                     systemImage: "arrow.right.circle",
                     size: .extraLarge,
                     primary: true,
-                    action: {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showQR = true
-                        }
-                    }
+                    action: onNext
                 )
                 .transition(.identity)
             }
@@ -62,5 +58,5 @@ struct WelcomeView: View {
 }
 
 #Preview {
-    WelcomeView(showQR: .constant(true))
+    WelcomeView(onNext: {})
 }

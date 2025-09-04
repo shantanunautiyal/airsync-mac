@@ -11,18 +11,18 @@ import AppKit
 struct ADBConnector {
 
     // Potential fallback paths
-    private static let possibleADBPaths = [
+    static let possibleADBPaths = [
         "/opt/homebrew/bin/adb",  // Apple Silicon Homebrew
         "/usr/local/bin/adb"      // Intel Homebrew
     ]
-    private static let possibleScrcpyPaths = [
+    static let possibleScrcpyPaths = [
         "/opt/scrcpy/scrcpy",
         "/opt/homebrew/bin/scrcpy",
         "/usr/local/bin/scrcpy"
     ]
 
     // Try to locate a binary
-    private static func findExecutable(named name: String, fallbackPaths: [String]) -> String? {
+    static func findExecutable(named name: String, fallbackPaths: [String]) -> String? {
         // Step 1: Try direct execution from PATH
         if isExecutableAvailable(name) {
             logBinaryDetection("\(name) found in system PATH — using direct command.")
@@ -62,12 +62,12 @@ struct ADBConnector {
         return output
     }
     // Check if binary is available in PATH
-    private static func isExecutableAvailable(_ name: String) -> Bool {
+    static func isExecutableAvailable(_ name: String) -> Bool {
         let data = getExecutablePath(name)
         return !data.isEmpty
     }
 
-    private static func logBinaryDetection(_ message: String) {
+    static func logBinaryDetection(_ message: String) {
         DispatchQueue.main.async {
             AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\n[Binary Detection] \(message)"
         }

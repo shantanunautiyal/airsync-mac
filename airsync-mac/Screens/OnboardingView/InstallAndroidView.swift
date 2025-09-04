@@ -11,9 +11,8 @@ internal import SwiftImageReadWrite
 
 struct InstallAndroidView: View {
 
+    let onNext: () -> Void
     @State private var qrImage: CGImage?
-    @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack {
@@ -70,10 +69,7 @@ struct InstallAndroidView: View {
                 systemImage: "apps.iphone.badge.checkmark",
                 size: .extraLarge,
                 primary: true,
-                action: {
-                    hasPairedDeviceOnce = true
-                    dismiss()
-                }
+                action: onNext
             )
             .transition(.identity)
         }
@@ -99,6 +95,5 @@ struct InstallAndroidView: View {
 }
 
 #Preview {
-    InstallAndroidView()
+    InstallAndroidView(onNext: {})
 }
-
