@@ -12,6 +12,7 @@ struct SidebarView: View {
 
     @ObservedObject var appState = AppState.shared
     @State private var isExpandedAllSeas: Bool = false
+    @State private var showDisconnectAlert = false
 
     var body: some View {
         VStack{
@@ -37,9 +38,7 @@ struct SidebarView: View {
                             label: "Disconnect",
                             systemImage: "xmark",
                             action: {
-                                appState.disconnectDevice()
-                                ADBConnector.disconnectADB()
-                                appState.adbConnected = false
+                                showDisconnectAlert = true
                             }
                         )
                         .transition(.identity)
@@ -49,6 +48,18 @@ struct SidebarView: View {
                 }
                 .padding()
             }
+        }
+        .alert(isPresented: $showDisconnectAlert) {
+            Alert(
+                title: Text("Disconnect Device"),
+                message: Text("Do you want to disconnect \"\(appState.device?.name ?? "device")\"?"),
+                primaryButton: .destructive(Text("Disconnect")) {
+                    appState.disconnectDevice()
+                    ADBConnector.disconnectADB()
+                    appState.adbConnected = false
+                },
+                secondaryButton: .cancel()
+            )
         }
     }
 }

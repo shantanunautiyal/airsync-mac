@@ -53,6 +53,7 @@ struct AppContentView: View {
     @State private var showAboutSheet = false
     @State private var showHelpSheet = false
     @AppStorage("notificationStacks") private var notificationStacks = true
+    @State private var showDisconnectAlert = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -131,9 +132,7 @@ struct AppContentView: View {
                             if appState.device != nil {
                                 ToolbarItemGroup{
                                     Button {
-                                        appState.disconnectDevice()
-                                        ADBConnector.disconnectADB()
-                                        appState.adbConnected = false
+                                        showDisconnectAlert = true
                                     } label: {
                                         Label("Disconnect", systemImage: "iphone.slash")
                                     }
@@ -199,6 +198,18 @@ struct AppContentView: View {
         }
         .sheet(isPresented: $showHelpSheet) {
             HelpWebSheet(isPresented: $showHelpSheet)
+        }
+        .alert(isPresented: $showDisconnectAlert) {
+            Alert(
+                title: Text("Disconnect Device"),
+                message: Text("Do you want to disconnect \"\(appState.device?.name ?? "device")\"?"),
+                primaryButton: .destructive(Text("Disconnect")) {
+                    appState.disconnectDevice()
+                    ADBConnector.disconnectADB()
+                    appState.adbConnected = false
+                },
+                secondaryButton: .cancel()
+            )
         }
     }
 }
