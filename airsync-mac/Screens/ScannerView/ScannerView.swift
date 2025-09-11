@@ -105,6 +105,7 @@ struct ScannerView: View {
                     Image(systemName: info.icon)
                         .foregroundColor(info.color)
                 }
+                .padding()
                 .background(.thinMaterial, in: .rect(cornerRadius: 20))
                 .padding()
             }
