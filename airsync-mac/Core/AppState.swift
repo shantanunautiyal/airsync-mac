@@ -455,7 +455,7 @@ class AppState: ObservableObject {
 
         // Only show "Continue browsing" if the whole text is a valid http/https URL
         if let url = exactURL(from: text) {
-            let open = UNNotificationAction(identifier: "OPEN_LINK", title: "Open", options: [.foreground])
+            let open = UNNotificationAction(identifier: "OPEN_LINK", title: "Open", options: [])
             self.postNativeNotification(
                 id: "clipboard",
                 appName: "Clipboard",
