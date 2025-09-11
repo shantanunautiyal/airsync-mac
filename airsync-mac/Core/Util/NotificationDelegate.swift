@@ -28,7 +28,12 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        if response.actionIdentifier == "VIEW_ACTION" {
+        if response.actionIdentifier == "OPEN_LINK" {
+            let userInfo = response.notification.request.content.userInfo
+            if let urlString = userInfo["url"] as? String, let url = URL(string: urlString) {
+                NSWorkspace.shared.open(url)
+            }
+        } else if response.actionIdentifier == "VIEW_ACTION" {
             let userInfo = response.notification.request.content.userInfo
             if let package = userInfo["package"] as? String,
                let ip = AppState.shared.device?.ipAddress,
