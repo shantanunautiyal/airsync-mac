@@ -34,6 +34,35 @@ struct MediaPlayerView: View {
                 Group {
                     if AppState.shared.isPlus && AppState.shared.licenseCheck {
                         HStack{
+                            if (AppState.shared.status?.music.likeStatus == "liked" || AppState.shared.status?.music.likeStatus == "not_liked") {
+                                GlassButtonView(
+                                    label: "",
+                                    systemImage: {
+                                        if let like = AppState.shared.status?.music.likeStatus {
+                                            switch like {
+                                            case "liked": return "heart.fill"
+                                            case "not_liked": return "heart"
+                                            default: return "heart.slash"
+                                            }
+                                        }
+                                        return "heart.slash"
+                                    }(),
+                                    iconOnly: true,
+                                    size: .small,
+                                    action: {
+                                        guard let like = AppState.shared.status?.music.likeStatus else { return }
+                                        if like == "liked" {
+                                            WebSocketServer.shared.unlike()
+                                        } else if like == "not_liked" {
+                                            WebSocketServer.shared.like()
+                                        } else {
+                                            WebSocketServer.shared.toggleLike()
+                                        }
+                                    }
+                                )
+                                .help("Like / Unlike")
+                            } else {
+
                                 GlassButtonView(
                                     label: "",
                                     systemImage: "backward.end",
@@ -47,6 +76,8 @@ struct MediaPlayerView: View {
                                     .leftArrow,
                                     modifiers: .control
                                 )
+                            }
+                            
                                 GlassButtonView(
                                     label: "",
                                     systemImage: music.isPlaying ? "pause.fill" : "play.fill",

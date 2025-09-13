@@ -137,6 +137,7 @@ struct MenubarView: View {
                         NSApplication.shared.terminate(nil)
                     }
                 }
+                .padding(8)
 
                 if (appState.status != nil){
                     DeviceStatusView()

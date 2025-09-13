@@ -306,7 +306,9 @@ class AppState: ObservableObject {
         body: String,
         appIcon: NSImage? = nil,
         package: String? = nil,
-        actions: [NotificationAction] = []
+        actions: [NotificationAction] = [],
+        extraActions: [UNNotificationAction] = [],
+        extraUserInfo: [String: Any] = [:]
     ) {
         let center = UNUserNotificationCenter.current()
         let content = UNMutableNotificationContent()
@@ -316,6 +318,8 @@ class AppState: ObservableObject {
 
         content.userInfo["nid"] = id
         if let pkg = package { content.userInfo["package"] = pkg }
+        // Merge any extra payload the caller wants to pass
+        for (k, v) in extraUserInfo { content.userInfo[k] = v }
 
         // Build action list (Android actions + optional View action if mirroring conditions)
         let actionDefinitions: [NotificationAction] = actions
@@ -325,7 +329,7 @@ class AppState: ObservableObject {
         }
 
         // Construct UNNotificationActions
-        var unActions: [UNNotificationAction] = []
+    var unActions: [UNNotificationAction] = []
         for a in actionDefinitions.prefix(8) { // safety cap
             switch a.type {
             case .button:
@@ -341,6 +345,8 @@ class AppState: ObservableObject {
         if includeView {
             unActions.append(UNNotificationAction(identifier: "VIEW_ACTION", title: "View", options: []))
         }
+    // Append caller-provided extra actions (e.g., OPEN_LINK)
+    unActions.append(contentsOf: extraActions)
 
         // Choose category: DEFAULT_CATEGORY when no custom actions besides optional view; otherwise derive
         if unActions.isEmpty {
@@ -446,12 +452,40 @@ class AppState: ObservableObject {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
         self.lastClipboardValue = text
-        self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
+
+        // Only show "Continue browsing" if the whole text is a valid http/https URL
+        // AND the user has AirSync+ (isPlus). Otherwise show a regular clipboard update.
+        if let url = exactURL(from: text), self.isPlus {
+            let open = UNNotificationAction(identifier: "OPEN_LINK", title: "Open", options: [])
+            self.postNativeNotification(
+                id: "clipboard",
+                appName: "Clipboard",
+                title: "Continue browsing",
+                body: text,
+                extraActions: [open],
+                extraUserInfo: ["url": url.absoluteString]
+            )
+        } else {
+            // Non-plus users or non-URL clipboard content: simple clipboard update notification
+            self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
+        }
     }
 
     private func stopClipboardMonitoring() {
         clipboardCancellable?.cancel()
         clipboardCancellable = nil
+    }
+
+    // MARK: - Continue browsing helper (exact URL detection)
+    private func exactURL(from text: String) -> URL? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(),
+              (scheme == "http" || scheme == "https"),
+              url.host != nil else { return nil }
+        // Ensure no extra text beyond a URL
+        if trimmed != text { /* allow surrounding whitespace */ }
+        return url
     }
 
 
