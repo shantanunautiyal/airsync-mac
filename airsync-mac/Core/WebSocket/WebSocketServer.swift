@@ -350,6 +350,7 @@ class WebSocketServer: ObservableObject {
                let isMuted = music["isMuted"] as? Bool
             {
                 let albumArt = (music["albumArt"] as? String) ?? ""
+                let likeStatus = (music["likeStatus"] as? String) ?? "none"
 
                 AppState.shared.status = DeviceStatus(
                     battery: .init(level: level, isCharging: isCharging),
@@ -360,7 +361,8 @@ class WebSocketServer: ObservableObject {
                         artist: artist,
                         volume: volume,
                         isMuted: isMuted,
-                        albumArt: albumArt
+                        albumArt: albumArt,
+                        likeStatus: likeStatus
                     )
                 )
             }
@@ -624,6 +626,19 @@ class WebSocketServer: ObservableObject {
 
     func stopMedia() {
         sendMediaAction("stop")
+    }
+
+    // Like controls
+    func toggleLike() {
+        sendMediaAction("toggleLike")
+    }
+
+    func like() {
+        sendMediaAction("like")
+    }
+
+    func unlike() {
+        sendMediaAction("unlike")
     }
 
     private func sendMediaAction(_ action: String) {
