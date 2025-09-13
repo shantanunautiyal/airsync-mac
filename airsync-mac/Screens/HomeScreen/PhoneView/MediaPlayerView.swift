@@ -35,33 +35,31 @@ struct MediaPlayerView: View {
                     if AppState.shared.isPlus && AppState.shared.licenseCheck {
                         HStack{
                             if (AppState.shared.status?.music.likeStatus == "liked" || AppState.shared.status?.music.likeStatus == "not_liked") {
-                                // Like button at far left
-                                Button(action: {
-                                    guard let like = AppState.shared.status?.music.likeStatus else { return }
-                                    // If no like/unlike capability, attempt toggle; Android may respond with failure
-                                    if like == "liked" {
-                                        WebSocketServer.shared.unlike()
-                                    } else if like == "not_liked" {
-                                        WebSocketServer.shared.like()
-                                    } else {
-                                        WebSocketServer.shared.toggleLike()
-                                    }
-                                }) {
-                                    Group {
+                                GlassButtonView(
+                                    label: "",
+                                    systemImage: {
                                         if let like = AppState.shared.status?.music.likeStatus {
                                             switch like {
-                                            case "liked": Image(systemName: "heart.fill")
-                                            case "not_liked": Image(systemName: "heart")
-                                            default: Image(systemName: "heart.slash")
+                                            case "liked": return "heart.fill"
+                                            case "not_liked": return "heart"
+                                            default: return "heart.slash"
                                             }
+                                        }
+                                        return "heart.slash"
+                                    }(),
+                                    iconOnly: true,
+                                    size: .small,
+                                    action: {
+                                        guard let like = AppState.shared.status?.music.likeStatus else { return }
+                                        if like == "liked" {
+                                            WebSocketServer.shared.unlike()
+                                        } else if like == "not_liked" {
+                                            WebSocketServer.shared.like()
                                         } else {
-                                            Image(systemName: "heart.slash")
+                                            WebSocketServer.shared.toggleLike()
                                         }
                                     }
-                                    .font(.system(size: 14))
-                                    .frame(width: 30, height: 30)
-                                }
-                                .buttonStyle(.plain)
+                                )
                                 .help("Like / Unlike")
                             } else {
 
