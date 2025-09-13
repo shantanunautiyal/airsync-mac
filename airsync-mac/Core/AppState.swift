@@ -454,7 +454,8 @@ class AppState: ObservableObject {
         self.lastClipboardValue = text
 
         // Only show "Continue browsing" if the whole text is a valid http/https URL
-        if let url = exactURL(from: text) {
+        // AND the user has AirSync+ (isPlus). Otherwise show a regular clipboard update.
+        if let url = exactURL(from: text), self.isPlus {
             let open = UNNotificationAction(identifier: "OPEN_LINK", title: "Open", options: [])
             self.postNativeNotification(
                 id: "clipboard",
@@ -465,7 +466,7 @@ class AppState: ObservableObject {
                 extraUserInfo: ["url": url.absoluteString]
             )
         } else {
-            // Previous behavior: simple clipboard update notification
+            // Non-plus users or non-URL clipboard content: simple clipboard update notification
             self.postNativeNotification(id: "clipboard", appName: "Clipboard", title: "Updated", body: text)
         }
     }
