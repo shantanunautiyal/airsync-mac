@@ -37,6 +37,12 @@ class AppState: ObservableObject {
         self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
         self.showMenubarText = UserDefaults.standard.bool(forKey: "showMenubarText")
 
+        // Default to true if not previously set
+        let showNameObj = UserDefaults.standard.object(forKey: "showMenubarDeviceName")
+        self.showMenubarDeviceName = showNameObj == nil
+            ? true
+            : UserDefaults.standard.bool(forKey: "showMenubarDeviceName")
+
         let savedMaxLength = UserDefaults.standard.integer(forKey: "menubarTextMaxLength")
         self.menubarTextMaxLength = savedMaxLength > 0 ? savedMaxLength : 30
 
@@ -113,6 +119,12 @@ class AppState: ObservableObject {
     @Published var showMenubarText: Bool {
         didSet {
             UserDefaults.standard.set(showMenubarText, forKey: "showMenubarText")
+        }
+    }
+
+    @Published var showMenubarDeviceName: Bool {
+        didSet {
+            UserDefaults.standard.set(showMenubarDeviceName, forKey: "showMenubarDeviceName")
         }
     }
 
