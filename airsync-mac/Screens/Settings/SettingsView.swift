@@ -169,6 +169,21 @@ struct SettingsView: View {
                             .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
 
                             HStack{
+                                Label {
+                                    Text("Show device name")
+                                } icon: {
+                                    Image(systemName: "iphone.gen3")
+                                        .imageScale(.medium)
+                                        .frame(width: 18, alignment: .center)
+                                }
+                                Spacer()
+                                Toggle("", isOn: $appState.showMenubarDeviceName)
+                                    .toggleStyle(.switch)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
+
+                            HStack{
                                 Label("Hide Dock Icon", systemImage: "dock.rectangle")
                                 Spacer()
                                 Toggle("", isOn: $appState.hideDockIcon)

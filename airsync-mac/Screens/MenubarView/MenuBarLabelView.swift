@@ -24,12 +24,14 @@ struct MenuBarLabelView: View {
             return "\(title) - \(artist)"
         } else {
             var parts: [String] = []
-            parts.append(device.name)
+            if appState.showMenubarDeviceName {
+                parts.append(device.name)
+            }
 
             if let batteryLevel = appState.status?.battery.level {
                 parts.append("\(batteryLevel)%")
             }
-            return parts.joined(separator: " ")
+            return parts.isEmpty ? nil : parts.joined(separator: " ")
         }
     }
 
