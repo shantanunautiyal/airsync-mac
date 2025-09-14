@@ -90,7 +90,6 @@ struct AppContentView: View {
 
                 case .apps:
                     AppsView()
-                    .font(.largeTitle)
                     .transition(.blurReplace)
 
                 case .transfers:
