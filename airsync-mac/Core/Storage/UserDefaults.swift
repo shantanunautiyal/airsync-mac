@@ -10,7 +10,9 @@ import Foundation
 extension UserDefaults {
     private enum Keys {
         static let lastLicenseCheckDate = "lastLicenseCheckDate"
+        static let lastLicenseSuccessfulCheckDate = "lastLicenseSuccessfulCheckDate"
         static let consecutiveLicenseFailCount = "consecutiveLicenseFailCount"
+        static let consecutiveNetworkFailureDays = "consecutiveNetworkFailureDays"
         static let scrcpyOnTop = "scrcpyOnTop"
         static let scrcpyShareRes = "scrcpyShareRes"
         static let scrcpyDesktopMode = "scrcpyDesktopMode"
@@ -24,7 +26,6 @@ extension UserDefaults {
         static let continueApp = "continueApp"
         static let directKeyInput = "directKeyInput"
 
-
         static let notificationStacks = "notificationStacks"
     }
 
@@ -34,8 +35,18 @@ extension UserDefaults {
     }
 
     var lastLicenseCheckDate: Date? {
-        get { object(forKey: "lastLicenseCheckDate") as? Date }
-        set { set(newValue, forKey: "lastLicenseCheckDate") }
+        get { object(forKey: Keys.lastLicenseCheckDate) as? Date }
+        set { set(newValue, forKey: Keys.lastLicenseCheckDate) }
+    }
+
+    var lastLicenseSuccessfulCheckDate: Date? {
+        get { object(forKey: Keys.lastLicenseSuccessfulCheckDate) as? Date }
+        set { set(newValue, forKey: Keys.lastLicenseSuccessfulCheckDate) }
+    }
+
+    var consecutiveNetworkFailureDays: Int {
+        get { integer(forKey: Keys.consecutiveNetworkFailureDays) }
+        set { set(newValue, forKey: Keys.consecutiveNetworkFailureDays) }
     }
 
     var scrcpyOnTop: Bool {
@@ -49,24 +60,23 @@ extension UserDefaults {
     }
 
     var scrcpyDesktopMode: String? {
-        get { object(forKey: "scrcpyDesktopMode") as? String }
+        get { object(forKey: Keys.scrcpyDesktopMode) as? String }
         set { set(newValue, forKey: Keys.scrcpyDesktopMode) }
     }
 
     var lastADBCommand: String? {
-        get { object(forKey: "lastADBCommand") as? String }
+        get { object(forKey: Keys.lastADBCommand) as? String }
         set { set(newValue, forKey: Keys.lastADBCommand) }
     }
 
     var manualPositionCoords: [String] {
         get {
-            return object(forKey: "manualPositionCoords") as? [String] ?? ["0", "0"]
+            return object(forKey: Keys.manualPositionCoords) as? [String] ?? ["0", "0"]
         }
         set {
-            set(newValue, forKey: "manualPositionCoords")
+            set(newValue, forKey: Keys.manualPositionCoords)
         }
     }
-
 
     var stayAwake: Bool {
         get { bool(forKey: Keys.stayAwake)}
@@ -108,3 +118,4 @@ extension UserDefaults {
         set { set(newValue, forKey: Keys.directKeyInput)}
     }
 }
+

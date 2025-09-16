@@ -7,26 +7,35 @@
 
 import Foundation
 
+// New: error type to distinguish network/server failures from invalid license results
+enum LicenseCheckError: Error {
+    case network(Error)           // Transport / connectivity issues (timeouts, offline, DNS, etc.)
+    case server(String)           // Non-OK HTTP or malformed responses
+}
+
 func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) async throws -> Bool {
+    // Tester shortcut (kept)
     if key == "i-am-a-tester" {
-        AppState.shared.setPlusTemporarily(true)
-        AppState.shared.licenseDetails = LicenseDetails(
-            key: key,
-            email: "tester@example.com",
-            productName: "Test Mode",
-            orderNumber: 0,
-            purchaserID: "tester",
-            usesCount: 0,
-            price: 0,
-            currency: "usd",
-            saleTimestamp: "",
-            subscriptionCancelledAt: nil,
-            subscriptionEndedAt: nil,
-            subscriptionFailedAt: nil,
-            refunded: false,
-            disputed: false,
-            chargebacked: false
-        )
+        if save {
+            AppState.shared.setPlusTemporarily(true)
+            AppState.shared.licenseDetails = LicenseDetails(
+                key: key,
+                email: "tester@example.com",
+                productName: "Test Mode",
+                orderNumber: 0,
+                purchaserID: "tester",
+                usesCount: 0,
+                price: 0,
+                currency: "usd",
+                saleTimestamp: "",
+                subscriptionCancelledAt: nil,
+                subscriptionEndedAt: nil,
+                subscriptionFailedAt: nil,
+                refunded: false,
+                disputed: false,
+                chargebacked: false
+            )
+        }
         return true
     }
 
@@ -52,26 +61,48 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
 
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-        throw NSError(domain: "InvalidResponse", code: 0, userInfo: nil)
+    let data: Data
+    let response: URLResponse
+    do {
+        (data, response) = try await URLSession.shared.data(for: request)
+    } catch {
+        // Transport / connectivity error
+        throw LicenseCheckError.network(error)
     }
 
+    guard let httpResponse = response as? HTTPURLResponse else {
+        throw LicenseCheckError.server("Invalid HTTP response")
+    }
+
+    // Treat 404 as an invalid license (not a network error)
     if httpResponse.statusCode == 404 {
-        AppState.shared.isPlus = false
-        if save { AppState.shared.licenseDetails = nil }
+        if save {
+            AppState.shared.isPlus = false
+            AppState.shared.licenseDetails = nil
+        }
         return false
     }
 
+    // Accept only 2xx here; other codes are server-ish problems
+    guard (200...299).contains(httpResponse.statusCode) else {
+        throw LicenseCheckError.server("HTTP \(httpResponse.statusCode)")
+    }
+
+    // Parse JSON
     guard
-        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
         let success = json["success"] as? Bool,
-        success,
         let purchase = json["purchase"] as? [String: Any]
     else {
-        AppState.shared.isPlus = false
-        if save { AppState.shared.licenseDetails = nil }
+        throw LicenseCheckError.server("Malformed JSON")
+    }
+
+    // If Gumroad says not success => invalid license
+    guard success else {
+        if save {
+            AppState.shared.isPlus = false
+            AppState.shared.licenseDetails = nil
+        }
         return false
     }
 
@@ -80,30 +111,34 @@ func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) a
     let endedAt = purchase["subscription_ended_at"] as? String
     let failedAt = purchase["subscription_failed_at"] as? String
 
+    // Membership plan must be active; otherwise invalid
     if selectedPlan == .membership {
         if [cancelledAt, endedAt, failedAt].contains(where: { dateStr in
             if let s = dateStr, !s.isEmpty { return true }
             return false
         }) {
-            AppState.shared.isPlus = false
-            if save { AppState.shared.licenseDetails = nil }
+            if save {
+                AppState.shared.isPlus = false
+                AppState.shared.licenseDetails = nil
+            }
             return false
         }
     }
 
-    // check device limit
+    // Device limit logic — if exceeded we treat as invalid
     let currentUsesCount = json["uses"] as? Int ?? 0
     let previousUsesCount = AppState.shared.licenseDetails?.usesCount ?? currentUsesCount
-
     if (currentUsesCount - previousUsesCount) > 3 {
-        AppState.shared.isPlus = false
-        if save { AppState.shared.licenseDetails = nil }
+        if save {
+            AppState.shared.isPlus = false
+            AppState.shared.licenseDetails = nil
+        }
         return false
     }
-    // Passed all checks
-    AppState.shared.isPlus = true
 
+    // Valid license
     if save {
+        AppState.shared.isPlus = true
         let details = LicenseDetails(
             key: key,
             email: purchase["email"] as? String ?? "unknown",
