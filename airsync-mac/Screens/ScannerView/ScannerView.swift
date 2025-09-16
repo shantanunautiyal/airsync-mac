@@ -14,6 +14,7 @@ struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
     @State private var qrImage: CGImage?
     @State private var copyStatus: String?
+    @State private var hasValidIP: Bool = true
 
     private func statusInfo(for status: WebSocketStatus) -> (text: String, icon: String, color: Color) {
         switch status {
@@ -35,13 +36,26 @@ struct ScannerView: View {
         VStack {
             Spacer()
 
-            Text("Scan to connect")
-                .font(.title)
+            if !hasValidIP {
+                VStack {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 30))
+                        .foregroundColor(.gray)
+                        .padding()
+
+                    Text("No local IP found")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+                .frame(width: 250, height: 250)
                 .padding()
+            } else if let qrImage = qrImage {
+                Text("Scan to connect")
+                    .font(.title)
+                    .padding()
 
-            Spacer()
+                Spacer()
 
-            if let qrImage = qrImage {
                 Image(decorative: qrImage, scale: 1.0)
                     .resizable()
                     .interpolation(.none)
@@ -60,7 +74,7 @@ struct ScannerView: View {
             }
 
             // --- Copy Key Button ---
-            if let key = WebSocketServer.shared.getSymmetricKeyBase64(), !key.isEmpty {
+            if hasValidIP, let key = WebSocketServer.shared.getSymmetricKeyBase64(), !key.isEmpty {
                 GlassButtonView(
                     label: "Copy Key",
                     systemImage: "key",
@@ -127,15 +141,31 @@ struct ScannerView: View {
     }
 
      func generateQRAsync() {
+        let ip = WebSocketServer.shared
+            .getLocalIPAddress(
+                adapterName: appState.selectedNetworkAdapterName
+            )
+
+        // Check if we have a valid IP address
+        guard let validIP = ip else {
+            DispatchQueue.main.async {
+                self.hasValidIP = false
+                self.qrImage = nil
+            }
+            return
+        }
+
+        // If we have a valid IP, proceed with QR generation
+        DispatchQueue.main.async {
+            self.hasValidIP = true
+            self.qrImage = nil // Reset to show progress view
+        }
+
         let text = generateQRText(
-            ip: WebSocketServer.shared
-                .getLocalIPAddress(
-                    adapterName: appState.selectedNetworkAdapterName
-                ),
+            ip: validIP,
             port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),
             name: appState.myDevice?.name,
             key: WebSocketServer.shared.getSymmetricKeyBase64() ?? ""
-
         ) ?? "That doesn't look right, QR Generation failed"
 
         Task {
