@@ -30,7 +30,7 @@ struct SidebarView: View {
 
 
             .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
-            .frame(minWidth: 230, minHeight: 380)
+            .frame(minWidth: 280, minHeight: 400)
             .safeAreaInset(edge: .bottom) {
                 HStack{
                     if appState.device != nil {
@@ -46,7 +46,7 @@ struct SidebarView: View {
                         Label("Connect your device", systemImage: "arrow.2.circlepath.circle")
                     }
                 }
-                .padding()
+                .padding(16)
             }
         }
         .alert(isPresented: $showDisconnectAlert) {

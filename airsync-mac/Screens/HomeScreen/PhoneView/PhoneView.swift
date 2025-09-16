@@ -17,8 +17,8 @@ struct PhoneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let cardWidth: CGFloat = 200
-            let cardHeight: CGFloat = 440
+            let cardWidth: CGFloat = 220
+            let cardHeight: CGFloat = 460
             let corner: CGFloat = 24
             ZStack {
                 // Wallpaper background layer(s) WITH 3D tilt
