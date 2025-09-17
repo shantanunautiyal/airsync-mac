@@ -20,10 +20,8 @@ class AppState: ObservableObject {
 
     @Published var isOS26: Bool = true
 
-
     init() {
         self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")
-
 
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
@@ -60,7 +58,7 @@ class AppState: ObservableObject {
         }
 
         Task {
-            await checkLicenseIfNeeded()
+            await Gumroad().checkLicenseIfNeeded()
         }
 
         self.scrcpyBitrate = UserDefaults.standard.integer(forKey: "scrcpyBitrate")
@@ -68,8 +66,6 @@ class AppState: ObservableObject {
 
         self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
         if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
-
-
 
         self.myDevice = Device(
             name: name,
@@ -226,7 +222,6 @@ class AppState: ObservableObject {
         shouldSkipSave = false
     }
 
-
     // Remove notification by model instance and system notif center
     func removeNotification(_ notif: Notification) {
         DispatchQueue.main.async {
@@ -251,7 +246,6 @@ class AppState: ObservableObject {
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [nid])
         }
     }
-
 
     func hideNotification(_ notif: Notification) {
         DispatchQueue.main.async {
@@ -341,7 +335,7 @@ class AppState: ObservableObject {
         }
 
         // Construct UNNotificationActions
-    var unActions: [UNNotificationAction] = []
+        var unActions: [UNNotificationAction] = []
         for a in actionDefinitions.prefix(8) { // safety cap
             switch a.type {
             case .button:
@@ -357,8 +351,8 @@ class AppState: ObservableObject {
         if includeView {
             unActions.append(UNNotificationAction(identifier: "VIEW_ACTION", title: "View", options: []))
         }
-    // Append caller-provided extra actions (e.g., OPEN_LINK)
-    unActions.append(contentsOf: extraActions)
+        // Append caller-provided extra actions (e.g., OPEN_LINK)
+        unActions.append(contentsOf: extraActions)
 
         // Choose category: DEFAULT_CATEGORY when no custom actions besides optional view; otherwise derive
         if unActions.isEmpty {
@@ -393,7 +387,6 @@ class AppState: ObservableObject {
             if let error = error { print("Failed to post native notification: \(error)") }
         }
     }
-
 
     private func saveIconToTemporaryFile(icon: NSImage) -> URL? {
         // Save NSImage as a temporary PNG file to attach in notification
@@ -500,7 +493,6 @@ class AppState: ObservableObject {
         return url
     }
 
-
     func wallpaperCacheDirectory() -> URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("wallpapers", isDirectory: true)
@@ -571,63 +563,6 @@ class AppState: ObservableObject {
             print("Error loading apps: \(error)")
         }
     }
-    func checkLicenseIfNeeded() async {
-        let now = Date()
-        let calendar = Calendar.current
-
-        // Compare just the year/month/day, ignoring time
-        if let lastCheck = UserDefaults.standard.lastLicenseCheckDate,
-           calendar.isDate(lastCheck, inSameDayAs: now) {
-            print("License was already checked today")
-            return
-        }
-
-        await checkLicense()
-        UserDefaults.standard.lastLicenseCheckDate = now
-    }
-
-    @MainActor
-    func checkLicense() async {
-        guard let key = self.licenseDetails?.key, !key.isEmpty else {
-            self.isPlus = false
-            incrementLicenseFailCount()
-            return
-        }
-
-        let result = try? await checkLicenseKeyValidity(
-            key: key,
-            save: false,
-            isNewRegistration: false
-        )
-
-        if result == true {
-            // License valid — reset fail count
-            UserDefaults.standard.consecutiveLicenseFailCount = 0
-            self.isPlus = true
-        } else {
-            // License invalid
-            incrementLicenseFailCount()
-            self.isPlus = false
-        }
-
-        print("License checked, validity:", isPlus)
-    }
-
-    private func incrementLicenseFailCount() {
-        let failCount = UserDefaults.standard.consecutiveLicenseFailCount + 1
-        UserDefaults.standard.consecutiveLicenseFailCount = failCount
-
-        if failCount >= 3 {
-            clearLicenseDetails()
-            print("License check failed \(failCount) times — license removed")
-        }
-    }
-
-    private func clearLicenseDetails() {
-        self.licenseDetails = nil
-        UserDefaults.standard.removeObject(forKey: "licenseDetailsKey")
-        UserDefaults.standard.consecutiveLicenseFailCount = 0
-    }
 
     func updateDockIconVisibility() {
         DispatchQueue.main.async {
@@ -638,5 +573,4 @@ class AppState: ObservableObject {
             }
         }
     }
-
 }

@@ -69,7 +69,7 @@ struct SettingsPlusView: View {
                                 isCheckingLicense = true
                                 licenseValid = nil
                                 UserDefaults.standard.licensePlanType = selectedPlan
-                                let result = try? await checkLicenseKeyValidity(
+                                let result = try? await Gumroad().checkLicenseKeyValidity(
                                     key: licenseKey,
                                     save: true,
                                     isNewRegistration: true

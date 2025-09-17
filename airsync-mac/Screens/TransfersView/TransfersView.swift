@@ -12,10 +12,24 @@ struct TransfersView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if sessions.isEmpty {
-                VStack {
-                    Label(L("transfers.empty"), systemImage: "tray.and.arrow.up")
-                        .padding()
-                }
+                    VStack {
+
+                        if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
+                            Text("BETA")
+                            .padding(8)
+                            .background(.clear)
+                            .glassEffect(in: .rect(cornerRadius: 10))
+                            .padding(8)
+                        } else {
+                            Text("BETA")
+                            .padding(8)
+                            .background(.thinMaterial, in: .rect(cornerRadius: 10))
+                            .padding(8)
+                        }
+
+                        Label(L("transfers.empty"), systemImage: "tray.and.arrow.up")
+                            .padding()
+                    }
             } else {
                 List {
                     ForEach(sessions) { session in
