@@ -696,6 +696,42 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    // MARK: - Device Status (Mac -> Android)
+    func sendDeviceStatus(batteryLevel: Int, isCharging: Bool, isPaired: Bool, musicInfo: NowPlayingInfo?, albumArtBase64: String? = nil) {
+        let musicDict: [String: Any] = [
+            "isPlaying": musicInfo?.isPlaying ?? false,
+            "title": musicInfo?.title ?? "",
+            "artist": musicInfo?.artist ?? "",
+            "volume": 50, // Hardcoded for now - will be replaced later
+            "isMuted": false, // Hardcoded for now - will be replaced later
+            "albumArt": albumArtBase64 ?? "",
+            "likeStatus": "none" // Hardcoded for now - will be replaced later
+        ]
+        
+        let statusDict: [String: Any] = [
+            "battery": [
+                "level": batteryLevel,
+                "isCharging": isCharging
+            ],
+            "isPaired": isPaired,
+            "music": musicDict
+        ]
+        
+        let messageDict: [String: Any] = [
+            "type": "status",
+            "data": statusDict
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                sendToFirstAvailable(message: jsonString)
+            }
+        } catch {
+            print("Error creating device status message: \(error)")
+        }
+    }
+
     // MARK: - File transfer (Mac -> Android)
     func sendFile(url: URL, chunkSize: Int = 64 * 1024) {
         guard FileManager.default.fileExists(atPath: url.path) else { return }
