@@ -154,7 +154,7 @@ struct TimeView: View {
             currentDate = newValue
         }
         .foregroundColor(.white)
-        .shadow(radius: 10)
+//        .shadow(radius: 10)
     }
 
     // Detect if system uses 24-hour time
