@@ -19,6 +19,9 @@ struct airsync_macApp: App {
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
     private let updaterController: SPUStandardUpdaterController
 
+    // Initialize NowPlayingViewModel to start sending media info to Android
+    @StateObject private var nowPlayingViewModel = NowPlayingViewModel()
+
     init() {
 
         let center = UNUserNotificationCenter.current()

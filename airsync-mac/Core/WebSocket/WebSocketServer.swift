@@ -567,9 +567,68 @@ class WebSocketServer: ObservableObject {
                     body: verified ? "Receiver verified the file checksum" : "Receiver reported checksum mismatch"
                 )
             }
+
+        case .macMediaControl:
+            if let dict = message.data.value as? [String: Any],
+               let action = dict["action"] as? String {
+                print("Received Mac media control: \(action)")
+                handleMacMediaControl(action: action)
+            }
+
+        case .macMediaControlResponse:
+            // This case handles responses from Android to Mac media control responses
+            // Currently not needed as Mac sends responses to Android, not vice versa
+            print("Received macMediaControlResponse (not typically expected)")
         }
 
 
+    }
+
+    // MARK: - Mac Media Control Handler
+    private func handleMacMediaControl(action: String) {
+        // Get reference to the NowPlayingViewModel from the app
+        // We'll access it through the main app or AppState if needed
+
+        switch action {
+        case "play":
+            NowPlayingCLI.shared.play()
+            print("Mac media control: play")
+
+        case "pause":
+            NowPlayingCLI.shared.pause()
+            print("Mac media control: pause")
+
+        case "previous":
+            NowPlayingCLI.shared.previous()
+            print("Mac media control: previous (using previous-track)")
+
+        case "next":
+            NowPlayingCLI.shared.next()
+            print("Mac media control: next (using next-track)")
+
+        case "stop":
+            NowPlayingCLI.shared.stop()
+            print("Mac media control: stop")
+            
+        default:
+            print("Unknown Mac media control action: \(action)")
+        }
+
+        // Send response back to Android
+        sendMacMediaControlResponse(action: action, success: true)
+    }
+
+    private func sendMacMediaControlResponse(action: String, success: Bool) {
+        let message = """
+        {
+            "type": "macMediaControlResponse",
+            "data": {
+                "action": "\(action)",
+                "success": \(success)
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
     }
 
     // MARK: - Sending Helpers
@@ -694,6 +753,42 @@ class WebSocketServer: ObservableObject {
 
     func sendClipboardUpdate(_ message: String) {
         sendToFirstAvailable(message: message)
+    }
+
+    // MARK: - Device Status (Mac -> Android)
+    func sendDeviceStatus(batteryLevel: Int, isCharging: Bool, isPaired: Bool, musicInfo: NowPlayingInfo?, albumArtBase64: String? = nil) {
+        let musicDict: [String: Any] = [
+            "isPlaying": musicInfo?.isPlaying ?? false,
+            "title": musicInfo?.title ?? "",
+            "artist": musicInfo?.artist ?? "",
+            "volume": 50, // Hardcoded for now - will be replaced later
+            "isMuted": false, // Hardcoded for now - will be replaced later
+            "albumArt": albumArtBase64 ?? "",
+            "likeStatus": "none" // Hardcoded for now - will be replaced later
+        ]
+
+        let statusDict: [String: Any] = [
+            "battery": [
+                "level": batteryLevel,
+                "isCharging": isCharging
+            ],
+            "isPaired": isPaired,
+            "music": musicDict
+        ]
+
+        let messageDict: [String: Any] = [
+            "type": "status",
+            "data": statusDict
+        ]
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                sendToFirstAvailable(message: jsonString)
+            }
+        } catch {
+            print("Error creating device status message: \(error)")
+        }
     }
 
     // MARK: - File transfer (Mac -> Android)

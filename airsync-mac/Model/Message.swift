@@ -15,6 +15,8 @@ enum MessageType: String, Codable {
     case status
     case dismissalResponse
     case mediaControlResponse
+    case macMediaControl
+    case macMediaControlResponse
     case appIcons
     case clipboardUpdate
     // file transfer
