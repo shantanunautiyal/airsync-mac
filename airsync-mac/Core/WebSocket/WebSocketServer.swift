@@ -567,9 +567,69 @@ class WebSocketServer: ObservableObject {
                     body: verified ? "Receiver verified the file checksum" : "Receiver reported checksum mismatch"
                 )
             }
+            
+        case .macMediaControl:
+            if let dict = message.data.value as? [String: Any],
+               let action = dict["action"] as? String {
+                print("Received Mac media control: \(action)")
+                handleMacMediaControl(action: action)
+            }
+            
+        case .macMediaControlResponse:
+            // This case handles responses from Android to Mac media control responses
+            // Currently not needed as Mac sends responses to Android, not vice versa
+            print("Received macMediaControlResponse (not typically expected)")
         }
 
 
+    }
+
+    // MARK: - Mac Media Control Handler
+    private func handleMacMediaControl(action: String) {
+        // Get reference to the NowPlayingViewModel from the app
+        // We'll access it through the main app or AppState if needed
+        
+        switch action {
+        case "play":
+            NowPlayingCLI.shared.play()
+            print("Mac media control: play")
+            
+        case "pause":
+            NowPlayingCLI.shared.pause()
+            print("Mac media control: pause")
+            
+        case "previous":
+            NowPlayingCLI.shared.previous()
+            print("Mac media control: previous")
+            
+        case "next":
+            NowPlayingCLI.shared.next()
+            print("Mac media control: next")
+            
+        case "stop":
+            // Use pause as stop since CLI doesn't have explicit stop
+            NowPlayingCLI.shared.pause()
+            print("Mac media control: stop (using pause)")
+            
+        default:
+            print("Unknown Mac media control action: \(action)")
+        }
+        
+        // Send response back to Android
+        sendMacMediaControlResponse(action: action, success: true)
+    }
+    
+    private func sendMacMediaControlResponse(action: String, success: Bool) {
+        let message = """
+        {
+            "type": "macMediaControlResponse",
+            "data": {
+                "action": "\(action)",
+                "success": \(success)
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
     }
 
     // MARK: - Sending Helpers
