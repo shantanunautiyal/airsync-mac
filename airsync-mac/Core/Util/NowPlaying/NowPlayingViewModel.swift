@@ -42,7 +42,7 @@ class NowPlayingViewModel: ObservableObject {
     private func startPolling() {
         // Don't start if already running
         guard timer == nil else { return }
-        
+
         print("Starting media playback monitoring - device connected")
         fetch() // initial fetch
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
@@ -53,11 +53,11 @@ class NowPlayingViewModel: ObservableObject {
 
     private func stopPolling() {
         guard timer != nil else { return }
-        
+
         print("Stopping media playback monitoring - device disconnected")
         timer?.invalidate()
         timer = nil
-        
+
         // Reset published properties when stopping
         title = "Unknown Title"
         artist = "Unknown Artist"
@@ -72,7 +72,7 @@ class NowPlayingViewModel: ObservableObject {
     private func fetch() {
         // Only fetch if there's a connected device
         guard AppState.shared.device != nil else { return }
-        
+
         NowPlayingCLI.shared.fetchNowPlaying { [weak self] info in
             guard let info = info else {
                 print("No now playing info")
@@ -161,25 +161,25 @@ class NowPlayingViewModel: ObservableObject {
     func togglePlayPause() {
         NowPlayingCLI.shared.toggle()
     }
-    
+
     func play() {
         NowPlayingCLI.shared.play()
     }
-    
+
     func pause() {
         NowPlayingCLI.shared.pause()
     }
-    
+
     func next() {
         print("Next track requested")
         // Add implementation for next track if available in NowPlayingCLI
     }
-    
+
     func previous() {
         print("Previous track requested")
         // Add implementation for previous track if available in NowPlayingCLI
     }
-    
+
     func stop() {
         print("Stop playback requested")
         // Add implementation for stop if available in NowPlayingCLI

@@ -72,8 +72,9 @@ class NowPlayingCLI {
     func play() { runCommand("play") }
     func pause() { runCommand("pause") }
     func toggle() { runCommand("toggle-play-pause") }
-    func next() { runCommand("next") }
-    func previous() { runCommand("previous") }
+    func next() { runCommand("next-track") }
+    func previous() { runCommand("previous-track") }
+    func stop() { runCommand("stop") }
 
     private func runCommand(_ cmd: String) {
         let process = Process()
