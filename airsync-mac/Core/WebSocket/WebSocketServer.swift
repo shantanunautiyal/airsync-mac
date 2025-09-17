@@ -707,7 +707,7 @@ class WebSocketServer: ObservableObject {
             "albumArt": albumArtBase64 ?? "",
             "likeStatus": "none" // Hardcoded for now - will be replaced later
         ]
-        
+
         let statusDict: [String: Any] = [
             "battery": [
                 "level": batteryLevel,
@@ -716,12 +716,12 @@ class WebSocketServer: ObservableObject {
             "isPaired": isPaired,
             "music": musicDict
         ]
-        
+
         let messageDict: [String: Any] = [
             "type": "status",
             "data": statusDict
         ]
-        
+
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
             if let jsonString = String(data: jsonData, encoding: .utf8) {
