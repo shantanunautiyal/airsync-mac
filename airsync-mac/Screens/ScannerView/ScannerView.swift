@@ -15,6 +15,7 @@ struct ScannerView: View {
     @State private var qrImage: CGImage?
     @State private var copyStatus: String?
     @State private var hasValidIP: Bool = true
+    @State private var showConfirmReset = false
 
     private func statusInfo(for status: WebSocketStatus) -> (text: String, icon: String, color: Color) {
         switch status {
@@ -63,31 +64,46 @@ struct ScannerView: View {
                     .accessibilityLabel("QR Code")
                     .shadow(radius: 20)
                     .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 40)
-                            .fill(.clear)
-                            .blur(radius: 1)
-                    )
+                    .background(.black.opacity(0.6), in: .rect(cornerRadius: 30))
             } else {
                 ProgressView("Generating QR…")
                     .frame(width: 100, height: 100)
             }
 
             // --- Copy Key Button ---
-            if hasValidIP, let key = WebSocketServer.shared.getSymmetricKeyBase64(), !key.isEmpty {
-                GlassButtonView(
-                    label: "Copy Key",
-                    systemImage: "key",
-                    action: {
-                        copyToClipboard(key)
-                    }
-                )
+            if hasValidIP,
+               let key = WebSocketServer.shared.getSymmetricKeyBase64(),
+               !key.isEmpty {
+                HStack {
+                    GlassButtonView(
+                        label: "Copy Key",
+                        systemImage: "key",
+                        action: {
+                            copyToClipboard(key)
+                        }
+                    )
+
+                    GlassButtonView(
+                        label: "Re-generate key",
+                        systemImage: "repeat.badge.xmark",
+                        iconOnly: true,
+                        action: {
+                            showConfirmReset = true
+                        }
+                    )
+                }
                 .padding(.top, 8)
-                .contextMenu {
-                    Button("Reset key - Devices will need to reAuth") {
+
+                // Confirmation popup
+                .confirmationDialog(
+                    "Are you sure you want to reset the key? You will have to re-auth all the devices.",
+                    isPresented: $showConfirmReset
+                ) {
+                    Button("Reset key", role: .destructive) {
                         WebSocketServer.shared.resetSymmetricKey()
                         generateQRAsync()
                     }
+                    Button("Cancel", role: .cancel) { }
                 }
 
                 if let status = copyStatus {

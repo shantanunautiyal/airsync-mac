@@ -9,32 +9,33 @@ import Foundation
 import QRCode
 internal import SwiftImageReadWrite
 import CoreGraphics
+import SwiftUI
 
 class QRCodeGenerator {
     static func generateQRCode(for text: String, dimension: Int = 400) async -> CGImage? {
         do {
-            let builder = try QRCode.build
-                .text(text)
-                .quietZonePixelCount(2)
-                .eye.shape(QRCode.EyeShape.RoundedPointingIn())
-                .onPixels.shape(QRCode.PixelShape.Blob())
-                .foregroundColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1.0))
-                .backgroundColor(CGColor(srgbRed: 0.0, green: 0.0, blue: 0.0, alpha: 1.0))
-                .background.cornerRadius(6)
+            // Use high error correction when embedding logos
+            let doc = try QRCode.Document(
+                utf8String: text,
+                errorCorrection: .high
+            )
 
-            let imageData = try builder.generate.image(dimension: dimension, representation: .png())
+            // Shapes
+            doc.design.shape.eye = QRCode.EyeShape.RoundedPointingIn()
+            doc.design.shape.onPixels = QRCode.PixelShape.Blob()
+            doc.design.shape.pupil = QRCode.PupilShape.Seal()
 
-            guard let provider = CGDataProvider(data: imageData as CFData),
-                  let cgImage = CGImage(
-                    pngDataProviderSource: provider,
-                    decode: nil,
-                    shouldInterpolate: false,
-                    intent: .defaultIntent
-                  ) else {
-                print("Failed to convert PNG data to CGImage")
-                return nil
-            }
+            // Colors
+            doc.design.backgroundColor(.clear)
 
+            // Accent color for eye + pupil
+            let accentCG = NSColor.controlAccentColor.cgColor
+            doc.design.style.eye = QRCode.FillStyle.Solid(accentCG)
+            doc.design.style.pupil = QRCode.FillStyle.Solid(.white)
+            doc.design.style.onPixels = QRCode.FillStyle.Solid(.white)
+
+            // Export to CGImage
+            let cgImage = try doc.cgImage(CGSize(width: dimension, height: dimension))
             return cgImage
         } catch {
             print("QR generation failed: \(error)")
