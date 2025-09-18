@@ -137,18 +137,33 @@ class NowPlayingViewModel: ObservableObject {
         if mediaInfoChanged {
             print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
         } else {
-            print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging))")
+            // Handle N/A battery status for desktop Macs
+            if batteryInfo.level == -1 {
+                print("Sent device status update (desktop Mac - no battery)")
+            } else {
+                print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging))")
+            }
         }
     }
 
     private func getBatteryInfo() -> (level: Int, isCharging: Bool) {
-        // Get battery info using pmset command
+        // Check if this is a MacBook (Air or Pro) - only these have batteries
+        let deviceType = DeviceTypeUtil.deviceTypeDescription()
+        let isMacBook = deviceType.contains("MacBook")
+        
+        guard isMacBook else {
+            // For desktop Macs (iMac, Mac mini, Mac Pro, Mac Studio), return N/A status
+            print("Desktop Mac detected (\(deviceType)) - no battery present")
+            return (level: -1, isCharging: false) // -1 indicates N/A
+        }
+        
+        // Get battery info using pmset command for MacBooks
         if let batteryStatus = BatteryInfo.fetchStatus() {
             return (level: batteryStatus.percentage, isCharging: batteryStatus.isCharging)
         }
         
-        // Fallback to hardcoded values if battery info can't be retrieved
-        print("Failed to fetch battery status, using fallback values")
+        // Fallback to hardcoded values if battery info can't be retrieved on MacBook
+        print("Failed to fetch battery status on MacBook, using fallback values")
         return (level: 75, isCharging: false)
     }
 

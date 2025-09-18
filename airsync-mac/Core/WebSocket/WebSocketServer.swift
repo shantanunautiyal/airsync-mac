@@ -769,7 +769,7 @@ class WebSocketServer: ObservableObject {
 
         let statusDict: [String: Any] = [
             "battery": [
-                "level": batteryLevel,
+                "level": batteryLevel, // -1 for non-MacBooks, 0-100 for MacBooks
                 "isCharging": isCharging
             ],
             "isPaired": isPaired,
