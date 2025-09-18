@@ -6,7 +6,6 @@
 //
 import Foundation
 internal import Combine
-import IOKit.ps
 
 class NowPlayingViewModel: ObservableObject {
     @Published var title: String = "Unknown Title"
@@ -135,25 +134,13 @@ class NowPlayingViewModel: ObservableObject {
     }
 
     private func getBatteryInfo() -> (level: Int, isCharging: Bool) {
-        // Get battery info using IOKit
-        let powerSourcesInfo = IOPSCopyPowerSourcesInfo()?.takeRetainedValue()
-        let powerSources = IOPSCopyPowerSourcesList(powerSourcesInfo)?.takeRetainedValue() as? [CFTypeRef]
-
-        for powerSource in powerSources ?? [] {
-            if let psInfo = IOPSGetPowerSourceDescription(powerSourcesInfo, powerSource)?.takeUnretainedValue() as? [String: Any] {
-                if let currentCapacity = psInfo[kIOPSCurrentCapacityKey] as? Int,
-                   let maxCapacity = psInfo[kIOPSMaxCapacityKey] as? Int,
-                   let powerSourceState = psInfo[kIOPSPowerSourceStateKey] as? String {
-
-                    let batteryLevel = (currentCapacity * 100) / maxCapacity
-                    let isCharging = (powerSourceState == kIOPSACPowerValue)
-
-                    return (level: batteryLevel, isCharging: isCharging)
-                }
-            }
+        // Get battery info using pmset command
+        if let batteryStatus = BatteryInfo.fetchStatus() {
+            return (level: batteryStatus.percentage, isCharging: batteryStatus.isCharging)
         }
-
+        
         // Fallback to hardcoded values if battery info can't be retrieved
+        print("Failed to fetch battery status, using fallback values")
         return (level: 75, isCharging: false)
     }
 
