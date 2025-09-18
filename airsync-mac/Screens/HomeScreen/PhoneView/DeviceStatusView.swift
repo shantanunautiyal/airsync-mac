@@ -16,9 +16,11 @@ struct DeviceStatusView: View {
 
     var body: some View {
         HStack {
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 let batteryLevel = appState.status?.battery.level ?? 100
                 let batteryIsCharging = appState.status?.battery.isCharging ?? false
+
+
                 HStack{
                     Image(systemName: batteryIcon(for: batteryLevel, isCharging: batteryIsCharging))
                         .help("\(batteryLevel)%")
@@ -26,13 +28,17 @@ struct DeviceStatusView: View {
                     Text("\(batteryLevel)%")
                         .font(.caption2)
                 }
+                .padding(.leading, 4)
 
                 let volume = appState.status?.music.volume ?? 100
                 let isMuted = appState.status?.music.isMuted ?? false
-                Image(systemName: volumeIcon(for: volume, isMuted: isMuted))
-                    .help(isMuted ? "Muted" : "\(volume)%")
-                    .contentTransition(.symbolEffect)
-                    .onTapGesture {
+
+                GlassButtonView(
+                    label: "Music Player",
+                    systemImage: volumeIcon(for: volume, isMuted: isMuted),
+                    iconOnly: true,
+                    primary: false,
+                    action: {
                         if AppState.shared.isPlus && AppState.shared.licenseCheck {
                             if let currentVolume = appState.status?.music.volume {
                                 tempVolume = Double(currentVolume)
@@ -42,6 +48,9 @@ struct DeviceStatusView: View {
                             showingPlusPopover = true
                         }
                     }
+                )
+                .help(isMuted ? "Muted" : "\(volume)%")
+                .contentTransition(.symbolEffect)
                     .popover(isPresented: $showingVolumePopover, arrowEdge: .bottom) {
                         VStack {
                             HStack {
@@ -68,24 +77,28 @@ struct DeviceStatusView: View {
                     .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
                         PlusFeaturePopover(message: "Control volume with AirSync+")
                     }
+
+
+                GlassButtonView(
+                    label: "Music Player",
+                    systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
+                    iconOnly: true,
+                    primary: false,
+                    action: {
+                        withAnimation(.easeInOut(duration: 0.28)) {
+                            appState.isMusicCardHidden.toggle()
+                        }
+                    }
+                )
+                .help("Show player")
             }
-            .padding(10)
+            .padding(4)
             .applyGlassViewIfAvailable()
             .animation(
                 .easeInOut(duration: 0.25),
                 value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)"
             )
 
-            GlassButtonView(
-                label: "Music Player",
-                systemImage: appState.status?.music.isPlaying == true ? "play" : "music.note",
-                iconOnly: true,
-                primary: false,
-                action: {
-                    appState.isMusicCardHidden.toggle()
-                }
-            )
-            .help("Show player")
         }
     }
 

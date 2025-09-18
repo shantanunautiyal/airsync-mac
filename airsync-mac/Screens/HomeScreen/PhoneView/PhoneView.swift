@@ -199,6 +199,10 @@ struct ScreenView: View {
             .easeInOut(duration: 0.35),
             value: AppState.shared.adbConnected
         )
+        .animation(
+            .easeInOut(duration: 0.28),
+            value: appState.isMusicCardHidden
+        )
     }
 }
 
