@@ -26,7 +26,8 @@ extension UserDefaults {
         static let continueApp = "continueApp"
         static let directKeyInput = "directKeyInput"
         static let sendNowPlayingStatus = "sendNowPlayingStatus"
-    static let isMusicCardHidden = "isMusicCardHidden"
+        static let isMusicCardHidden = "isMusicCardHidden"
+        static let lastOnboarding = "lastOnboarding"
 
         static let notificationStacks = "notificationStacks"
     }
@@ -128,6 +129,32 @@ extension UserDefaults {
     var isMusicCardHidden: Bool {
         get { bool(forKey: Keys.isMusicCardHidden) }
         set { set(newValue, forKey: Keys.isMusicCardHidden) }
+    }
+    
+    // MARK: - String-based Onboarding Tracking
+    
+    var lastOnboarding: String? {
+        get { string(forKey: Keys.lastOnboarding) }
+        set { set(newValue, forKey: Keys.lastOnboarding) }
+    }
+    
+    var needsOnboarding: Bool {
+        let currentForceUpdateKey = Bundle.main.object(forInfoDictionaryKey: "ForceUpdateKey") as? String ?? "001"
+        let lastCompletedVersion = lastOnboarding
+        
+        // Show onboarding if:
+        // 1. No lastOnboarding value exists (first time user)
+        // 2. lastOnboarding doesn't match current ForceUpdateKey
+        return lastCompletedVersion == nil || lastCompletedVersion != currentForceUpdateKey
+    }
+    
+    func markOnboardingCompleted() {
+        let currentForceUpdateKey = Bundle.main.object(forInfoDictionaryKey: "ForceUpdateKey") as? String ?? "001"
+        lastOnboarding = currentForceUpdateKey
+    }
+    
+    func resetOnboarding() {
+        lastOnboarding = "000"
     }
 }
 

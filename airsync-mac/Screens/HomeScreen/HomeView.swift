@@ -14,6 +14,13 @@ struct HomeView: View {
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
     @State var showOnboarding = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    
+    private var needsOnboarding: Bool {
+        // Show onboarding if either:
+        // 1. User has never paired a device (first time user)
+        // 2. User's lastOnboarding doesn't match current ForceUpdateKey
+        return !hasPairedDeviceOnce || UserDefaults.standard.needsOnboarding
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -34,7 +41,7 @@ struct HomeView: View {
         )
         // Show onboarding sheet when needed
         .onAppear {
-            if hasPairedDeviceOnce == false {
+            if needsOnboarding {
                 showOnboarding = true
                 appState.isOnboardingActive = true
             }

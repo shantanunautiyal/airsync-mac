@@ -11,6 +11,10 @@ extension Bundle {
     var buildNumber: String {
         return infoDictionary?["CFBundleVersion"] as! String
     }
+
+    var appVersion: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }
 }
 
 struct ContentView: View {
