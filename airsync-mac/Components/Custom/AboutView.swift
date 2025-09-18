@@ -22,6 +22,8 @@ struct AboutView: View {
                             .font(.title2)
                             .bold()
 
+                        Text("v\(Bundle.main.appVersion)")
+
                         // Profile image
                         Image("avatar")
                             .resizable()
@@ -109,6 +111,7 @@ struct AboutView: View {
                         action: {
                             if UserDefaults.standard.hasPairedDeviceOnce == true {
                                 UserDefaults.standard.hasPairedDeviceOnce = false
+                                UserDefaults.standard.resetOnboarding()
                             }
                         }
                     )

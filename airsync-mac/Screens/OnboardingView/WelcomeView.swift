@@ -22,10 +22,10 @@ struct WelcomeView: View {
             }
 
             Text("AirSync")
-                .font(.system(size: 48, weight: .bold))
+                .font(.system(size: 48, weight: .bold, design: .rounded))
                 .tracking(0.5)
 
-            Text("Sync notifications, clipboard, and more between your Mac and Android. First, install AirSync on your Android device.")
+            Text("The forbidden continuity for you mac and Android. (っ◕‿◕)っ")
                 .font(.title3)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -52,7 +52,10 @@ struct WelcomeView: View {
                     action: onNext
                 )
                 .transition(.identity)
+
             }
+
+            Text("v\(Bundle.main.appVersion)")
         }
     }
 }

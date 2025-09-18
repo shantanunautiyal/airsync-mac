@@ -4,6 +4,8 @@
 <dict>
 	<key>AndroidVersion</key>
 	<string>2.0.32</string>
+	<key>ForceUpdateKey</key>
+	<string>001</string>
 	<key>SUEnableDownloaderService</key>
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
