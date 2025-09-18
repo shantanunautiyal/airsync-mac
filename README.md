@@ -1,24 +1,23 @@
-# AirSync 2.0 macOS app written in Swift
+ # AirSync macOS app source code
 
-Min : macOS 14.5
-
-[![AirSync demo](https://img.youtube.com/vi/HDv0Hu9z294?si=dgycryP1T8QvPJYa/0.jpg)](https://www.youtube.com/watch?v=HDv0Hu9z294?si=dgycryP1T8QvPJYa)
-
-### During beta testing, You can use the code `i-am-a-tester` to try out and test AirSync+ features. Also these + features are subject to change and currently they are limited because to test if the workflow works.
-
-## [Help translating AirSync to your language on crowdin!](https://crwd.in/airsync/612ea64319db322fa1ed070574109c242534446)
+> During beta testing, You can use the code `i-am-a-tester` to try out and test AirSync+ features. Also these + features are subject to change and currently they are limited because to test if the workflow works.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42" width="30%" />
+  <img src="https://github.com/user-attachments/assets/1b59fa22-780b-455d-87b1-6bb028c69d37" />
+<!--   <img src="https://github.com/user-attachments/assets/7c81bd2a-3799-44f2-b63a-350344f68e42" width="30%" />
   <img src="https://github.com/user-attachments/assets/58996c84-083f-4464-b0a5-bce069935898" width="30%" />
-  <img src="https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439" width="30%" />
+  <img src="https://github.com/user-attachments/assets/3f9d3113-1e16-4071-b1fc-f8f33a24c439" width="30%" /> -->
 </p>
+
+[![AirSync demo](https://img.youtube.com/vi/HDv0Hu9z294?si=dgycryP1T8QvPJYa/0.jpg)](https://www.youtube.com/watch?v=HDv0Hu9z294?si=dgycryP1T8QvPJYa) | [Read Documentation and How-To](https://airsync.notion.site/) | [Help translating AirSync to your language on crowdin!](https://crwd.in/airsync/612ea64319db322fa1ed070574109c242534446)
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/8abdd977-6f8b-4037-b277-9457e65a6255" width="80%" />
+<!--   <img src="https://github.com/user-attachments/assets/8abdd977-6f8b-4037-b277-9457e65a6255" width="80%" /> -->
 </p>
 
-## [Read Documentation and How-To](https://airsync.notion.site/)
+## Requirements
+- Min : macOS 14.5
+- Opt: scrcpy, adb & media-control brew installs
 
 ## Contributors <3
 
@@ -38,7 +37,7 @@ Min : macOS 14.5
 
 - To you, seriously… <3
 
-### Libraries used
+## Libraries used
 
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
 - [httpswift/swifter](https://github.com/httpswift/swifter)
