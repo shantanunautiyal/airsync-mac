@@ -640,15 +640,18 @@ class WebSocketServer: ObservableObject {
     }
 
     private func sendMacInfoResponse() {
-        // Get Mac device information
+        // Gather Mac info with robust fallbacks
         let macName = AppState.shared.myDevice?.name ?? (Host.current().localizedName ?? "My Mac")
-        let categoryType = DeviceTypeUtil.deviceTypeDescription()
-        let exactDeviceName = DeviceTypeUtil.deviceFullDescription()
+        let categoryTypeRaw = DeviceTypeUtil.deviceTypeDescription()
+        let exactDeviceNameRaw = DeviceTypeUtil.deviceFullDescription()
+        let categoryType = categoryTypeRaw.isEmpty ? "Mac" : categoryTypeRaw
+        let exactDeviceName = exactDeviceNameRaw.isEmpty ? categoryType : exactDeviceNameRaw
         let isPlusSubscription = AppState.shared.isPlus
-        
-        // Get list of saved app package names
+
+        // Saved app packages
         let savedAppPackages = Array(AppState.shared.androidApps.keys)
-        
+
+        // Base macInfo model (for forward compatibility / decoding symmetry)
         let macInfo = MacInfo(
             name: macName,
             categoryType: categoryType,
@@ -656,19 +659,24 @@ class WebSocketServer: ObservableObject {
             isPlusSubscription: isPlusSubscription,
             savedAppPackages: savedAppPackages
         )
-        
+
         do {
             let jsonData = try JSONEncoder().encode(macInfo)
-            if let jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+            if var jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                // Enrich with legacy / explicit keys Android may expect
+                jsonDict["model"] = exactDeviceName   // Full marketing name
+                jsonDict["type"] = categoryType       // Broad category
+                jsonDict["isPlus"] = isPlusSubscription // Alias for existing isPlusSubscription
+
                 let messageDict: [String: Any] = [
                     "type": "macInfo",
                     "data": jsonDict
                 ]
-                
+
                 let messageJsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
                 if let messageJsonString = String(data: messageJsonData, encoding: .utf8) {
                     sendToFirstAvailable(message: messageJsonString)
-                    print("Sent Mac info response to Android device")
+                    print("Sent Mac info response to Android device: model=\(exactDeviceName), type=\(categoryType)")
                 }
             }
         } catch {
