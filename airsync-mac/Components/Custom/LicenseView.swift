@@ -284,6 +284,10 @@ This app bundles adb from the Android SDK Platform Tools (Apache License 2.0).
 This app includes scrcpy (Apache License 2.0) by Genymobile.
 Source: https://github.com/Genymobile/scrcpy
 """)
+            ExpandableLicenseSection(title: "External: media-control", content: """
+This app communicates with the media-control cli the use install via Homebrew. Huge thanks tot he amazing project giving us the ability to create awesome features <3
+Source: https://github.com/ungive/media-control
+""")
         }
     }
 }
