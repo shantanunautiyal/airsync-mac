@@ -42,7 +42,7 @@ class NowPlayingViewModel: ObservableObject {
         // Don't start if already running
         guard timer == nil else { return }
 
-        print("Starting media playback monitoring - device connected")
+        print("Starting device status monitoring - device connected")
         fetch() // initial fetch
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             self?.fetch()
@@ -72,31 +72,64 @@ class NowPlayingViewModel: ObservableObject {
         // Only fetch if there's a connected device
         guard AppState.shared.device != nil else { return }
 
-        NowPlayingCLI.shared.fetchNowPlaying { [weak self] info in
-            guard let info = info else {
-                print("No now playing info")
-                return
-            }
-            // MUST update @Published properties on main thread
-            DispatchQueue.main.async {
-                print("Now Playing fetched:", info) // debug
-                self?.title = info.title ?? "Unknown Title"
-                self?.artist = info.artist ?? "Unknown Artist"
-                self?.album = info.album ?? "Unknown Album"
-                self?.elapsed = info.elapsedTime ?? 0
-                self?.duration = info.duration ?? 0
-                self?.isPlaying = info.isPlaying ?? false
-
-                // Convert artwork to base64 if available
-                if let artworkData = info.artworkData {
-                    self?.artworkBase64 = artworkData.base64EncodedString()
-                } else {
-                    self?.artworkBase64 = ""
+        // Check if now playing status is enabled
+        if AppState.shared.sendNowPlayingStatus {
+            // Fetch now playing info and send device status with music info
+            NowPlayingCLI.shared.fetchNowPlaying { [weak self] info in
+                guard let info = info else {
+                    print("No now playing info")
+                    // Still send device status without music info
+                    self?.sendDeviceStatusWithoutMusic()
+                    return
                 }
+                // MUST update @Published properties on main thread
+                DispatchQueue.main.async {
+                    print("Now Playing fetched:", info) // debug
+                    self?.title = info.title ?? "Unknown Title"
+                    self?.artist = info.artist ?? "Unknown Artist"
+                    self?.album = info.album ?? "Unknown Album"
+                    self?.elapsed = info.elapsedTime ?? 0
+                    self?.duration = info.duration ?? 0
+                    self?.isPlaying = info.isPlaying ?? false
 
-                // Send to Android if connected and info has changed
-                self?.sendDeviceStatusIfNeeded(with: info)
+                    // Convert artwork to base64 if available
+                    if let artworkData = info.artworkData {
+                        self?.artworkBase64 = artworkData.base64EncodedString()
+                    } else {
+                        self?.artworkBase64 = ""
+                    }
+
+                    // Send to Android if connected and info has changed
+                    self?.sendDeviceStatusIfNeeded(with: info)
+                }
             }
+        } else {
+            // Now playing disabled - just send device status without music info
+            sendDeviceStatusWithoutMusic()
+        }
+    }
+    
+    private func sendDeviceStatusWithoutMusic() {
+        // Only send if there's a connected device
+        guard AppState.shared.device != nil else { return }
+
+        // Get battery info
+        let batteryInfo = getBatteryInfo()
+
+        // Send device status without music info
+        WebSocketServer.shared.sendDeviceStatus(
+            batteryLevel: batteryInfo.level,
+            isCharging: batteryInfo.isCharging,
+            isPaired: true, // Always true when device is connected
+            musicInfo: nil, // No music info when disabled
+            albumArtBase64: nil
+        )
+
+        // Handle N/A battery status for desktop Macs
+        if batteryInfo.level == -1 {
+            print("Sent device status update (desktop Mac - no battery, no music)")
+        } else {
+            print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging), no music)")
         }
     }
 
@@ -104,6 +137,9 @@ class NowPlayingViewModel: ObservableObject {
         // Only send if there's a connected device
         guard AppState.shared.device != nil else { return }
 
+        // Check if now playing is enabled - if not, send status without music info
+        let shouldIncludeMusicInfo = AppState.shared.sendNowPlayingStatus
+        
         // Check if the media info has actually changed for logging purposes
         let mediaInfoChanged: Bool
         if let lastInfo = lastSentInfo {
@@ -119,22 +155,25 @@ class NowPlayingViewModel: ObservableObject {
         // Get battery info
         let batteryInfo = getBatteryInfo()
 
-        // Convert artwork to base64 if available
-        let albumArtBase64 = info.artworkData?.base64EncodedString()
+        // Convert artwork to base64 if available and music info is enabled
+        let albumArtBase64 = shouldIncludeMusicInfo ? info.artworkData?.base64EncodedString() : nil
 
         // Always send device status to Android (includes battery info which can change independently)
+        // But conditionally include music info based on user setting
         WebSocketServer.shared.sendDeviceStatus(
             batteryLevel: batteryInfo.level,
             isCharging: batteryInfo.isCharging,
             isPaired: true, // Always true when device is connected
-            musicInfo: info,
+            musicInfo: shouldIncludeMusicInfo ? info : nil,
             albumArtBase64: albumArtBase64
         )
 
-        // Update last sent info
-        lastSentInfo = info
+        // Update last sent info only if we're tracking music
+        if shouldIncludeMusicInfo {
+            lastSentInfo = info
+        }
         
-        if mediaInfoChanged {
+        if shouldIncludeMusicInfo && mediaInfoChanged {
             print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
         } else {
             // Handle N/A battery status for desktop Macs

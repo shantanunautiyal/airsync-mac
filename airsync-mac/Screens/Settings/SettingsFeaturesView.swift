@@ -320,6 +320,13 @@ struct SettingsFeaturesView: View {
                     .toggleStyle(.switch)
             }
 
+            HStack{
+                Label("Send now playing status", systemImage: "play.circle")
+                Spacer()
+                Toggle("", isOn: $appState.sendNowPlayingStatus)
+                    .toggleStyle(.switch)
+            }
+
         }
         .padding()
         .onAppear{

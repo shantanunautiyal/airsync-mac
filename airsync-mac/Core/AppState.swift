@@ -53,6 +53,11 @@ class AppState: ObservableObject {
             .bool(forKey: "hideDockIcon")
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
+        
+        // Default to true for backward compatibility - existing behavior should continue
+        let savedNowPlayingStatus = UserDefaults.standard.object(forKey: "sendNowPlayingStatus")
+        self.sendNowPlayingStatus = savedNowPlayingStatus == nil ? true : UserDefaults.standard.bool(forKey: "sendNowPlayingStatus")
+        
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
@@ -189,6 +194,12 @@ class AppState: ObservableObject {
     @Published var dismissNotif: Bool {
         didSet {
             UserDefaults.standard.set(dismissNotif, forKey: "dismissNotif")
+        }
+    }
+
+    @Published var sendNowPlayingStatus: Bool {
+        didSet {
+            UserDefaults.standard.set(sendNowPlayingStatus, forKey: "sendNowPlayingStatus")
         }
     }
 

@@ -25,6 +25,7 @@ extension UserDefaults {
         static let manualPositionCoords = "manualPositionCoords"
         static let continueApp = "continueApp"
         static let directKeyInput = "directKeyInput"
+        static let sendNowPlayingStatus = "sendNowPlayingStatus"
 
         static let notificationStacks = "notificationStacks"
     }
@@ -116,6 +117,11 @@ extension UserDefaults {
     var directKeyInput: Bool {
         get { bool(forKey: Keys.directKeyInput)}
         set { set(newValue, forKey: Keys.directKeyInput)}
+    }
+    
+    var sendNowPlayingStatus: Bool {
+        get { bool(forKey: Keys.sendNowPlayingStatus)}
+        set { set(newValue, forKey: Keys.sendNowPlayingStatus)}
     }
 }
 
