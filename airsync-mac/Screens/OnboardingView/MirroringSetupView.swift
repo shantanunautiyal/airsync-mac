@@ -13,23 +13,31 @@ struct MirroringSetupView: View {
 
     @State private var adbAvailable = false
     @State private var scrcpyAvailable = false
+    @State private var mediaControlAvailable = false
     @State private var checking = true
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Optional Android mirroring setup")
+            Text("Optional Setup - Android Mirror and Media Playback")
                 .font(.title)
                 .multilineTextAlignment(.center)
                 .padding()
 
-            Text("AirSync can mirror your Android screen to your Mac using ADB and scrcpy. This allows you to control your Android device from your Mac. But mirroring is an optional AirSync+ feature which you may or may not need. ADB and scrcpy are required for mirroring.")
+            Text("AirSync can mirror your Android screen to your Mac using ADB and scrcpy. This allows you to control your Android device from your Mac. But mirroring is an optional AirSync+ feature which you may or may not need. ADB and scrcpy are required for mirroring. For rich media features (showing the current song and controlling playback), we recommend installing the optional media-control CLI as well.")
                 .font(.body)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: 500)
+
+
+            Text("media-control is optional, but enables Now Playing sync to Android and media keys from Mac. Recommended.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: 500)
 
             if checking {
-                ProgressView("Checking for ADB and scrcpy...")
+                ProgressView("Checking for ADB, scrcpy, and media-control...")
                     .frame(width: 200, height: 50)
             } else {
                 VStack(spacing: 16) {
@@ -45,8 +53,16 @@ struct MirroringSetupView: View {
                         Text("scrcpy \(scrcpyAvailable ? "found" : "not found")")
                     }
 
-                    if !adbAvailable || !scrcpyAvailable {
-                        Text("Install with Homebrew running the following commands terminal:")
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: mediaControlAvailable ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(mediaControlAvailable ? .green : .red)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("media-control \(mediaControlAvailable ? "found" : "not found")")
+                        }
+                    }
+
+                    if !adbAvailable || !scrcpyAvailable || !mediaControlAvailable {
+                        Text("Install with Homebrew by running the following commands in Terminal:")
                             .font(.body)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -59,6 +75,9 @@ struct MirroringSetupView: View {
                             }
                             if !scrcpyAvailable {
                                 commandRow("brew install scrcpy")
+                            }
+                            if !mediaControlAvailable {
+                                commandRow("brew install media-control")
                             }
                         }
                         .padding()
@@ -80,7 +99,7 @@ struct MirroringSetupView: View {
                         )
                         .transition(.identity)
                     } else {
-                        Text("Great! Both ADB and scrcpy are available.")
+                        Text("Great! ADB, scrcpy, and media-control are available.")
                             .font(.callout)
                             .foregroundColor(.green)
                     }
@@ -116,12 +135,14 @@ struct MirroringSetupView: View {
         DispatchQueue.global(qos: .background).async {
             let adbFound = ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil
             let scrcpyFound = ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil
+            let mediaFound = ADBConnector.findExecutable(named: "media-control", fallbackPaths: ["/opt/homebrew/bin/media-control", "/usr/local/bin/media-control"]) != nil
 
             // let scrcpyFound = false
 
             DispatchQueue.main.async {
                 self.adbAvailable = adbFound
                 self.scrcpyAvailable = scrcpyFound
+                self.mediaControlAvailable = mediaFound
                 self.checking = false
             }
         }

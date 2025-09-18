@@ -286,6 +286,9 @@ class WebSocketServer: ObservableObject {
 				if UserDefaults.standard.hasPairedDeviceOnce == false {
 					UserDefaults.standard.hasPairedDeviceOnce = true
 				}
+				
+				// Send Mac info response to Android
+				sendMacInfoResponse()
             }
 
 
@@ -579,6 +582,11 @@ class WebSocketServer: ObservableObject {
             // This case handles responses from Android to Mac media control responses
             // Currently not needed as Mac sends responses to Android, not vice versa
             print("Received macMediaControlResponse (not typically expected)")
+
+        case .macInfo:
+            // This case handles macInfo messages from Android to Mac
+            // Currently not expected as Mac sends macInfo to Android, not vice versa
+            print("Received macInfo message from Android (not typically expected)")
         }
 
 
@@ -629,6 +637,51 @@ class WebSocketServer: ObservableObject {
         }
         """
         sendToFirstAvailable(message: message)
+    }
+
+    private func sendMacInfoResponse() {
+        // Gather Mac info with robust fallbacks
+        let macName = AppState.shared.myDevice?.name ?? (Host.current().localizedName ?? "My Mac")
+        let categoryTypeRaw = DeviceTypeUtil.deviceTypeDescription()
+        let exactDeviceNameRaw = DeviceTypeUtil.deviceFullDescription()
+        let categoryType = categoryTypeRaw.isEmpty ? "Mac" : categoryTypeRaw
+        let exactDeviceName = exactDeviceNameRaw.isEmpty ? categoryType : exactDeviceNameRaw
+        let isPlusSubscription = AppState.shared.isPlus
+
+        // Saved app packages
+        let savedAppPackages = Array(AppState.shared.androidApps.keys)
+
+        // Base macInfo model (for forward compatibility / decoding symmetry)
+        let macInfo = MacInfo(
+            name: macName,
+            categoryType: categoryType,
+            exactDeviceName: exactDeviceName,
+            isPlusSubscription: isPlusSubscription,
+            savedAppPackages: savedAppPackages
+        )
+
+        do {
+            let jsonData = try JSONEncoder().encode(macInfo)
+            if var jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                // Enrich with legacy / explicit keys Android may expect
+                jsonDict["model"] = exactDeviceName   // Full marketing name
+                jsonDict["type"] = categoryType       // Broad category
+                jsonDict["isPlus"] = isPlusSubscription // Alias for existing isPlusSubscription
+
+                let messageDict: [String: Any] = [
+                    "type": "macInfo",
+                    "data": jsonDict
+                ]
+
+                let messageJsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
+                if let messageJsonString = String(data: messageJsonData, encoding: .utf8) {
+                    sendToFirstAvailable(message: messageJsonString)
+                    print("Sent Mac info response to Android device: model=\(exactDeviceName), type=\(categoryType)")
+                }
+            }
+        } catch {
+            print("Error creating Mac info response: \(error)")
+        }
     }
 
     // MARK: - Sending Helpers
@@ -769,7 +822,7 @@ class WebSocketServer: ObservableObject {
 
         let statusDict: [String: Any] = [
             "battery": [
-                "level": batteryLevel,
+                "level": batteryLevel, // -1 for non-MacBooks, 0-100 for MacBooks
                 "isCharging": isCharging
             ],
             "isPaired": isPaired,

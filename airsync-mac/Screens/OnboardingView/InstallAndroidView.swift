@@ -20,20 +20,6 @@ struct InstallAndroidView: View {
                 .font(.title)
                 .multilineTextAlignment(.center)
                 .padding()
-            Text("The app is currently pending approval on Google Play in Early Access.")
-                .font(.callout)
-                .multilineTextAlignment(.center)
-
-            GlassButtonView(
-                label: "First, Join the Google group",
-                size: .extraLarge,
-                action: {
-                    if let url = URL(string: "https://groups.google.com/forum/#!forum/airsync-testing/join") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            )
-            .transition(.identity)
 
             if let qrImage = qrImage {
                 Image(decorative: qrImage, scale: 1.0)
@@ -48,13 +34,13 @@ struct InstallAndroidView: View {
                     .frame(width: 100, height: 100)
             }
 
-            Text("Scan the QR code to download the app from Google Play Early Access or use the below link.")
+            Text("Scan the QR code to download the app from Google Play or use the below link.")
                 .multilineTextAlignment(.center)
                 .padding()
 
 
             GlassButtonView(
-                label: "Enroll and install from web",
+                label: "Install from web",
                 size: .extraLarge,
                 action: {
                     if let url = URL(string: "https://play.google.com/apps/testing/com.sameerasw.airsync") {

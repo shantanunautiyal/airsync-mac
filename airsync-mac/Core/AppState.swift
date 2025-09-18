@@ -53,6 +53,11 @@ class AppState: ObservableObject {
             .bool(forKey: "hideDockIcon")
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
+        
+        // Default to true for backward compatibility - existing behavior should continue
+        let savedNowPlayingStatus = UserDefaults.standard.object(forKey: "sendNowPlayingStatus")
+        self.sendNowPlayingStatus = savedNowPlayingStatus == nil ? true : UserDefaults.standard.bool(forKey: "sendNowPlayingStatus")
+        
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
@@ -66,6 +71,9 @@ class AppState: ObservableObject {
 
         self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
         if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
+
+    // Initialize persisted UI toggles
+    self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
 
         self.myDevice = Device(
             name: name,
@@ -189,6 +197,19 @@ class AppState: ObservableObject {
     @Published var dismissNotif: Bool {
         didSet {
             UserDefaults.standard.set(dismissNotif, forKey: "dismissNotif")
+        }
+    }
+
+    @Published var sendNowPlayingStatus: Bool {
+        didSet {
+            UserDefaults.standard.set(sendNowPlayingStatus, forKey: "sendNowPlayingStatus")
+        }
+    }
+
+    // Whether the media player card is hidden on the PhoneView
+    @Published var isMusicCardHidden: Bool = false {
+        didSet {
+            UserDefaults.standard.set(isMusicCardHidden, forKey: "isMusicCardHidden")
         }
     }
 

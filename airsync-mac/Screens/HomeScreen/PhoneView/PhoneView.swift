@@ -120,7 +120,8 @@ struct ScreenView: View {
 
             if let music = appState.status?.music,
                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-               !title.isEmpty {
+               !title.isEmpty,
+               !appState.isMusicCardHidden {
 
                 MediaPlayerView(music: music)
                     .transition(.opacity.combined(with: .scale))
@@ -197,6 +198,10 @@ struct ScreenView: View {
         .animation(
             .easeInOut(duration: 0.35),
             value: AppState.shared.adbConnected
+        )
+        .animation(
+            .easeInOut(duration: 0.28),
+            value: appState.isMusicCardHidden
         )
     }
 }

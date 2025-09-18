@@ -27,6 +27,7 @@ struct PlusFeaturesView: View {
                     featureRow(icon: "macbook.and.iphone", title: "Android Mirroring", description: "Mirror your Android screen and apps to your Mac with full control, wirelessly")
                     featureRow(icon: "music.note", title: "Media Controls", description: "Control music playback and volume directly from your Mac")
                     featureRow(icon: "desktopcomputer", title: "Wireless Desktop Mode", description: "Use the phone in a familiar way, with full desktop controls")
+                    featureRow(icon: "globe", title: "Continue Browsing", description: "Simply copy or share a link to prompt it open on the other device")
                     featureRow(icon: "bell.badge", title: "Advanced Notifications", description: "Enhanced notification management and customization", soon: true)
                     featureRow(icon: "battery.25percent", title: "Low Battery Alerts", description: "Get notified when your Android device needs charging", soon: true)
                     featureRow(icon: "widget.small.badge.plus", title: "Widgets", description: "Synced widgets with device status and more", soon: true)
