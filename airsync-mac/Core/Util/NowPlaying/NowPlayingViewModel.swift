@@ -101,25 +101,28 @@ class NowPlayingViewModel: ObservableObject {
     }
 
     private func sendDeviceStatusIfNeeded(with info: NowPlayingInfo) {
-        // Only send if there's a connected device and the info has changed
+        // Only send if there's a connected device
         guard AppState.shared.device != nil else { return }
 
-        // Check if the media info has actually changed to avoid spam
-        if let lastInfo = lastSentInfo,
-           lastInfo.title == info.title &&
-           lastInfo.artist == info.artist &&
-           lastInfo.isPlaying == info.isPlaying &&
-           lastInfo.elapsedTime == info.elapsedTime {
-            return
+        // Check if the media info has actually changed for logging purposes
+        let mediaInfoChanged: Bool
+        if let lastInfo = lastSentInfo {
+            let titleChanged = lastInfo.title != info.title
+            let artistChanged = lastInfo.artist != info.artist
+            let playingChanged = lastInfo.isPlaying != info.isPlaying
+            let elapsedChanged = lastInfo.elapsedTime != info.elapsedTime
+            mediaInfoChanged = titleChanged || artistChanged || playingChanged || elapsedChanged
+        } else {
+            mediaInfoChanged = true
         }
 
-        // Get battery info (hardcoded for now)
+        // Get battery info
         let batteryInfo = getBatteryInfo()
 
         // Convert artwork to base64 if available
         let albumArtBase64 = info.artworkData?.base64EncodedString()
 
-        // Send device status to Android
+        // Always send device status to Android (includes battery info which can change independently)
         WebSocketServer.shared.sendDeviceStatus(
             batteryLevel: batteryInfo.level,
             isCharging: batteryInfo.isCharging,
@@ -130,7 +133,12 @@ class NowPlayingViewModel: ObservableObject {
 
         // Update last sent info
         lastSentInfo = info
-        print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
+        
+        if mediaInfoChanged {
+            print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
+        } else {
+            print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging))")
+        }
     }
 
     private func getBatteryInfo() -> (level: Int, isCharging: Bool) {
