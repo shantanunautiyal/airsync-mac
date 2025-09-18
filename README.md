@@ -43,3 +43,4 @@ Min : macOS 14.5
 - [dagronf/QRCode](https://github.com/dagronf/QRCode)
 - [httpswift/swifter](https://github.com/httpswift/swifter)
 - [sparkle-project/Sparkle](https://github.com/sparkle-project/Sparkle)
+- [ungive/media-control](https://github.com/ungive/media-control)
