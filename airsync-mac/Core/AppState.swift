@@ -72,6 +72,9 @@ class AppState: ObservableObject {
         self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
         if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
 
+    // Initialize persisted UI toggles
+    self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
+
         self.myDevice = Device(
             name: name,
             ipAddress: WebSocketServer.shared
@@ -200,6 +203,13 @@ class AppState: ObservableObject {
     @Published var sendNowPlayingStatus: Bool {
         didSet {
             UserDefaults.standard.set(sendNowPlayingStatus, forKey: "sendNowPlayingStatus")
+        }
+    }
+
+    // Whether the media player card is hidden on the PhoneView
+    @Published var isMusicCardHidden: Bool = false {
+        didSet {
+            UserDefaults.standard.set(isMusicCardHidden, forKey: "isMusicCardHidden")
         }
     }
 

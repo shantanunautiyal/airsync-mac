@@ -120,7 +120,8 @@ struct ScreenView: View {
 
             if let music = appState.status?.music,
                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-               !title.isEmpty {
+               !title.isEmpty,
+               !appState.isMusicCardHidden {
 
                 MediaPlayerView(music: music)
                     .transition(.opacity.combined(with: .scale))

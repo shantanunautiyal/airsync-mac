@@ -15,7 +15,7 @@ struct DeviceStatusView: View {
     @State private var showingPlusPopover = false
 
     var body: some View {
-        ZStack {
+        HStack {
             HStack(spacing: 12) {
                 let batteryLevel = appState.status?.battery.level ?? 100
                 let batteryIsCharging = appState.status?.battery.isCharging ?? false
@@ -75,6 +75,17 @@ struct DeviceStatusView: View {
                 .easeInOut(duration: 0.25),
                 value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)"
             )
+
+            GlassButtonView(
+                label: "Music Player",
+                systemImage: appState.status?.music.isPlaying == true ? "play" : "music.note",
+                iconOnly: true,
+                primary: false,
+                action: {
+                    appState.isMusicCardHidden.toggle()
+                }
+            )
+            .help("Show player")
         }
     }
 
