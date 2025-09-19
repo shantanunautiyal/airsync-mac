@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B94F8ACA2E7D407E00CD04AC /* AppIcon-p9-10.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC42E7D407E00CD04AC /* AppIcon-p9-10.icon */; };
+		B94F8ACB2E7D407E00CD04AC /* AppIcon-s2x.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC62E7D407E00CD04AC /* AppIcon-s2x.icon */; };
+		B94F8ACC2E7D407E00CD04AC /* AppIcon-sfold.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC92E7D407E00CD04AC /* AppIcon-sfold.icon */; };
+		B94F8ACD2E7D407E00CD04AC /* AppIcon-sflip.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC82E7D407E00CD04AC /* AppIcon-sflip.icon */; };
+		B94F8ACE2E7D407E00CD04AC /* AppIcon-p6.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC22E7D407E00CD04AC /* AppIcon-p6.icon */; };
+		B94F8ACF2E7D407E00CD04AC /* AppIcon-p7-8.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC32E7D407E00CD04AC /* AppIcon-p7-8.icon */; };
+		B94F8AD02E7D407E00CD04AC /* AppIcon-s21.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC72E7D407E00CD04AC /* AppIcon-s21.icon */; };
+		B94F8AD12E7D407E00CD04AC /* AppIcon-pfold.icon in Resources */ = {isa = PBXBuildFile; fileRef = B94F8AC52E7D407E00CD04AC /* AppIcon-pfold.icon */; };
 		B995A3332E4D2B3F00FA7A41 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B995A3322E4D2B3F00FA7A41 /* AppIcon.icon */; };
 		B9AEBC0A2E6235D3006BA027 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B9AEBC092E6235D3006BA027 /* Sparkle */; };
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
@@ -14,6 +22,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B94F8AC22E7D407E00CD04AC /* AppIcon-p6.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-p6.icon"; sourceTree = "<group>"; };
+		B94F8AC32E7D407E00CD04AC /* AppIcon-p7-8.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-p7-8.icon"; sourceTree = "<group>"; };
+		B94F8AC42E7D407E00CD04AC /* AppIcon-p9-10.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-p9-10.icon"; sourceTree = "<group>"; };
+		B94F8AC52E7D407E00CD04AC /* AppIcon-pfold.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-pfold.icon"; sourceTree = "<group>"; };
+		B94F8AC62E7D407E00CD04AC /* AppIcon-s2x.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-s2x.icon"; sourceTree = "<group>"; };
+		B94F8AC72E7D407E00CD04AC /* AppIcon-s21.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-s21.icon"; sourceTree = "<group>"; };
+		B94F8AC82E7D407E00CD04AC /* AppIcon-sflip.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-sflip.icon"; sourceTree = "<group>"; };
+		B94F8AC92E7D407E00CD04AC /* AppIcon-sfold.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-sfold.icon"; sourceTree = "<group>"; };
 		B9673B572E35A2A1006D284A /* AirSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B995A3322E4D2B3F00FA7A41 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -57,6 +73,14 @@
 			isa = PBXGroup;
 			children = (
 				B995A3322E4D2B3F00FA7A41 /* AppIcon.icon */,
+				B94F8AC22E7D407E00CD04AC /* AppIcon-p6.icon */,
+				B94F8AC32E7D407E00CD04AC /* AppIcon-p7-8.icon */,
+				B94F8AC42E7D407E00CD04AC /* AppIcon-p9-10.icon */,
+				B94F8AC52E7D407E00CD04AC /* AppIcon-pfold.icon */,
+				B94F8AC62E7D407E00CD04AC /* AppIcon-s2x.icon */,
+				B94F8AC72E7D407E00CD04AC /* AppIcon-s21.icon */,
+				B94F8AC82E7D407E00CD04AC /* AppIcon-sflip.icon */,
+				B94F8AC92E7D407E00CD04AC /* AppIcon-sfold.icon */,
 				B9673B592E35A2A1006D284A /* airsync-mac */,
 				B9673B582E35A2A1006D284A /* Products */,
 			);
@@ -143,6 +167,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				B995A3332E4D2B3F00FA7A41 /* AppIcon.icon in Resources */,
+				B94F8ACA2E7D407E00CD04AC /* AppIcon-p9-10.icon in Resources */,
+				B94F8ACB2E7D407E00CD04AC /* AppIcon-s2x.icon in Resources */,
+				B94F8ACC2E7D407E00CD04AC /* AppIcon-sfold.icon in Resources */,
+				B94F8ACD2E7D407E00CD04AC /* AppIcon-sflip.icon in Resources */,
+				B94F8ACE2E7D407E00CD04AC /* AppIcon-p6.icon in Resources */,
+				B94F8ACF2E7D407E00CD04AC /* AppIcon-p7-8.icon in Resources */,
+				B94F8AD02E7D407E00CD04AC /* AppIcon-s21.icon in Resources */,
+				B94F8AD12E7D407E00CD04AC /* AppIcon-pfold.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,6 +320,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -333,6 +366,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;

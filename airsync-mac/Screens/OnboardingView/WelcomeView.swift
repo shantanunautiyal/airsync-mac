@@ -21,14 +21,15 @@ struct WelcomeView: View {
                     Image(nsImage: appIcon)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 110, height: 110)
+                        .frame(width: 140, height: 140)
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
                 }
 
+
                 Text("AirSync")
-                    .font(.system(size: 50, weight: .bold, design: .rounded))
-                    .tracking(0.5)
+                .font(.system(size: 50, weight: .bold, design: .rounded))
+                .tracking(0.5)
 
                 if showDetails {
                     Text("The forbidden continuity for you mac and Android. (っ◕‿◕)っ")
