@@ -810,24 +810,27 @@ class WebSocketServer: ObservableObject {
 
     // MARK: - Device Status (Mac -> Android)
     func sendDeviceStatus(batteryLevel: Int, isCharging: Bool, isPaired: Bool, musicInfo: NowPlayingInfo?, albumArtBase64: String? = nil) {
-        let musicDict: [String: Any] = [
-            "isPlaying": musicInfo?.isPlaying ?? false,
-            "title": musicInfo?.title ?? "",
-            "artist": musicInfo?.artist ?? "",
-            "volume": 50, // Hardcoded for now - will be replaced later
-            "isMuted": false, // Hardcoded for now - will be replaced later
-            "albumArt": albumArtBase64 ?? "",
-            "likeStatus": "none" // Hardcoded for now - will be replaced later
-        ]
-
-        let statusDict: [String: Any] = [
+        var statusDict: [String: Any] = [
             "battery": [
                 "level": batteryLevel, // -1 for non-MacBooks, 0-100 for MacBooks
                 "isCharging": isCharging
             ],
-            "isPaired": isPaired,
-            "music": musicDict
+            "isPaired": isPaired
         ]
+
+        // Only include music section if we have valid playback info
+        if let musicInfo {
+            let musicDict: [String: Any] = [
+                "isPlaying": musicInfo.isPlaying ?? false,
+                "title": musicInfo.title ?? "",
+                "artist": musicInfo.artist ?? "",
+                "volume": 50, // Hardcoded for now - will be replaced later
+                "isMuted": false, // Hardcoded for now - will be replaced later
+                "albumArt": albumArtBase64 ?? "",
+                "likeStatus": "none" // Hardcoded for now - will be replaced later
+            ]
+            statusDict["music"] = musicDict
+        }
 
         let messageDict: [String: Any] = [
             "type": "status",
