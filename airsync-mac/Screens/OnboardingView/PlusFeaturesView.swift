@@ -28,6 +28,7 @@ struct PlusFeaturesView: View {
                     featureRow(icon: "music.note", title: "Media Controls", description: "Control music playback and volume directly from your Mac")
                     featureRow(icon: "desktopcomputer", title: "Wireless Desktop Mode", description: "Use the phone in a familiar way, with full desktop controls")
                     featureRow(icon: "globe", title: "Continue Browsing", description: "Simply copy or share a link to prompt it open on the other device")
+                    featureRow(icon: "app.grid", title: "Custom App Icons", description: "Match your device, Make it personal")
                     featureRow(icon: "bell.badge", title: "Advanced Notifications", description: "Enhanced notification management and customization", soon: true)
                     featureRow(icon: "battery.25percent", title: "Low Battery Alerts", description: "Get notified when your Android device needs charging", soon: true)
                     featureRow(icon: "widget.small.badge.plus", title: "Widgets", description: "Synced widgets with device status and more", soon: true)
@@ -49,6 +50,7 @@ struct PlusFeaturesView: View {
                     label: "Get AirSync+",
                     systemImage: "plus.diamond",
                     size: .large,
+                    fixedIconSize: 16,
                     action: {
                         if let url = URL(string: "https://store.sameerasw.com") {
                             NSWorkspace.shared.open(url)
@@ -62,6 +64,7 @@ struct PlusFeaturesView: View {
                     systemImage: "arrow.right.circle",
                     size: .large,
                     primary: true,
+                    fixedIconSize: 16,
                     action: onNext
                 )
                 .transition(.identity)
@@ -70,7 +73,7 @@ struct PlusFeaturesView: View {
     }
 
     @ViewBuilder
-    private func featureRow(icon: String, title: String, description: String, soon: Bool = false) -> some View {
+     func featureRow(icon: String, title: String, description: String, soon: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .foregroundColor(.primary)
