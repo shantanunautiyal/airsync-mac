@@ -14,27 +14,30 @@ struct AppIconView: View {
 
     var body: some View {
         // App Icon Selection Section
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading) {
             HStack {
                 Label("App Icon", systemImage: "app.badge")
                 Spacer()
             }
+            .padding(EdgeInsets(top: 16, leading: 16, bottom: 0, trailing: 16))
 
-            HStack(alignment: .top,spacing: 16) {
-                ForEach(AppIcon.allIcons) { icon in
-                    AppIconImageView(
-                        appIconManager: appIconManager, 
-                        icon: icon,
-                        isDisabled: !appState.isPlus && appState.licenseCheck,
-                        showLock: !appState.isPlus && appState.licenseCheck && !icon.isDefault,
-                        onRestrictedTap: {
-                            showingPlusPopover = true
-                        }
-                    )
+            ScrollView(.horizontal) {
+                HStack(alignment: .top,spacing: 16) {
+                    ForEach(AppIcon.allIcons) { icon in
+                        AppIconImageView(
+                            appIconManager: appIconManager,
+                            icon: icon,
+                            isDisabled: !appState.isPlus && appState.licenseCheck,
+                            showLock: !appState.isPlus && appState.licenseCheck && !icon.isDefault,
+                            onRestrictedTap: {
+                                showingPlusPopover = true
+                            }
+                        )
+                    }
                 }
+                .padding()
             }
         }
-        .padding()
         .background(.background.opacity(0.3))
         .cornerRadius(12.0)
         .onAppear {
@@ -75,7 +78,7 @@ struct AppIconImageView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            ZStack {
+            ZStack(alignment: .center) {
                 icon.image
                     .resizable()
                     .frame(width: 60, height: 60)
@@ -92,15 +95,11 @@ struct AppIconImageView: View {
                 // Lock overlay for non-default icons when user doesn't have Plus
                 if showLock {
                     ZStack {
-                        Circle()
-                            .fill(Color.black.opacity(0.7))
-                            .frame(width: 24, height: 24)
-                        
-                        Image(systemName: "lock.fill")
+                        Image(systemName: "lock")
                             .foregroundColor(.white)
-                            .font(.caption)
+                            .font(.system(size: 24))
                     }
-                    .offset(x: 18, y: -18)
+
                 }
             }
             .onTapGesture {
