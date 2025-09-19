@@ -3,6 +3,7 @@ import UserNotifications
 
 struct SettingsView: View {
     @ObservedObject var appState = AppState.shared
+    @StateObject var appIconManager = AppIconManager()
 
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
@@ -118,6 +119,42 @@ struct SettingsView: View {
                             )
                             .disabled(notificationsGranted)
                             .transition(.identity)
+                        }
+
+                        // App Icon Selection Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Label("App Icon", systemImage: "app.badge")
+                                Spacer()
+                            }
+                            
+                            HStack(spacing: 16) {
+                                ForEach(AppIcon.allIcons) { icon in
+                                    VStack(spacing: 8) {
+                                        icon.image
+                                            .resizable()
+                                            .frame(width: 60, height: 60)
+                                            .cornerRadius(12)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(
+                                                        appIconManager.currentIcon.id == icon.id ? Color.accentColor : Color.clear,
+                                                        lineWidth: 3
+                                                    )
+                                            )
+                                            .onTapGesture {
+                                                appIconManager.setIcon(icon)
+                                            }
+                                        
+                                        Text(icon.name)
+                                            .font(.caption)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                }
+                            }
+                        }
+                        .onAppear {
+                            appIconManager.loadCurrentIcon()
                         }
 
                         HStack{

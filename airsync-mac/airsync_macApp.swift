@@ -51,6 +51,10 @@ struct airsync_macApp: App {
 
         loadCachedIcons()
         loadCachedWallpapers()
+        
+        // Load saved app icon preference
+        let appIconManager = AppIconManager()
+        appIconManager.loadCurrentIcon()
 
     }
 
