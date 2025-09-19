@@ -32,7 +32,7 @@ struct WelcomeView: View {
                 .tracking(0.5)
 
                 if showDetails {
-                    Text("The forbidden continuity for you mac and Android. (っ◕‿◕)っ")
+                    Text("The forbidden continuity for your mac and Android. (っ◕‿◕)っ")
                         .font(.title3)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
