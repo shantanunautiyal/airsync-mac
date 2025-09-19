@@ -1,6 +1,15 @@
 {
-  "originHash" : "f03d2180757d45d3cccbf422425c86bd557a0502f14951e6b5516a417f804193",
+  "originHash" : "54b617f5c005742d7a1332c26775517ee81805d4a9597f1a1dd08a95e25b7951",
   "pins" : [
+    {
+      "identity" : "appiconkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/danielsaidi/AppIconKit.git",
+      "state" : {
+        "revision" : "2b35396bc8d2de368288a4735f85b167c4b1a602",
+        "version" : "0.7.0"
+      }
+    },
     {
       "identity" : "qrcode",
       "kind" : "remoteSourceControl",
