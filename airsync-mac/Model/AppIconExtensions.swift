@@ -40,7 +40,7 @@ struct AppIcon: Identifiable {
     )
 
     static let s2x = AppIcon(
-        name: "Galaxy S22, 23, ... 69",
+        name: "Galaxy S22^",
         image: Image("AppIconImage-s2x"),
         iconName: "AppIconImage-s2x",
         isDefault: false
@@ -54,14 +54,14 @@ struct AppIcon: Identifiable {
     )
 
     static let zfold = AppIcon(
-        name: "Galaxy Z Fold",
+        name: "Galaxy zFold",
         image: Image("AppIconImage-zfold"),
         iconName: "AppIconImage-zfold",
         isDefault: false
     )
 
     static let zflip = AppIcon(
-        name: "Galaxy Z Flip",
+        name: "Galaxy zFlip",
         image: Image("AppIconImage-zflip"),
         iconName: "AppIconImage-zflip",
         isDefault: false

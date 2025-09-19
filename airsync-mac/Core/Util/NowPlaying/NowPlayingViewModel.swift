@@ -44,7 +44,7 @@ class NowPlayingViewModel: ObservableObject {
 
         print("Starting device status monitoring - device connected")
         fetch() // initial fetch
-        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 7, repeats: true) { [weak self] _ in
             self?.fetch()
         }
         RunLoop.main.add(timer!, forMode: .common)
