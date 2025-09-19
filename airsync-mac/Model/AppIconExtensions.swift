@@ -9,17 +9,20 @@ struct AppIcon: Identifiable {
     let name: String
     let image: Image
     let iconName: String?
+    let isDefault: Bool
     
     static let defaultIcon = AppIcon(
         name: "AirSync",
         image: Image("AppIconImage"),
-        iconName: "AppIconImage"
+        iconName: "AppIconImage",
+        isDefault: true
     )
     
     static let p9Plus10 = AppIcon(
         name: "Google Pixel 9, 10",
         image: Image("AppIconImage-p9-10"),
-        iconName: "AppIconImage-p9-10"
+        iconName: "AppIconImage-p9-10",
+        isDefault: false
     )
     
     static let allIcons = [defaultIcon, p9Plus10]
@@ -28,6 +31,26 @@ struct AppIcon: Identifiable {
 // Simple app icon switching functionality for macOS
 class AppIconManager: ObservableObject {
     @Published var currentIcon: AppIcon = .defaultIcon
+    
+    init() {
+        // Listen for license status changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(licenseStatusChanged),
+            name: NSNotification.Name("LicenseStatusChanged"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func licenseStatusChanged() {
+        DispatchQueue.main.async {
+            self.revertToDefaultIfNeeded()
+        }
+    }
     
     func setIcon(_ icon: AppIcon) {
         currentIcon = icon
@@ -103,9 +126,32 @@ class AppIconManager: ObservableObject {
     
     func loadCurrentIcon() {
         if let savedIconName = UserDefaults.standard.string(forKey: "selectedAppIcon") {
-            currentIcon = AppIcon.allIcons.first { $0.iconName == savedIconName } ?? .defaultIcon
+            let savedIcon = AppIcon.allIcons.first { $0.iconName == savedIconName } ?? .defaultIcon
+            
+            // If the saved icon is not default and user doesn't have Plus, revert to default
+            let isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+            if !savedIcon.isDefault && !isPlus {
+                print("Reverting to default icon - Plus required for custom icons")
+                currentIcon = .defaultIcon
+                UserDefaults.standard.set(AppIcon.defaultIcon.iconName, forKey: "selectedAppIcon")
+                updateAppIcon(for: .defaultIcon)
+                return
+            }
+            
+            currentIcon = savedIcon
             // Apply the saved icon
             updateAppIcon(for: currentIcon)
+        }
+    }
+    
+    func revertToDefaultIfNeeded() {
+        // Check if current icon is not default and user doesn't have Plus
+        let isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+        if !currentIcon.isDefault && !isPlus {
+            print("Reverting to default icon - license check failed")
+            currentIcon = .defaultIcon
+            UserDefaults.standard.set(AppIcon.defaultIcon.iconName, forKey: "selectedAppIcon")
+            updateAppIcon(for: .defaultIcon)
         }
     }
 }

@@ -52,9 +52,19 @@ struct airsync_macApp: App {
         loadCachedIcons()
         loadCachedWallpapers()
         
-        // Load saved app icon preference
+        // Load saved app icon preference and revert if needed based on license status
         let appIconManager = AppIconManager()
         appIconManager.loadCurrentIcon()
+        
+        // Set up listener for license changes to revert icon if needed
+        // This will be called when license status changes
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("LicenseStatusChanged"), 
+            object: nil, 
+            queue: .main
+        ) { _ in
+            appIconManager.revertToDefaultIfNeeded()
+        }
 
     }
 

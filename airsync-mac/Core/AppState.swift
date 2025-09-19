@@ -234,6 +234,8 @@ class AppState: ObservableObject {
             if !shouldSkipSave {
                 UserDefaults.standard.set(isPlus, forKey: "isPlus")
             }
+            // Notify about license status change for icon revert logic
+            NotificationCenter.default.post(name: NSNotification.Name("LicenseStatusChanged"), object: nil)
         }
     }
 
