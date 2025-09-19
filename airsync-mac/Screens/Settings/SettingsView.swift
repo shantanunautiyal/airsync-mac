@@ -20,6 +20,8 @@ struct SettingsView: View {
                     VStack {
                         AppIconView()
 
+                        Spacer()
+
                         HStack {
                             Label("Rename your \(DeviceTypeUtil.deviceTypeDescription())", systemImage: "pencil")
                             Spacer()

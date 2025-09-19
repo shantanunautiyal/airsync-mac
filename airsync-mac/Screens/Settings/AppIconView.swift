@@ -20,27 +20,7 @@ struct AppIconView: View {
 
             HStack(alignment: .top,spacing: 16) {
                 ForEach(AppIcon.allIcons) { icon in
-                    VStack(spacing: 8) {
-                        icon.image
-                            .resizable()
-                            .frame(width: 60, height: 60)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(
-                                        appIconManager.currentIcon.id == icon.id ? Color.accentColor : Color.clear,
-                                        lineWidth: 3
-                                    )
-                            )
-                            .onTapGesture {
-                                appIconManager.setIcon(icon)
-                            }
-
-                        Text(icon.name)
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 50)
-                    }
+                    AppIconImageView(icon: icon)
                 }
             }
         }
@@ -56,4 +36,33 @@ struct AppIconView: View {
 
 #Preview {
     AppIconView()
+}
+
+struct AppIconImageView: View {
+    @StateObject var appIconManager = AppIconManager()
+    let icon: AppIcon
+
+    var body: some View {
+        VStack(spacing: 8) {
+            icon.image
+                .resizable()
+                .frame(width: 60, height: 60)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(
+                            appIconManager.currentIcon.id == icon.id ? Color.secondary : Color.clear,
+                            lineWidth: 5
+                        )
+                )
+                .onTapGesture {
+                    appIconManager.setIcon(icon)
+                }
+
+            Text(icon.name)
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 50)
+        }
+    }
 }
