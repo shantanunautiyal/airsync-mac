@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B92060982E7D6851008C24DC /* AppIconKit in Frameworks */ = {isa = PBXBuildFile; productRef = B92060972E7D6851008C24DC /* AppIconKit */; };
 		B995A3332E4D2B3F00FA7A41 /* AppIcon-uni.icon in Resources */ = {isa = PBXBuildFile; fileRef = B995A3322E4D2B3F00FA7A41 /* AppIcon-uni.icon */; };
 		B9AEBC0A2E6235D3006BA027 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B9AEBC092E6235D3006BA027 /* Sparkle */; };
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
@@ -45,7 +44,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B92060982E7D6851008C24DC /* AppIconKit in Frameworks */,
 				B9AEBC0A2E6235D3006BA027 /* Sparkle in Frameworks */,
 				B9D742FC2E39CF850053128A /* Swifter in Frameworks */,
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
@@ -95,7 +93,6 @@
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9D742FB2E39CF850053128A /* Swifter */,
 				B9AEBC092E6235D3006BA027 /* Sparkle */,
-				B92060972E7D6851008C24DC /* AppIconKit */,
 			);
 			productName = "airsync-mac";
 			productReference = B9673B572E35A2A1006D284A /* AirSync.app */;
@@ -129,7 +126,6 @@
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
 				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
 				B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */,
-				B92060962E7D6851008C24DC /* XCRemoteSwiftPackageReference "AppIconKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9673B582E35A2A1006D284A /* Products */;
@@ -403,14 +399,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B92060962E7D6851008C24DC /* XCRemoteSwiftPackageReference "AppIconKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/danielsaidi/AppIconKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.7.0;
-			};
-		};
 		B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sparkle-project/Sparkle";
@@ -438,11 +426,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B92060972E7D6851008C24DC /* AppIconKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B92060962E7D6851008C24DC /* XCRemoteSwiftPackageReference "AppIconKit" */;
-			productName = AppIconKit;
-		};
 		B9AEBC092E6235D3006BA027 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B9AEBC082E6235D3006BA027 /* XCRemoteSwiftPackageReference "Sparkle" */;
