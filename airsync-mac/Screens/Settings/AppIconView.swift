@@ -36,7 +36,7 @@ struct AppIconView: View {
         }
         .padding()
         .background(.background.opacity(0.3))
-        .cornerRadius(10.0)
+        .cornerRadius(12.0)
         .onAppear {
             appIconManager.loadCurrentIcon()
         }
