@@ -103,18 +103,29 @@ class NowPlayingCLI {
             }
 
             // Try decoding the full JSON at once
-            if let jsonString = String(data: buffer, encoding: .utf8) {
-                print("Full media-control JSON:", jsonString) // debug
+            if let rawString = String(data: buffer, encoding: .utf8) {
+                let trimmed = rawString.trimmingCharacters(in: .whitespacesAndNewlines)
+                print("Full media-control output:", trimmed) // debug
+
+                // If media-control returns literal "null", treat as no media
+                if trimmed.isEmpty || trimmed.lowercased() == "null" {
+                    DispatchQueue.main.async { completion(nil) }
+                    return
+                }
+
                 do {
-                    if let dict = try JSONSerialization.jsonObject(with: Data(jsonString.utf8)) as? [String: Any] {
+                    let obj = try JSONSerialization.jsonObject(with: Data(trimmed.utf8))
+                    if let dict = obj as? [String: Any] {
                         var info = NowPlayingInfo()
                         info.updateFromPayload(dict)
-                        DispatchQueue.main.async {
-                            completion(info)
-                        }
+                        DispatchQueue.main.async { completion(info) }
+                    } else {
+                        // Not a dictionary (could be null/array) -> no media info
+                        DispatchQueue.main.async { completion(nil) }
                     }
                 } catch {
                     print("JSON parse error:", error)
+                    DispatchQueue.main.async { completion(nil) }
                 }
             } else {
                 DispatchQueue.main.async { completion(nil) }

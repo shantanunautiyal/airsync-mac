@@ -220,17 +220,14 @@ class NowPlayingViewModel: ObservableObject {
     }
 
     func next() {
-        print("Next track requested")
-        // Add implementation for next track if available in NowPlayingCLI
+        NowPlayingCLI.shared.next()
     }
 
     func previous() {
-        print("Previous track requested")
-        // Add implementation for previous track if available in NowPlayingCLI
+        NowPlayingCLI.shared.previous()
     }
 
     func stop() {
-        print("Stop playback requested")
-        // Add implementation for stop if available in NowPlayingCLI
+        NowPlayingCLI.shared.stop()
     }
 }
