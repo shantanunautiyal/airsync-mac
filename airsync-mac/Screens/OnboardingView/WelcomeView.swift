@@ -17,15 +17,7 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 16) {
-                if let appIcon = NSApplication.shared.applicationIconImage {
-                    Image(nsImage: appIcon)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 140, height: 140)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
-                }
-
+                AnimatedAppIconCarousel(iconSize: 140, cornerRadius: 24)
 
                 Text("AirSync")
                 .font(.system(size: 50, weight: .bold, design: .rounded))
