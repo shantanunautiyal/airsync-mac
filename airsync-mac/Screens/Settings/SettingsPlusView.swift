@@ -18,6 +18,7 @@ struct SettingsPlusView: View {
     @State private var isLicenseVisible = false
 
     @State private var selectedPlan: LicensePlanType = UserDefaults.standard.licensePlanType
+    @State private var showPlusUnlockedSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -44,14 +45,16 @@ struct SettingsPlusView: View {
                 }
 
                 if appState.isPlus {
-                    Button("Unregister", systemImage: "key.slash") {
-                        appState.licenseDetails = nil
-                        appState.isPlus = false
-                    }
-                    .buttonStyle(.plain)
+                    // New: button to review Plus features (with confetti) — placed left to Unregister
+                        GlassButtonView(
+                            label: "What’s in Plus",
+                            systemImage: "sparkles",
+                            action: {
+                                showPlusUnlockedSheet = true
+                            }
+                        )
                 }
             }
-            .padding()
 
 
             // License input + check
@@ -76,6 +79,10 @@ struct SettingsPlusView: View {
                                 )
                                 licenseValid = result ?? false
                                 isCheckingLicense = false
+                                if result == true {
+                                    // Show Plus unlocked sheet
+                                    showPlusUnlockedSheet = true
+                                }
                             }
                         }
                     )
@@ -174,6 +181,9 @@ struct SettingsPlusView: View {
                         .foregroundColor(.red)
                 }
             }
+        }
+        .sheet(isPresented: $showPlusUnlockedSheet) {
+            PlusUnlockedSheet()
         }
 
         // Why Plus section

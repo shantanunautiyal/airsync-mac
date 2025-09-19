@@ -16,5 +16,25 @@
 	<string>sHwLY7+V1LUTP7lmY9FYK8FAZgn2zlUhYCEiDazyaMQ=</string>
 	<key>UpdateFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>AppIcon-p9-10</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-p9-10</string>
+				</array>
+			</dict>
+		</dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+		</dict>
+	</dict>
 </dict>
 </plist>

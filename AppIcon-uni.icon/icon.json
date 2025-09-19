@@ -8,8 +8,8 @@
         {
           "glass" : true,
           "hidden" : false,
-          "image-name" : "Group 5.png",
-          "name" : "Group 5",
+          "image-name" : "Icon-60@3x.png",
+          "name" : "Icon-60@3x",
           "position" : {
             "scale" : 1.61,
             "translation-in-points" : [
@@ -30,6 +30,7 @@
           }
         },
         {
+          "hidden" : true,
           "image-name" : "Grid.png",
           "name" : "Grid",
           "position" : {

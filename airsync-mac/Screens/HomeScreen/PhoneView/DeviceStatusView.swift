@@ -78,19 +78,23 @@ struct DeviceStatusView: View {
                         PlusFeaturePopover(message: "Control volume with AirSync+")
                     }
 
-
-                GlassButtonView(
-                    label: "Music Player",
-                    systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
-                    iconOnly: true,
-                    primary: false,
-                    action: {
-                        withAnimation(.easeInOut(duration: 0.28)) {
-                            appState.isMusicCardHidden.toggle()
-                        }
-                    }
-                )
-                .help("Show player")
+                if let music = appState.status?.music,
+                   let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !title.isEmpty {
+                        GlassButtonView(
+                            label: "Music Player",
+                            systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
+                            iconOnly: true,
+                            primary: false,
+                            action: {
+                                withAnimation(.easeInOut(duration: 0.28)) {
+                                    appState.isMusicCardHidden.toggle()
+                                }
+                            }
+                        )
+                        .help("Show player")
+                        .transition(.opacity.combined(with: .scale))
+                }
             }
             .padding(4)
             .applyGlassViewIfAvailable()

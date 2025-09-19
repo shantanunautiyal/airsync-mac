@@ -19,7 +19,9 @@ struct PlusFeaturePopover: View {
             HStack{
                 Spacer()
                 GlassButtonView(label: "See more", action: {
-                    AppState.shared.selectedTab = .settings
+                    if let url = URL(string: "https://store.sameerasw.com") {
+                        NSWorkspace.shared.open(url)
+                    }
                 })
                 Spacer()
             }
