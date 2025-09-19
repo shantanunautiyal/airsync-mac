@@ -20,7 +20,7 @@ struct AppIconView: View {
 
             HStack(alignment: .top,spacing: 16) {
                 ForEach(AppIcon.allIcons) { icon in
-                    AppIconImageView(icon: icon)
+                    AppIconImageView(appIconManager: appIconManager, icon: icon)
                 }
             }
         }
@@ -39,8 +39,15 @@ struct AppIconView: View {
 }
 
 struct AppIconImageView: View {
-    @StateObject var appIconManager = AppIconManager()
+    @ObservedObject var appIconManager: AppIconManager
     let icon: AppIcon
+
+    private var isSelected: Bool {
+        // Compare by iconName (stable across instances). Fallback to name if needed.
+        let currentKey = appIconManager.currentIcon.iconName ?? appIconManager.currentIcon.name
+        let thisKey = icon.iconName ?? icon.name
+        return currentKey == thisKey
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -51,7 +58,7 @@ struct AppIconImageView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
                         .stroke(
-                            appIconManager.currentIcon.id == icon.id ? Color.secondary : Color.clear,
+                            isSelected ? Color.secondary : Color.clear,
                             lineWidth: 5
                         )
                 )
