@@ -155,62 +155,19 @@ struct SettingsFeaturesView: View {
                                     .frame(width: 60, alignment: .leading)
                             }
 
-                            HStack {
-                                Text("Stay on top")
-                                Spacer()
+                            SettingsToggleView(name: "Stay on top", icon: "inset.filled.toptrailing.rectangle.portrait", isOn: $scrcpyOnTop)
 
-                                Toggle("", isOn: $scrcpyOnTop)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Stay awake (charging)", icon: "cup.and.heat.waves", isOn: $stayAwake)
 
+                            SettingsToggleView(name: "Blank display", icon: "iphone.gen3.slash", isOn: $turnScreenOff)
 
-                            HStack {
-                                Text("Stay awake (charging)")
-                                Spacer()
+                            SettingsToggleView(name: "No audio", icon: "speaker.slash", isOn: $noAudio)
 
-                                Toggle("", isOn: $stayAwake)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Continue app after closing", icon: "arrow.turn.up.forward.iphone", isOn: $continueApp)
 
-                            HStack {
-                                Text("Blank display")
-                                Spacer()
+                            SettingsToggleView(name: "Direct keyboard input", icon: "keyboard.chevron.compact.down", isOn: $directKeyInput)
 
-                                Toggle("", isOn: $turnScreenOff)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("No audio")
-                                Spacer()
-
-                                Toggle("", isOn: $noAudio)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Continue app after closing")
-                                Spacer()
-
-                                Toggle("", isOn: $continueApp)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Direct keyboard input")
-                                Spacer()
-
-                                Toggle("", isOn: $directKeyInput)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Apps & Desktop mode shared resolution")
-                                Spacer()
-
-                                Toggle("", isOn: $scrcpyShareRes)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Apps & Desktop mode shared resolution", icon: "ipad.sizes", isOn: $scrcpyShareRes)
 
                             HStack {
                                 Text(UserDefaults.standard.scrcpyShareRes ? "Desktop and App mirroring" :"Desktop mode")
@@ -298,34 +255,12 @@ struct SettingsFeaturesView: View {
 
 
         VStack{
-//            HStack{
-//                Label("Sync device status", systemImage: "battery.75percent")
-//                Spacer()
-//                Toggle("", isOn: .constant(false))
-//                    .toggleStyle(.switch)
-//                    .disabled(true)
-//            }
 
-            HStack{
-                Label("Sync clipboard", systemImage: "clipboard")
-                Spacer()
-                Toggle("", isOn: $appState.isClipboardSyncEnabled)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Sync clipboard", icon: "clipboard", isOn: $appState.isClipboardSyncEnabled)
 
-            HStack{
-                Label("Sync notification dismissals", systemImage: "bell.badge")
-                Spacer()
-                Toggle("", isOn: $appState.dismissNotif)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Sync notification dismissals", icon: "bell.badge", isOn: $appState.dismissNotif)
 
-            HStack{
-                Label("Send now playing status", systemImage: "play.circle")
-                Spacer()
-                Toggle("", isOn: $appState.sendNowPlayingStatus)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Send now playing status", icon: "play.circle", isOn: $appState.sendNowPlayingStatus)
 
         }
         .padding()

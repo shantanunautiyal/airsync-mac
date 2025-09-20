@@ -31,11 +31,6 @@ struct AboutView: View {
                             .frame(width: 100, height: 100)
                             .clipShape(Circle())
                             .padding()
-                            // .onLongPressGesture {
-                            //     if UserDefaults.standard.hasPairedDeviceOnce == true {
-                            //         UserDefaults.standard.hasPairedDeviceOnce = false
-                            //     }
-                            // }
 
                         Text("Developed by Sameera Wijerathna")
                             .font(.headline)

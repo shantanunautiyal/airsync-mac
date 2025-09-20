@@ -155,7 +155,9 @@ struct AppContentView: View {
             )
         }
         .sheet(isPresented: $showHelpSheet) {
-            HelpWebSheet(isPresented: $showHelpSheet)
+            HelpWebSheet(
+                isPresented: $showHelpSheet
+            )
         }
         .alert(isPresented: $showDisconnectAlert) {
             Alert(
