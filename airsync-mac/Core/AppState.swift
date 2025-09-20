@@ -302,7 +302,9 @@ class AppState: ObservableObject {
             self.currentDeviceWallpaperBase64 = nil
             self.transfers = [:]
 
-            ADBConnector.disconnectADB()
+            if self.adbConnected {
+                ADBConnector.disconnectADB()
+            }
         }
     }
 
