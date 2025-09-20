@@ -10,12 +10,12 @@ import SwiftUI
 struct DeviceNameView: View {
     @Binding var deviceName: String
     let macDevice = DeviceTypeUtil.deviceTypeDescription()
-
+    let macIcon = DeviceTypeUtil.deviceIconName()
 
     var body: some View {
         HStack{
-            Image(systemName: "macbook")
-                .font(.system(size: 30))
+            Image(systemName: macIcon)
+                .font(.system(size: 40))
                 .padding(.trailing, 8)
 
             VStack {
