@@ -78,8 +78,7 @@ struct DeviceStatusView: View {
                         PlusFeaturePopover(message: "Control volume with AirSync+")
                     }
 
-                if let music = appState.status?.music,
-                   let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                if let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
                    !title.isEmpty {
                         GlassButtonView(
                             label: "Music Player",

@@ -7,7 +7,7 @@
 import Foundation
 internal import Combine
 
-class NowPlayingViewModel: ObservableObject {
+class MacInfoSyncManager: ObservableObject {
     @Published var title: String = "Unknown Title"
     @Published var artist: String = "Unknown Artist"
     @Published var album: String = "Unknown Album"

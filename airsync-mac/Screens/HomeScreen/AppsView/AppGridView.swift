@@ -56,8 +56,7 @@ struct AppGridView: View {
                                     .frame(maxWidth: .infinity)
                             }
                             .padding(8)
-                            .background(.background.opacity(0.3))
-                            .cornerRadius(15)
+                            .glassBoxIfAvailable(radius: 15)
                             .onTapGesture {
                                 if let device = appState.device, appState.adbConnected {
                                     ADBConnector.startScrcpy(
@@ -94,7 +93,7 @@ struct AppGridView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 12)
+                .padding(12)
             }
         }
         .searchable(text: $searchText)
