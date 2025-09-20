@@ -69,8 +69,3 @@ struct FadingImageView: NSViewRepresentable {
         }
     }
 }
-
-
-#Preview {
-    FadingImageView()
-}
