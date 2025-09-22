@@ -92,14 +92,13 @@ private struct LiquidGlassText: View {
         let path = TextHelper.path(for: string)
         let bounds = path.boundingRect
 
-        // Flat look: apply clear glass to the raw glyph path (no stroke/emboss)
         Color.clear
             .frame(width: bounds.width, height: bounds.height, alignment: .center)
             .overlay(
                 Group {
                     if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
                         Color.clear
-                            .glassEffect(in: path)
+                            .glassEffect(in: path)   // keep glass effect, but no transition/animation here
                     } else {
                         Color.clear
                     }
@@ -109,8 +108,10 @@ private struct LiquidGlassText: View {
     }
 }
 
+
 struct TimeView: View {
     @State private var currentDate = Date()
+    @Namespace private var ns   // namespace for matchedGeometryEffect
 
     // Timer that updates every second
     private let timer = Timer
@@ -128,41 +129,48 @@ struct TimeView: View {
         let minute = String(format: "%02d", components.minute ?? 0)
 
         // Desired size and weight
-        let fontSize: CGFloat = 75
-        // Keep the on-screen Text fallback as medium rounded
-        let fallbackWeight: Font.Weight = .light
+        let fontSize: CGFloat = 65
         // Use a rounded NSFont for the liquid glass path
         let roundedNSFont = roundedFont(ofSize: fontSize, weight: .black)
 
-        HStack{
-            if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
-                VStack(spacing: 5) {
-                    // Liquid glass (flat, rounded)
+        ZStack { // single coordinate space, center aligned by frame below
+            if AppState.shared.isMusicCardHidden {
+                // stacked layout (hour above minute)
+                VStack(spacing: 6) {
                     LiquidGlassText(hour, font: roundedNSFont)
+                        .matchedGeometryEffect(id: "hour", in: ns)
                     LiquidGlassText(minute, font: roundedNSFont)
+                        .matchedGeometryEffect(id: "minute", in: ns)
                 }
+                .scaleEffect(1.25)
+                // we use identity transitions — the geometry effect handles the motion
+                .id("stack")
             } else {
-                VStack(spacing: -20) {
-                    // Fallback to existing view (rounded design already specified)
-                    Text(hour)
-                    Text(minute)
+                // side-by-side layout (hour left, minute right)
+                HStack(spacing: 20) {
+                    LiquidGlassText(hour, font: roundedNSFont)
+                        .matchedGeometryEffect(id: "hour", in: ns)
+                    LiquidGlassText(minute, font: roundedNSFont)
+                        .matchedGeometryEffect(id: "minute", in: ns)
                 }
+                .id("row")
             }
         }
-        .font(.system(size: fontSize, weight: fallbackWeight, design: .rounded))
-        .onReceive(timer) { newValue in
-            currentDate = newValue
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center) // keep centered
+        .onReceive(timer) { newValue in currentDate = newValue }
+        // spring animation drives the motion; tweak stiffness/damping for more/less jiggle
+        .animation(.interpolatingSpring(stiffness: 120, damping: 10), value: AppState.shared.isMusicCardHidden)
         .foregroundColor(.white)
-//        .shadow(radius: 10)
     }
 
-    // Detect if system uses 24-hour time
     private func isSystemUsing24Hour() -> Bool {
         let formatString = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: Locale.current) ?? ""
         return !formatString.contains("a")
     }
 }
+
+
+
 
 #Preview {
     TimeView()

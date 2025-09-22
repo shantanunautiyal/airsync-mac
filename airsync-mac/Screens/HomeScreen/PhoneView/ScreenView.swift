@@ -11,10 +11,6 @@ struct ScreenView: View {
     @ObservedObject var appState = AppState.shared
     var body: some View {
         VStack{
-            if (appState.status != nil){
-                DeviceStatusView()
-                    .transition(.opacity.combined(with: .scale))
-            }
 
             Spacer()
 
@@ -22,17 +18,6 @@ struct ScreenView: View {
                 .transition(.opacity.combined(with: .scale))
 
             Spacer()
-
-            if let music = appState.status?.music,
-               let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-               !title.isEmpty,
-               !appState.isMusicCardHidden {
-
-                MediaPlayerView(music: music)
-                    .transition(.opacity.combined(with: .scale))
-            } else {
-                Spacer()
-            }
 
             if appState.device != nil {
 
@@ -96,6 +81,11 @@ struct ScreenView: View {
                         )
                     }
                 }
+            }
+            if (appState.status != nil){
+                DeviceStatusView()
+                    .transition(.scale.combined(with: .opacity))
+                    .animation(.interpolatingSpring(stiffness: 200, damping: 30), value: appState.isMusicCardHidden)
             }
 
         }
