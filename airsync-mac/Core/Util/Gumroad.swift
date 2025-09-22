@@ -178,7 +178,7 @@ class Gumroad {
 
         if failCount >= 3 {
             Gumroad().clearLicenseDetails()
-            print("License check failed \(failCount) times — license removed")
+            print("[gumroad] License check failed \(failCount) times — license removed")
         }
     }
 
@@ -229,14 +229,14 @@ class Gumroad {
                 UserDefaults.standard.consecutiveLicenseFailCount = 0
                 UserDefaults.standard.lastLicenseSuccessfulCheckDate = now
                 appState.isPlus = true
-                print("License valid — daily success recorded.")
+                print("[gumroad] License valid — daily success recorded.")
             } else {
                 // Invalid/expired/cancelled/license-limit — disable immediately
                 appState.isPlus = false
                 Gumroad().incrementInvalidLicenseFailCount()
                 // Reset network failure streak because this is not a network failure
                 UserDefaults.standard.consecutiveNetworkFailureDays = 0
-                print("License invalid or expired — disabled Plus.")
+                print("[gumroad] License invalid or expired — disabled Plus.")
             }
         } catch let error as LicenseCheckError {
             // Network/server failure: do not disable Plus today
@@ -276,7 +276,7 @@ class Gumroad {
                 // Unregister on 3rd consecutive day
                 Gumroad().performUnregisterWithAlert(reason: "Could not validate your license for 3 consecutive days due to network issues. Please re-enter your key when you’re online.")
             } else {
-                print("Network/server error during license check: \(error)")
+                print("[gumroad] Network/server error during license check: \(error)")
             }
         } catch {
             // Any other unexpected error — treat as server error category
@@ -299,7 +299,7 @@ class Gumroad {
             if UserDefaults.standard.consecutiveNetworkFailureDays >= 3 {
                 Gumroad().performUnregisterWithAlert(reason: "Could not validate your license for 3 consecutive days due to server issues. Please re-enter your key when you’re online.")
             } else {
-                print("Unexpected error during license check: \(error)")
+                print("[gumroad] Unexpected error during license check: \(error)")
             }
         }
     }
@@ -309,7 +309,7 @@ class Gumroad {
         // If we already had a successful check today, skip to enforce "max one successful check per day"
         if let lastSuccess = UserDefaults.standard.lastLicenseSuccessfulCheckDate,
            Calendar.current.isDateInToday(lastSuccess) {
-            print("License already successfully validated today — skipping network call.")
+            print("[gumroad] License already successfully validated today — skipping network call.")
             return
         }
 

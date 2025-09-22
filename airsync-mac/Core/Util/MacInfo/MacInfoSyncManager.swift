@@ -61,7 +61,7 @@ class MacInfoSyncManager: ObservableObject {
         // Don't start if already running
         guard timer == nil else { return }
 
-        print("Starting device status monitoring - device connected")
+        print("[mac-info-sync] Starting device status monitoring - device connected")
         fetch() // initial fetch
         timer = Timer.scheduledTimer(withTimeInterval: 7, repeats: true) { [weak self] _ in
             self?.fetch()
@@ -72,7 +72,7 @@ class MacInfoSyncManager: ObservableObject {
     private func stopPolling() {
         guard timer != nil else { return }
 
-        print("Stopping media playback monitoring - device disconnected")
+        print("[mac-info-sync] Stopping media playback monitoring - device disconnected")
         timer?.invalidate()
         timer = nil
 
@@ -97,7 +97,7 @@ class MacInfoSyncManager: ObservableObject {
             // Fetch now playing info and send device status with music info
             NowPlayingCLI.shared.fetchNowPlaying { [weak self] info in
                 guard let info = info else {
-                    print("No now playing info")
+                    print("[mac-info-sync] No now playing info")
                     // Still send device status without music info
                     self?.sendDeviceStatusWithoutMusic()
                     return
@@ -163,9 +163,9 @@ class MacInfoSyncManager: ObservableObject {
 
         // Handle N/A battery status for desktop Macs
         if batteryInfo.level == -1 {
-            print("Sent device status update (desktop Mac - no battery, no music)")
+            print("[mac-info-sync] Sent device status update (desktop Mac - no battery, no music)")
         } else {
-            print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging), no music)")
+            print("[mac-info-sync] Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging), no music)")
         }
     }
 
@@ -205,7 +205,7 @@ class MacInfoSyncManager: ObservableObject {
 
         // Early exit if nothing changed compared to the last sent payload
         guard snapshot != lastSentSnapshot else {
-            print("[mac-status] No change, Skipping")
+//            print("[mac-info-sync] No change, Skipping")
             return
         }
 
@@ -217,7 +217,7 @@ class MacInfoSyncManager: ObservableObject {
             musicInfo: shouldIncludeMusicInfo ? info : nil,
             albumArtBase64: albumArtBase64
         )
-        print("[mac-status] Sent status \(snapshot.batteryLevel), \(snapshot.isCharging), \(info)")
+        print("[mac-info-sync] Sent status \(snapshot.batteryLevel), \(snapshot.isCharging), \(info)")
 
         // Update last sent trackers
         lastSentSnapshot = snapshot
@@ -242,7 +242,7 @@ class MacInfoSyncManager: ObservableObject {
         
         guard isMacBook else {
             // For desktop Macs (iMac, Mac mini, Mac Pro, Mac Studio), return N/A status
-            print("Desktop Mac detected (\(deviceType)) - no battery present")
+            print("[mac-info-sync] Desktop Mac detected (\(deviceType)) - no battery present")
             return (level: -1, isCharging: false) // -1 indicates N/A
         }
         
@@ -252,7 +252,7 @@ class MacInfoSyncManager: ObservableObject {
         }
         
         // Fallback to hardcoded values if battery info can't be retrieved on MacBook
-        print("Failed to fetch battery status on MacBook, using fallback values")
+        print("[mac-info-sync] Failed to fetch battery status on MacBook, using fallback values")
         return (level: 75, isCharging: false)
     }
 

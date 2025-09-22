@@ -25,7 +25,7 @@ private struct TextHelper {
 
             let key = kCTFontAttributeName as NSAttributedString.Key
             guard let anyCTFont = attributes[key] else {
-                print("[LiquidGlassText] Missing font attribute in run attributes: \(attributes)")
+                print("[time-view] (liquid-glass) Missing font attribute in run attributes: \(attributes)")
                 continue
             }
             let ctFont = anyCTFont as! CTFont

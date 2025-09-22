@@ -30,7 +30,7 @@ final class Localizer: ObservableObject {
             let dict = try JSONDecoder().decode([String: String].self, from: data)
             return dict
         } catch {
-            print("Localization load error for \(name): \(error)")
+            print("[localizer] Localization load error for \(name): \(error)")
             return nil
         }
     }

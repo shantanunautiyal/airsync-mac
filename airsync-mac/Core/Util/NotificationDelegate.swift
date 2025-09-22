@@ -12,7 +12,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didRemoveDeliveredNotifications identifiers: [String]) {
         for nid in identifiers {
-            print("User dismissed system notification with nid: \(nid)")
+            print("[notification-delegate] User dismissed system notification with nid: \(nid)")
             DispatchQueue.main.async {
                 AppState.shared.removeNotificationById(nid)
             }
@@ -46,7 +46,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                     package: package
                 )
             } else {
-                print("Missing device details or package for scrcpy.")
+                print("[notification-delegate] Missing device details or package for scrcpy.")
             }
         } else if response.actionIdentifier.hasPrefix("ACT_") {
             let actionName = String(response.actionIdentifier.dropFirst(4))

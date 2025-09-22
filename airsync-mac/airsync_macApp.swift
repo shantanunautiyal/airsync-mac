@@ -36,9 +36,9 @@ struct airsync_macApp: App {
         }
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
-                print("Notification permission error: \(error)")
+                print("[main-app] Notification permission error: \(error)")
             } else {
-                print("Notification permission granted: \(granted)")
+                print("[main-app] Notification permission granted: \(granted)")
             }
         }
 

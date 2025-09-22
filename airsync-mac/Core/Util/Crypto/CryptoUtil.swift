@@ -21,7 +21,7 @@ func encryptMessage(_ message: String, using key: SymmetricKey) -> String? {
         let combined = sealed.combined! // nonce + ciphertext + tag
         return combined.base64EncodedString()
     } catch {
-        print("Encryption failed: \(error)")
+        print("[crypto-util] Encryption failed: \(error)")
         return nil
     }
 }
@@ -33,7 +33,7 @@ func decryptMessage(_ base64: String, using key: SymmetricKey) -> String? {
         let decrypted = try AES.GCM.open(sealedBox, using: key)
         return String(data: decrypted, encoding: .utf8)
     } catch {
-        print("Decryption failed: \(error)")
+        print("[crypto-util] Decryption failed: \(error)")
         return nil
     }
 }
