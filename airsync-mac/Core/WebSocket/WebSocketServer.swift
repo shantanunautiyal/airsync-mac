@@ -54,6 +54,8 @@ class WebSocketServer: ObservableObject {
     private let ackWaitMs: UInt32 = 2000 // 2s
 
     private var lastKnownAdapters: [(name: String, address: String)] = []
+    // Track last adapter selection we logged to avoid repetitive logs
+    private var lastLoggedSelectedAdapter: (name: String, address: String)? = nil
 
     init() {
         loadOrGenerateSymmetricKey()
@@ -183,27 +185,42 @@ class WebSocketServer: ObservableObject {
 
         if let adapterName = adapterName {
             if let exact = adapters.first(where: { $0.name == adapterName }) {
-                print("[websocket] Selected adapter match: \(exact.name) -> \(exact.address)")
+                // Log only when selection changes
+                if lastLoggedSelectedAdapter?.name != exact.name || lastLoggedSelectedAdapter?.address != exact.address {
+                    print("[websocket] Selected adapter match: \(exact.name) -> \(exact.address)")
+                    lastLoggedSelectedAdapter = (exact.name, exact.address)
+                }
                 return exact.address
             }
-            print("[websocket] Adapter \(adapterName) not found, falling back")
+            // [quiet] adapter not found can be noisy; keep for debugging
+            // print("[websocket] Adapter \(adapterName) not found, falling back")
         }
 
         // Auto mode
         if adapterName == nil {
             // Priority 1: Wi-Fi/Ethernet (en0, en1, en2…)
             if let primary = adapters.first(where: { $0.name.hasPrefix("en") }) {
-                print("[websocket] Auto-selected network adapter: \(primary.name) -> \(primary.address)")
+                // Log only when selection changes
+                if lastLoggedSelectedAdapter?.name != primary.name || lastLoggedSelectedAdapter?.address != primary.address {
+                    print("[websocket] Auto-selected network adapter: \(primary.name) -> \(primary.address)")
+                    lastLoggedSelectedAdapter = (primary.name, primary.address)
+                }
                 return primary.address
             }
             // Priority 2: Standard private ranges (192.168, 10.x, 172.16–31)
             if let privateIP = adapters.first(where: { ipIsPrivatePreferred($0.address) }) {
-                print("[websocket] Auto-selected private adapter: \(privateIP.name) -> \(privateIP.address)")
+                if lastLoggedSelectedAdapter?.name != privateIP.name || lastLoggedSelectedAdapter?.address != privateIP.address {
+                    print("[websocket] Auto-selected private adapter: \(privateIP.name) -> \(privateIP.address)")
+                    lastLoggedSelectedAdapter = (privateIP.name, privateIP.address)
+                }
                 return privateIP.address
             }
             // Priority 3: Any other adapter
             if let any = adapters.first {
-                print("[websocket] Auto-selected fallback adapter: \(any.name) -> \(any.address)")
+                if lastLoggedSelectedAdapter?.name != any.name || lastLoggedSelectedAdapter?.address != any.address {
+                    print("[websocket] Auto-selected fallback adapter: \(any.name) -> \(any.address)")
+                    lastLoggedSelectedAdapter = (any.name, any.address)
+                }
                 return any.address
             }
         }
@@ -1085,7 +1102,8 @@ class WebSocketServer: ObservableObject {
                 lastKnownIP = chosenIP
             }
         } else {
-            print("[websocket] (network) No change detected")
+            // [quiet] No change is the common case; keep log line for debugging
+            // print("[websocket] (network) No change detected")
         }
     }
 
