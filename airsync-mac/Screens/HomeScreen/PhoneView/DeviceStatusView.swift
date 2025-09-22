@@ -13,13 +13,15 @@ struct DeviceStatusView: View {
     @State private var tempVolume: Double = 100
     @State private var isDragging = false
     @State private var showingPlusPopover = false
+    var showMediaToggle: Bool = true
 
     var body: some View {
+
         VStack {
             if let music = appState.status?.music,
                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
                !title.isEmpty,
-               !appState.isMusicCardHidden {
+               !appState.isMusicCardHidden, showMediaToggle {
 
                 MediaPlayerView(music: music)
                     .transition(.opacity.combined(with: .scale))
@@ -88,7 +90,7 @@ struct DeviceStatusView: View {
                     }
 
                 if let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !title.isEmpty {
+                   !title.isEmpty && showMediaToggle {
                         GlassButtonView(
                             label: "Music Player",
                             systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
@@ -104,6 +106,7 @@ struct DeviceStatusView: View {
                         .transition(.opacity.combined(with: .scale))
                 }
             }
+            .padding(.bottom, appState.isMusicCardHidden ? 0 : 8)
 
         }
         .padding(4)

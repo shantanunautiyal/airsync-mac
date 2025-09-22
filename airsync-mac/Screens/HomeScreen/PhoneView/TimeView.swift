@@ -83,7 +83,8 @@ private struct LiquidGlassText: View {
 
     init(_ text: String, font: NSFont) {
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: font
+            .font: font,
+            .kern: -12
         ]
         self.string = NSAttributedString(string: text, attributes: attrs)
     }
@@ -129,7 +130,7 @@ struct TimeView: View {
         let minute = String(format: "%02d", components.minute ?? 0)
 
         // Desired size and weight
-        let fontSize: CGFloat = 75
+        let fontSize: CGFloat = 90
         // Use a rounded NSFont for the liquid glass path
         let roundedNSFont = roundedFont(ofSize: fontSize, weight: .black)
 
