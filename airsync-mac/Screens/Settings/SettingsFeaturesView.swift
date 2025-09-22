@@ -30,41 +30,10 @@ struct SettingsFeaturesView: View {
 
     var body: some View {
         VStack{
-            HStack {
-                Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
-                Spacer()
-
-                ZStack {
-                    Toggle(
-                        "",
-                        isOn: $appState.adbEnabled
-                    )
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
-
-                    // Transparent tap area on top to show popover even if disabled
-                    if !AppState.shared.isPlus && AppState.shared.licenseCheck {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                showingPlusPopover = true
-                            }
-                    }
-                }
-                .frame(width: 55)
-            }
-            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
-                PlusFeaturePopover(message: "Wireless ADB features are available in AirSync+")
-                    .onTapGesture {
-                        showingPlusPopover = false
-                    }
-            }
-
-            // Show port field if ADB toggle is on
-            if appState.isPlus, appState.adbEnabled{
+            ZStack{
                 HStack {
+                    Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
+                    Spacer()
 
                     if appState.adbConnected {
                         GlassButtonView(
@@ -88,10 +57,58 @@ struct SettingsFeaturesView: View {
                             }
                         )
                         .disabled(
-                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting
+                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting || !AppState.shared.isPlus
                         )
                     }
+
+
+                    ZStack {
+                        Toggle(
+                            "",
+                            isOn: $appState.adbEnabled
+                        )
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
+
+                    }
+                    .frame(width: 55)
+
                 }
+                
+                // Transparent tap area on top to show popover even if disabled
+                if !AppState.shared.isPlus && AppState.shared.licenseCheck {
+                    HStack{
+                        Spacer()
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showingPlusPopover = true
+                            }
+                            .frame(width: 500)
+                    }
+                }
+            }
+            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
+                PlusFeaturePopover(message: "Wireless ADB features are available in AirSync+")
+                    .onTapGesture {
+                        showingPlusPopover = false
+                    }
+            }
+
+
+            if let result = appState.adbConnectionResult {
+                VStack(alignment: .leading, spacing: 6) {
+                    ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
+                }
+                .transition(.opacity)
+            }
+
+            // Show port field if ADB toggle is on
+            if appState.isPlus, (appState.adbEnabled || appState.adbConnected){
+
+                Spacer()
 
                 HStack{
                     Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
@@ -104,7 +121,8 @@ struct SettingsFeaturesView: View {
                 VStack{
                     DisclosureGroup(isExpanded: $isExpanded) {
                         VStack(spacing: 10){
-
+                            Spacer()
+                            
                             HStack {
                                 Text("Video bitrate")
                                 Spacer()
@@ -224,22 +242,12 @@ struct SettingsFeaturesView: View {
                         Label("Mirroring Settings", systemImage: "gear")
                             .font(.subheadline)
                             .bold()
-                            .padding()
                     }
                     .onAppear {
                         tempBitrate = Double(AppState.shared.scrcpyBitrate)
                         tempResolution = Double(AppState.shared.scrcpyResolution)
                     }
                     .focusEffectDisabled()
-                    .padding(.bottom, 7)
-
-
-                    if let result = appState.adbConnectionResult {
-                        VStack(alignment: .leading, spacing: 6) {
-                            ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
-                        }
-                        .transition(.opacity)
-                    }
 
                 }
             }
