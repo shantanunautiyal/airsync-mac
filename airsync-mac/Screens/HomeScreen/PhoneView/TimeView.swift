@@ -129,39 +129,71 @@ struct TimeView: View {
         let minute = String(format: "%02d", components.minute ?? 0)
 
         // Desired size and weight
-        let fontSize: CGFloat = 65
+        let fontSize: CGFloat = 75
         // Use a rounded NSFont for the liquid glass path
         let roundedNSFont = roundedFont(ofSize: fontSize, weight: .black)
 
-        ZStack { // single coordinate space, center aligned by frame below
-            if AppState.shared.isMusicCardHidden {
-                // stacked layout (hour above minute)
-                VStack(spacing: 6) {
-                    LiquidGlassText(hour, font: roundedNSFont)
-                        .matchedGeometryEffect(id: "hour", in: ns)
-                    LiquidGlassText(minute, font: roundedNSFont)
-                        .matchedGeometryEffect(id: "minute", in: ns)
+        ZStack {
+            if #available(macOS 26.0, *) {
+                GlassEffectContainer {
+                    ClockLayout(
+                        hour: hour,
+                        minute: minute,
+                        roundedNSFont: roundedNSFont,
+                        ns: ns,
+                        stacked: AppState.shared.isMusicCardHidden
+                    )
                 }
-                .scaleEffect(1.25)
-                // we use identity transitions — the geometry effect handles the motion
-                .id("stack")
             } else {
-                // side-by-side layout (hour left, minute right)
-                HStack(spacing: 20) {
-                    LiquidGlassText(hour, font: roundedNSFont)
-                        .matchedGeometryEffect(id: "hour", in: ns)
-                    LiquidGlassText(minute, font: roundedNSFont)
-                        .matchedGeometryEffect(id: "minute", in: ns)
-                }
-                .id("row")
+                ClockLayout(
+                    hour: hour,
+                    minute: minute,
+                    roundedNSFont: roundedNSFont,
+                    ns: ns,
+                    stacked: AppState.shared.isMusicCardHidden
+                )
             }
         }
+
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center) // keep centered
         .onReceive(timer) { newValue in currentDate = newValue }
         // spring animation drives the motion; tweak stiffness/damping for more/less jiggle
-        .animation(.interpolatingSpring(stiffness: 120, damping: 10), value: AppState.shared.isMusicCardHidden)
+        .animation(.interpolatingSpring(stiffness: 300, damping: 15), value: AppState.shared.isMusicCardHidden)
         .foregroundColor(.white)
     }
+
+    @ViewBuilder
+    private func ClockLayout(
+        hour: String,
+        minute: String,
+        roundedNSFont: NSFont,
+        ns: Namespace.ID,
+        stacked: Bool
+    ) -> some View {
+        let hourView = LiquidGlassText(hour, font: roundedNSFont)
+            .matchedGeometryEffect(id: "hour", in: ns)
+            .conditionalGlassEffectID("hour", in: ns)
+
+        let minuteView = LiquidGlassText(minute, font: roundedNSFont)
+            .matchedGeometryEffect(id: "minute", in: ns)
+            .conditionalGlassEffectID("minute", in: ns)
+
+        if stacked {
+            VStack(alignment: .center, spacing: 0) {
+                hourView
+                minuteView
+            }
+            .id("stack")
+        } else {
+            HStack(alignment: .center, spacing: 0) {
+                hourView
+                minuteView
+            }
+            .id("row")
+        }
+    }
+
+
 
     private func isSystemUsing24Hour() -> Bool {
         let formatString = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: Locale.current) ?? ""
@@ -169,6 +201,16 @@ struct TimeView: View {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func conditionalGlassEffectID(_ id: String, in ns: Namespace.ID) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffectID(id, in: ns)
+        } else {
+            self
+        }
+    }
+}
 
 
 
