@@ -18,6 +18,25 @@ class MacInfoSyncManager: ObservableObject {
 
     private var timer: Timer?
     private var lastSentInfo: NowPlayingInfo?
+    // Snapshot of the last payload we actually sent over the wire
+    private var lastSentSnapshot: Snapshot?
+
+    // Mirrors the payload fields we send so equality check is accurate and cheap
+    private struct Snapshot: Equatable {
+        struct Music: Equatable {
+            let isPlaying: Bool
+            let title: String
+            let artist: String
+            let volume: Int
+            let isMuted: Bool
+            let albumArt: String
+            let likeStatus: String
+        }
+        let batteryLevel: Int
+        let isCharging: Bool
+        let isPaired: Bool
+        let music: Music?
+    }
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -66,6 +85,7 @@ class MacInfoSyncManager: ObservableObject {
         isPlaying = false
         artworkBase64 = ""
         lastSentInfo = nil
+        lastSentSnapshot = nil
     }
 
     private func fetch() {
@@ -84,7 +104,7 @@ class MacInfoSyncManager: ObservableObject {
                 }
                 // MUST update @Published properties on main thread
                 DispatchQueue.main.async {
-                    print("Now Playing fetched:", info) // debug
+//                    print("Now Playing fetched:", info) // debug
                     self?.title = info.title ?? "Unknown Title"
                     self?.artist = info.artist ?? "Unknown Artist"
                     self?.album = info.album ?? "Unknown Album"
@@ -116,14 +136,30 @@ class MacInfoSyncManager: ObservableObject {
         // Get battery info
         let batteryInfo = getBatteryInfo()
 
-        // Send device status without music info
-        WebSocketServer.shared.sendDeviceStatus(
+        // Build snapshot and compare to last sent; skip network if identical
+        let snapshot = Snapshot(
             batteryLevel: batteryInfo.level,
             isCharging: batteryInfo.isCharging,
-            isPaired: true, // Always true when device is connected
-            musicInfo: nil, // No music info when disabled
+            isPaired: true,
+            music: nil
+        )
+
+        guard snapshot != lastSentSnapshot else {
+            // Nothing changed — skip sending
+            return
+        }
+
+        // Send device status without music info (full payload for current mode)
+        WebSocketServer.shared.sendDeviceStatus(
+            batteryLevel: snapshot.batteryLevel,
+            isCharging: snapshot.isCharging,
+            isPaired: snapshot.isPaired,
+            musicInfo: nil,
             albumArtBase64: nil
         )
+
+        // Update last sent snapshot
+        lastSentSnapshot = snapshot
 
         // Handle N/A battery status for desktop Macs
         if batteryInfo.level == -1 {
@@ -140,49 +176,63 @@ class MacInfoSyncManager: ObservableObject {
         // Check if now playing is enabled - if not, send status without music info
         let shouldIncludeMusicInfo = AppState.shared.sendNowPlayingStatus
         
-        // Check if the media info has actually changed for logging purposes
-        let mediaInfoChanged: Bool
-        if let lastInfo = lastSentInfo {
-            let titleChanged = lastInfo.title != info.title
-            let artistChanged = lastInfo.artist != info.artist
-            let playingChanged = lastInfo.isPlaying != info.isPlaying
-            let elapsedChanged = lastInfo.elapsedTime != info.elapsedTime
-            mediaInfoChanged = titleChanged || artistChanged || playingChanged || elapsedChanged
-        } else {
-            mediaInfoChanged = true
-        }
-
         // Get battery info
         let batteryInfo = getBatteryInfo()
 
-        // Convert artwork to base64 if available and music info is enabled
-        let albumArtBase64 = shouldIncludeMusicInfo ? info.artworkData?.base64EncodedString() : nil
+    // Use already-updated published artwork (base64) to avoid recomputing before change check
+    let albumArtBase64 = shouldIncludeMusicInfo ? (artworkBase64.isEmpty ? nil : artworkBase64) : nil
 
-        // Always send device status to Android (includes battery info which can change independently)
-        // But conditionally include music info based on user setting
-        WebSocketServer.shared.sendDeviceStatus(
+        // Build snapshot mirroring the payload we would send
+        let musicSnapshot: Snapshot.Music? = {
+            guard shouldIncludeMusicInfo else { return nil }
+            return Snapshot.Music(
+                isPlaying: info.isPlaying ?? false,
+                title: info.title ?? "",
+                artist: info.artist ?? "",
+                volume: 50, // must match payload default
+                isMuted: false, // must match payload default
+                albumArt: albumArtBase64 ?? "",
+                likeStatus: "none" // must match payload default
+            )
+        }()
+
+        let snapshot = Snapshot(
             batteryLevel: batteryInfo.level,
             isCharging: batteryInfo.isCharging,
-            isPaired: true, // Always true when device is connected
+            isPaired: true,
+            music: musicSnapshot
+        )
+
+        // Early exit if nothing changed compared to the last sent payload
+        guard snapshot != lastSentSnapshot else {
+            print("[mac-status] No change, Skipping")
+            return
+        }
+
+        // Send full device status (all sections for current mode)
+        WebSocketServer.shared.sendDeviceStatus(
+            batteryLevel: snapshot.batteryLevel,
+            isCharging: snapshot.isCharging,
+            isPaired: snapshot.isPaired,
             musicInfo: shouldIncludeMusicInfo ? info : nil,
             albumArtBase64: albumArtBase64
         )
+        print("[mac-status] Sent status \(snapshot.batteryLevel), \(snapshot.isCharging), \(info)")
 
-        // Update last sent info only if we're tracking music
-        if shouldIncludeMusicInfo {
-            lastSentInfo = info
-        }
-        
-        if shouldIncludeMusicInfo && mediaInfoChanged {
-            print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
-        } else {
-            // Handle N/A battery status for desktop Macs
-            if batteryInfo.level == -1 {
-                print("Sent device status update (desktop Mac - no battery)")
-            } else {
-                print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging))")
-            }
-        }
+        // Update last sent trackers
+        lastSentSnapshot = snapshot
+        if shouldIncludeMusicInfo { lastSentInfo = info }
+
+        // Logging
+//        if shouldIncludeMusicInfo {
+//            print("Sent device status to Android: \(info.title ?? "Unknown") by \(info.artist ?? "Unknown")")
+//        } else {
+//            if batteryInfo.level == -1 {
+//                print("Sent device status update (desktop Mac - no battery)")
+//            } else {
+//                print("Sent device status update (battery: \(batteryInfo.level)%, charging: \(batteryInfo.isCharging))")
+//            }
+//        }
     }
 
     private func getBatteryInfo() -> (level: Int, isCharging: Bool) {

@@ -35,7 +35,7 @@ class AppIconManager: ObservableObject {
     func setIcon(_ icon: AppIcon) {
         currentIcon = icon
         UserDefaults.standard.set(icon.iconName, forKey: "selectedAppIcon")
-        print("App icon preference set to: \(icon.name)")
+        print("[app-icon-manager] App icon preference set to: \(icon.name)")
 
         // Actually change the app icon at runtime
         DispatchQueue.main.async {
@@ -84,17 +84,17 @@ class AppIconManager: ObservableObject {
             DispatchQueue.main.async {
                 NSApplication.shared.applicationIconImage = nsImage
             }
-            print("Successfully changed app icon to: \(icon.name) using \(iconName)")
+            print("[app-icon-manager] Successfully changed app icon to: \(icon.name) using \(iconName)")
         } else {
-            print("Could not load app icon: \(iconName)")
+            print("[app-icon-manager] Could not load app icon: \(iconName)")
             // List available named images for debugging
-            print("Trying to debug available images...")
+            print("[app-icon-manager] Trying to debug available images...")
 
             // Try some common fallback names
             let fallbackNames = ["AppIconImage", "AppIcon", "app", "icon"]
             for name in fallbackNames {
                 if NSImage(named: name) != nil {
-                    print("Found available image: \(name)")
+                    print("[app-icon-manager] Found available image: \(name)")
                     DispatchQueue.main.async {
                         NSApplication.shared.applicationIconImage = NSImage(named: name)
                     }
@@ -111,7 +111,7 @@ class AppIconManager: ObservableObject {
             // If the saved icon is not default and user doesn't have Plus, revert to default
             let isPlus = UserDefaults.standard.bool(forKey: "isPlus")
             if !savedIcon.isDefault && !isPlus {
-                print("Reverting to default icon - Plus required for custom icons")
+                print("[app-icon-manager] Reverting to default icon - Plus required for custom icons")
                 currentIcon = .defaultIcon
                 UserDefaults.standard.set(AppIcon.defaultIcon.iconName, forKey: "selectedAppIcon")
                 updateAppIcon(for: .defaultIcon)
@@ -128,7 +128,7 @@ class AppIconManager: ObservableObject {
         // Check if current icon is not default and user doesn't have Plus
         let isPlus = UserDefaults.standard.bool(forKey: "isPlus")
         if !currentIcon.isDefault && !isPlus {
-            print("Reverting to default icon - license check failed")
+            print("[app-icon-manager] Reverting to default icon - license check failed")
             currentIcon = .defaultIcon
             UserDefaults.standard.set(AppIcon.defaultIcon.iconName, forKey: "selectedAppIcon")
             updateAppIcon(for: .defaultIcon)

@@ -136,7 +136,11 @@ class WebSocketServer: ObservableObject {
                     decryptedText = text
                 }
 
-                print("WebSocket Received:\n\(decryptedText)")
+                let truncated = decryptedText.count > 300
+                ? decryptedText.prefix(300) + "..."
+                : decryptedText
+                print("[received] \n\(truncated)")
+
 
                 // Step 2: Decode JSON and handle
                 if let data = decryptedText.data(using: .utf8) {
