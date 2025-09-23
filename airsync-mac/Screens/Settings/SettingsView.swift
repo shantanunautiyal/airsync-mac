@@ -1,5 +1,4 @@
 import SwiftUI
-import UserNotifications
 
 struct SettingsView: View {
     @ObservedObject var appState = AppState.shared
@@ -8,9 +7,6 @@ struct SettingsView: View {
     @State private var port: String = "6996"
     @State private var availableAdapters: [(name: String, address: String)] = []
 
-    // New state for notification permissions
-    @State private var notificationsGranted = false
-    @State private var notificationsChecked = false
 
     var body: some View {
         NavigationStack {
@@ -20,10 +16,6 @@ struct SettingsView: View {
                     DeviceNameView(deviceName: $deviceName)
                     .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
-
-                    SettingsFeaturesView()
-                        .background(.background.opacity(0.3))
-                        .cornerRadius(12.0)
 
                     // Info Section
                     VStack {
@@ -71,18 +63,14 @@ struct SettingsView: View {
                                 }
                                 .frame(maxWidth: 100)
                         }
-
-                        ConnectionInfoText(
-                            label: "Plus features",
-                            icon: "plus.app",
-                            text: appState.isPlus ? "Active" : "Not active"
-                        )
                     }
                     .padding()
                     .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
 
                     HStack{
+                        Spacer()
+
                         SaveAndRestartButton(
                             title: "Save and Restart the Server",
                             systemImage: "square.and.arrow.down.badge.checkmark",
@@ -94,27 +82,20 @@ struct SettingsView: View {
                         )
                     }
 
+                    Spacer(minLength: 32)
+
+
+                    SettingsFeaturesView()
+                        .background(.background.opacity(0.3))
+                        .cornerRadius(12.0)
+
+                    Spacer(minLength: 32)
+
                     // App icons
                     AppIconView()
 
                     // UI Tweaks Section
                     VStack {
-                        HStack {
-                            Label("System Notifications", systemImage: "bell.badge")
-
-                            Spacer()
-
-                            GlassButtonView(
-                                label: notificationsGranted ? "Enabled" : "Grant Permission",
-                                systemImage: notificationsGranted ? "checkmark.circle.fill" : "bell.badge",
-                                primary: !notificationsGranted,
-                                action: {
-                                        openNotificationSettings()
-                                }
-                            )
-                            .disabled(notificationsGranted)
-                            .transition(.identity)
-                        }
 
                         HStack{
                             Label("Liquid Opacity", systemImage: "app.background.dotted")
@@ -136,6 +117,13 @@ struct SettingsView: View {
                             Label("Toolbar contrast", systemImage: "uiwindow.split.2x1")
                             Spacer()
                             Toggle("", isOn: $appState.toolbarContrast)
+                                .toggleStyle(.switch)
+                        }
+
+                        HStack{
+                            Label("Hide Dock Icon", systemImage: "dock.rectangle")
+                            Spacer()
+                            Toggle("", isOn: $appState.hideDockIcon)
                                 .toggleStyle(.switch)
                         }
 
@@ -179,19 +167,13 @@ struct SettingsView: View {
                             .transition(.opacity.combined(with: .move(edge: .top)))
                             .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
 
-                            HStack{
-                                Label("Hide Dock Icon", systemImage: "dock.rectangle")
-                                Spacer()
-                                Toggle("", isOn: $appState.hideDockIcon)
-                                    .toggleStyle(.switch)
-                            }
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                            .animation(.easeInOut(duration: 0.3), value: appState.showMenubarText)
                         }
                     }
                     .padding()
                     .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
+
+                    Spacer(minLength: 32)
 
                     SettingsPlusView()
                         .padding()
@@ -212,23 +194,7 @@ struct SettingsView: View {
                 port = UserDefaults.standard.string(forKey: "devicePort")
                 ?? String(Defaults.serverPort)
             }
-            checkNotificationPermissions()
         }
     }
 
-    // MARK: - Notification Permission Helpers
-    func checkNotificationPermissions() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                notificationsGranted = (settings.authorizationStatus == .authorized)
-                notificationsChecked = true
-            }
-        }
-    }
-
-    func openNotificationSettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
-            NSWorkspace.shared.open(url)
-        }
-    }
 }
