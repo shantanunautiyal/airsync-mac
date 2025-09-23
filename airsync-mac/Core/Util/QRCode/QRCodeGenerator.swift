@@ -38,7 +38,7 @@ class QRCodeGenerator {
             let cgImage = try doc.cgImage(CGSize(width: dimension, height: dimension))
             return cgImage
         } catch {
-            print("QR generation failed: \(error)")
+            print("[qr-code-generator] QR generation failed: \(error)")
             return nil
         }
     }

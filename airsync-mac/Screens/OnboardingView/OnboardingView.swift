@@ -53,24 +53,29 @@ struct OnboardingView: View {
 
             Group {
                 switch currentStep {
-                case .welcome:
-                    WelcomeView(onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .installAndroid } })
-                case .installAndroid:
-                    InstallAndroidView(onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .mirroringSetup } })
-                case .mirroringSetup:
-                    MirroringSetupView(
-                        onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .plusFeatures } },
-                        onSkip: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .plusFeatures } }
-                    )
-                case .plusFeatures:
-                    PlusFeaturesView(onNext: { withAnimation(.easeInOut(duration: 0.25)) { currentStep = .done } })
-                case .done:
-                    Color.clear.onAppear {
-                        hasPairedDeviceOnce = true
-                        UserDefaults.standard.markOnboardingCompleted()
-                        AppState.shared.isOnboardingActive = false
-                        dismiss()
-                    }
+
+                    case .welcome:
+                        WelcomeView(onNext: { withAnimation(.easeInOut(duration: 0.75)) { currentStep = .installAndroid } })
+
+                    case .installAndroid:
+                        InstallAndroidView(onNext: { withAnimation(.easeInOut(duration: 0.75)) { currentStep = .mirroringSetup } })
+
+                    case .mirroringSetup:
+                        MirroringSetupView(
+                            onNext: { withAnimation(.easeInOut(duration: 0.75)) { currentStep = .plusFeatures } },
+                            onSkip: { withAnimation(.easeInOut(duration: 0.75)) { currentStep = .plusFeatures } }
+                        )
+
+                    case .plusFeatures:
+                        PlusFeaturesView(onNext: { withAnimation(.easeInOut(duration: 0.75)) { currentStep = .done } })
+
+                    case .done:
+                        Color.clear.onAppear {
+                            hasPairedDeviceOnce = true
+                            UserDefaults.standard.markOnboardingCompleted()
+                            AppState.shared.isOnboardingActive = false
+                            dismiss()
+                        }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

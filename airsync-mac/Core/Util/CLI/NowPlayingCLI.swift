@@ -72,7 +72,7 @@ class NowPlayingCLI {
     func fetchNowPlaying(completion: @escaping (NowPlayingInfo?) -> Void) {
         guard let binPath = resolveBinaryPath() else {
             // media-control not available; gracefully return nil
-            print("media-control binary not found. Install with: brew install media-control")
+            print("[now-playing] media-control binary not found. Install with: brew install media-control")
             completion(Optional<NowPlayingInfo>.none)
             return
         }
@@ -105,7 +105,7 @@ class NowPlayingCLI {
             // Try decoding the full JSON at once
             if let rawString = String(data: buffer, encoding: .utf8) {
                 let trimmed = rawString.trimmingCharacters(in: .whitespacesAndNewlines)
-                print("Full media-control output:", trimmed) // debug
+//                print("[now-playing] Full media-control output:", trimmed) // debug
 
                 // If media-control returns literal "null", treat as no media
                 if trimmed.isEmpty || trimmed.lowercased() == "null" {
@@ -124,7 +124,7 @@ class NowPlayingCLI {
                         DispatchQueue.main.async { completion(nil) }
                     }
                 } catch {
-                    print("JSON parse error:", error)
+                    print("[now-playing] JSON parse error:", error)
                     DispatchQueue.main.async { completion(nil) }
                 }
             } else {
@@ -135,7 +135,7 @@ class NowPlayingCLI {
         do {
             try process.run()
         } catch {
-            print("Failed to run media-control get:", error)
+            print("[now-playing] Failed to run media-control get:", error)
             completion(Optional<NowPlayingInfo>.none)
         }
     }
@@ -152,7 +152,7 @@ class NowPlayingCLI {
 
     private func runCommand(_ cmd: String) {
         guard let binPath = resolveBinaryPath() else {
-            print("media-control binary not found. Install with: brew install media-control")
+            print("[now-playing] media-control binary not found. Install with: brew install media-control")
             return
         }
         let process = Process()

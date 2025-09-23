@@ -20,7 +20,6 @@ struct DeviceStatus: Codable {
         let volume: Int
         let isMuted: Bool
         let albumArt: String
-        // likeStatus: "liked" | "not_liked" | "none"
         let likeStatus: String
     }
 

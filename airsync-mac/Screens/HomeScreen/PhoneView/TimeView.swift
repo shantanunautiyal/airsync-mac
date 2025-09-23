@@ -25,7 +25,7 @@ private struct TextHelper {
 
             let key = kCTFontAttributeName as NSAttributedString.Key
             guard let anyCTFont = attributes[key] else {
-                print("[LiquidGlassText] Missing font attribute in run attributes: \(attributes)")
+                print("[time-view] (liquid-glass) Missing font attribute in run attributes: \(attributes)")
                 continue
             }
             let ctFont = anyCTFont as! CTFont
@@ -83,7 +83,8 @@ private struct LiquidGlassText: View {
 
     init(_ text: String, font: NSFont) {
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: font
+            .font: font,
+            .kern: -12
         ]
         self.string = NSAttributedString(string: text, attributes: attrs)
     }
@@ -92,14 +93,13 @@ private struct LiquidGlassText: View {
         let path = TextHelper.path(for: string)
         let bounds = path.boundingRect
 
-        // Flat look: apply clear glass to the raw glyph path (no stroke/emboss)
         Color.clear
             .frame(width: bounds.width, height: bounds.height, alignment: .center)
             .overlay(
                 Group {
                     if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
                         Color.clear
-                            .glassEffect(in: path)
+                            .glassEffect(in: path)   // keep glass effect, but no transition/animation here
                     } else {
                         Color.clear
                     }
@@ -109,8 +109,10 @@ private struct LiquidGlassText: View {
     }
 }
 
+
 struct TimeView: View {
     @State private var currentDate = Date()
+    @Namespace private var ns   // namespace for matchedGeometryEffect
 
     // Timer that updates every second
     private let timer = Timer
@@ -128,41 +130,90 @@ struct TimeView: View {
         let minute = String(format: "%02d", components.minute ?? 0)
 
         // Desired size and weight
-        let fontSize: CGFloat = 75
-        // Keep the on-screen Text fallback as medium rounded
-        let fallbackWeight: Font.Weight = .light
+        let fontSize: CGFloat = 90
         // Use a rounded NSFont for the liquid glass path
         let roundedNSFont = roundedFont(ofSize: fontSize, weight: .black)
 
-        HStack{
-            if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
-                VStack(spacing: 5) {
-                    // Liquid glass (flat, rounded)
-                    LiquidGlassText(hour, font: roundedNSFont)
-                    LiquidGlassText(minute, font: roundedNSFont)
+        ZStack {
+            if #available(macOS 26.0, *) {
+                GlassEffectContainer {
+                    ClockLayout(
+                        hour: hour,
+                        minute: minute,
+                        roundedNSFont: roundedNSFont,
+                        ns: ns,
+                        stacked: AppState.shared.isMusicCardHidden
+                    )
                 }
             } else {
-                VStack(spacing: -20) {
-                    // Fallback to existing view (rounded design already specified)
-                    Text(hour)
-                    Text(minute)
-                }
+                ClockLayout(
+                    hour: hour,
+                    minute: minute,
+                    roundedNSFont: roundedNSFont,
+                    ns: ns,
+                    stacked: AppState.shared.isMusicCardHidden
+                )
             }
         }
-        .font(.system(size: fontSize, weight: fallbackWeight, design: .rounded))
-        .onReceive(timer) { newValue in
-            currentDate = newValue
-        }
+
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center) // keep centered
+        .onReceive(timer) { newValue in currentDate = newValue }
+        // spring animation drives the motion; tweak stiffness/damping for more/less jiggle
+        .animation(.interpolatingSpring(stiffness: 300, damping: 15), value: AppState.shared.isMusicCardHidden)
         .foregroundColor(.white)
-//        .shadow(radius: 10)
     }
 
-    // Detect if system uses 24-hour time
+    @ViewBuilder
+    private func ClockLayout(
+        hour: String,
+        minute: String,
+        roundedNSFont: NSFont,
+        ns: Namespace.ID,
+        stacked: Bool
+    ) -> some View {
+        let hourView = LiquidGlassText(hour, font: roundedNSFont)
+            .matchedGeometryEffect(id: "hour", in: ns)
+            .conditionalGlassEffectID("hour", in: ns)
+
+        let minuteView = LiquidGlassText(minute, font: roundedNSFont)
+            .matchedGeometryEffect(id: "minute", in: ns)
+            .conditionalGlassEffectID("minute", in: ns)
+
+        if stacked {
+            VStack(alignment: .center, spacing: 0) {
+                hourView
+                minuteView
+            }
+            .id("stack")
+        } else {
+            HStack(alignment: .center, spacing: 0) {
+                hourView
+                minuteView
+            }
+            .id("row")
+        }
+    }
+
+
+
     private func isSystemUsing24Hour() -> Bool {
         let formatString = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: Locale.current) ?? ""
         return !formatString.contains("a")
     }
 }
+
+extension View {
+    @ViewBuilder
+    func conditionalGlassEffectID(_ id: String, in ns: Namespace.ID) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffectID(id, in: ns)
+        } else {
+            self
+        }
+    }
+}
+
+
 
 #Preview {
     TimeView()

@@ -17,15 +17,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack {
                     // Device Name Field
-                    VStack {
-
-                        HStack {
-                            Label("Rename your \(DeviceTypeUtil.deviceTypeDescription())", systemImage: "pencil")
-                            Spacer()
-                        }
-                        TextField("Device Name", text: $deviceName)
-                    }
-                    .padding()
+                    DeviceNameView(deviceName: $deviceName)
                     .background(.background.opacity(0.3))
                     .cornerRadius(12.0)
 

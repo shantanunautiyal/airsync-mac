@@ -302,7 +302,9 @@ class AppState: ObservableObject {
             self.currentDeviceWallpaperBase64 = nil
             self.transfers = [:]
 
-            ADBConnector.disconnectADB()
+            if self.adbConnected {
+                ADBConnector.disconnectADB()
+            }
         }
     }
 
@@ -407,7 +409,7 @@ class AppState: ObservableObject {
         }
         let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
         center.add(request) { error in
-            if let error = error { print("Failed to post native notification: \(error)") }
+            if let error = error { print("[state] (notification) Failed to post native notification: \(error)") }
         }
     }
 
@@ -426,7 +428,7 @@ class AppState: ObservableObject {
             try pngData.write(to: tempFile)
             return tempFile
         } catch {
-            print("Error saving icon to temp file: \(error)")
+            print("[state] Error saving icon to temp file: \(error)")
             return nil
         }
     }
@@ -440,7 +442,7 @@ class AppState: ObservableObject {
                 let removedNIDs = currentNIDs.subtracting(systemNIDs)
 
                 for nid in removedNIDs {
-                    print("System notification \(nid) was dismissed manually.")
+                    print("[state] (notification) System notification \(nid) was dismissed manually.")
                     self.removeNotificationById(nid)
                 }
             }
@@ -458,7 +460,7 @@ class AppState: ObservableObject {
                    copiedString != self.lastClipboardValue {
                     self.lastClipboardValue = copiedString
                     self.sendClipboardToAndroid(text: copiedString)
-                    print("Clipboard updated :" + copiedString)
+                    print("[state] (clipboard) updated :" + copiedString)
                 }
             }
     }
@@ -541,7 +543,7 @@ class AppState: ObservableObject {
             let data = try JSONEncoder().encode(details)
             UserDefaults.standard.set(data, forKey: licenseDetailsKey)
         } catch {
-            print("Failed to encode license details: \(error)")
+            print("[state] (license) Failed to encode license details: \(error)")
         }
     }
 
@@ -553,7 +555,7 @@ class AppState: ObservableObject {
         do {
             return try JSONDecoder().decode(LicenseDetails.self, from: data)
         } catch {
-            print("Failed to decode license details: \(error)")
+            print("[state] (license) Failed to decode license details: \(error)")
             return nil
         }
     }
@@ -564,7 +566,7 @@ class AppState: ObservableObject {
             let data = try JSONEncoder().encode(Array(AppState.shared.androidApps.values))
             try data.write(to: url)
         } catch {
-            print("Error saving apps: \(error)")
+            print("[state] (apps) Error saving apps: \(error)")
         }
     }
 
@@ -583,7 +585,7 @@ class AppState: ObservableObject {
                 }
             }
         } catch {
-            print("Error loading apps: \(error)")
+            print("[state] (apps) Error loading apps: \(error)")
         }
     }
 

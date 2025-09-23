@@ -71,7 +71,7 @@ struct ADBConnector {
         DispatchQueue.main.async {
             AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\n[Binary Detection] \(message)"
         }
-        print("[Binary Detection] \(message)")
+        print("[adb-connector] (Binary Detection) \(message)")
     }
 
     static func connectToADB(ip: String) {

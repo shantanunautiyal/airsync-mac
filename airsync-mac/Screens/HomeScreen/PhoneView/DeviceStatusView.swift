@@ -13,9 +13,20 @@ struct DeviceStatusView: View {
     @State private var tempVolume: Double = 100
     @State private var isDragging = false
     @State private var showingPlusPopover = false
+    var showMediaToggle: Bool = true
 
     var body: some View {
-        HStack {
+
+        VStack {
+            if let music = appState.status?.music,
+               let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+               !title.isEmpty,
+               !appState.isMusicCardHidden, showMediaToggle {
+
+                MediaPlayerView(music: music)
+                    .transition(.opacity.combined(with: .scale))
+            }
+
             HStack(spacing: 8) {
                 let batteryLevel = appState.status?.battery.level ?? 100
                 let batteryIsCharging = appState.status?.battery.isCharging ?? false
@@ -78,9 +89,8 @@ struct DeviceStatusView: View {
                         PlusFeaturePopover(message: "Control volume with AirSync+")
                     }
 
-                if let music = appState.status?.music,
-                   let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !title.isEmpty {
+                if let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !title.isEmpty && showMediaToggle {
                         GlassButtonView(
                             label: "Music Player",
                             systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
@@ -96,14 +106,15 @@ struct DeviceStatusView: View {
                         .transition(.opacity.combined(with: .scale))
                 }
             }
-            .padding(4)
-            .applyGlassViewIfAvailable()
-            .animation(
-                .easeInOut(duration: 0.25),
-                value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)"
-            )
+            .padding(.bottom, appState.isMusicCardHidden ? 0 : 8)
 
         }
+        .padding(4)
+        .applyGlassViewIfAvailable()
+        .animation(
+            .easeInOut(duration: 0.25),
+            value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)"
+        )
     }
 
     // Battery icon helper

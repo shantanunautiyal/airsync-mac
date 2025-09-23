@@ -20,7 +20,7 @@ struct airsync_macApp: App {
     private let updaterController: SPUStandardUpdaterController
 
     // Initialize NowPlayingViewModel to start sending media info to Android
-    @StateObject private var nowPlayingViewModel = NowPlayingViewModel()
+    @StateObject private var macInfoSyncManager = MacInfoSyncManager()
 
     init() {
 
@@ -36,9 +36,9 @@ struct airsync_macApp: App {
         }
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
-                print("Notification permission error: \(error)")
+                print("[main-app] Notification permission error: \(error)")
             } else {
-                print("Notification permission granted: \(granted)")
+                print("[main-app] Notification permission granted: \(granted)")
             }
         }
 

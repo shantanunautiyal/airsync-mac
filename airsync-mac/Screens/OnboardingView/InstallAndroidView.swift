@@ -29,6 +29,7 @@ struct InstallAndroidView: View {
                     .accessibilityLabel("QR Code to download AirSync Android app")
                     .shadow(radius: 10)
                     .padding()
+                    .background(.black.opacity(0.6), in: .rect(cornerRadius: 30))
             } else {
                 ProgressView("Generating QR…")
                     .frame(width: 100, height: 100)

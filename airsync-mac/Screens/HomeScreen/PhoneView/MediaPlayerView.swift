@@ -48,7 +48,6 @@ struct MediaPlayerView: View {
                                         return "heart.slash"
                                     }(),
                                     iconOnly: true,
-                                    size: .small,
                                     action: {
                                         guard let like = AppState.shared.status?.music.likeStatus else { return }
                                         if like == "liked" {
@@ -67,7 +66,6 @@ struct MediaPlayerView: View {
                                     label: "",
                                     systemImage: "backward.end",
                                     iconOnly: true,
-                                    size: .small,
                                     action: {
                                         WebSocketServer.shared.skipPrevious()
                                     }
@@ -96,7 +94,6 @@ struct MediaPlayerView: View {
                                     label: "",
                                     systemImage: "forward.end",
                                     iconOnly: true,
-                                    size: .small,
                                     action: {
                                         WebSocketServer.shared.skipNext()
                                     }
@@ -110,8 +107,7 @@ struct MediaPlayerView: View {
                 }
             }
         }
-        .padding()
-        .applyGlassViewIfAvailable(cornerRadius: 20)
+        .padding(10)
         .onTapGesture {
             showingPlusPopover = !AppState.shared.isPlus && AppState.shared.licenseCheck
         }

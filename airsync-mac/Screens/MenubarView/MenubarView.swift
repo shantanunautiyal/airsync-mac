@@ -140,7 +140,7 @@ struct MenubarView: View {
                 .padding(8)
 
                 if (appState.status != nil){
-                    DeviceStatusView()
+                    DeviceStatusView(showMediaToggle: false)
                         .transition(.opacity.combined(with: .scale))
                 }
 

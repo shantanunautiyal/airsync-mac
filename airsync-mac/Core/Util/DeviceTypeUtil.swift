@@ -53,4 +53,30 @@ enum DeviceTypeUtil {
         // Fallback to major type
         return deviceTypeDescription()
     }
+
+    static func deviceIconName() -> String {
+        let identifier = modelIdentifier()
+        // First, look for an explicit per-model icon key in any category
+        for (_, models) in deviceMappings {
+            if let icon = models["\(identifier)_icon"] { // e.g., "MacBookPro18,1_icon"
+                return icon
+            }
+        }
+        // Next, use category-based defaults
+        let type = deviceTypeDescription()
+        switch type {
+        case "MacBook Pro", "MacBook Air":
+            return "macbook"
+        case "Mac mini":
+            return "macmini"
+        case "iMac":
+            return "desktopcomputer"
+        case "Mac Studio":
+            return "macstudio"
+        case "Mac Pro":
+            return "macpro.gen3"
+        default:
+            return "desktopcomputer"
+        }
+    }
 }

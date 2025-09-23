@@ -54,6 +54,8 @@ class WebSocketServer: ObservableObject {
     private let ackWaitMs: UInt32 = 2000 // 2s
 
     private var lastKnownAdapters: [(name: String, address: String)] = []
+    // Track last adapter selection we logged to avoid repetitive logs
+    private var lastLoggedSelectedAdapter: (name: String, address: String)? = nil
 
     init() {
         loadOrGenerateSymmetricKey()
@@ -61,9 +63,9 @@ class WebSocketServer: ObservableObject {
         // Request notification permission so we can show incoming file alerts
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let err = error {
-                print("Notification auth error: \(err)")
+                print("[websocket] Notification auth error: \(err)")
             } else {
-                print("Notification permission granted: \(granted)")
+                print("[websocket] Notification permission granted: \(granted)")
             }
         }
     }
@@ -85,14 +87,14 @@ class WebSocketServer: ObservableObject {
 
                     self.lastKnownIP = ip
                 }
-                print("WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
+                print("[websocket] WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
 
                 self.startNetworkMonitoring()
             } catch {
                 DispatchQueue.main.async {
                     AppState.shared.webSocketStatus = .failed(error: "\(error)")
                 }
-                print("Failed to start WebSocket server: \(error)")
+                print("[websocket] Failed to start WebSocket server: \(error)")
             }
         }
     }
@@ -136,7 +138,11 @@ class WebSocketServer: ObservableObject {
                     decryptedText = text
                 }
 
-                print("WebSocket Received:\n\(decryptedText)")
+                let truncated = decryptedText.count > 300
+                ? decryptedText.prefix(300) + "..."
+                : decryptedText
+                print("[websocket] [received] \n\(truncated)")
+
 
                 // Step 2: Decode JSON and handle
                 if let data = decryptedText.data(using: .utf8) {
@@ -146,18 +152,18 @@ class WebSocketServer: ObservableObject {
                             self.handleMessage(message)
                         }
                     } catch {
-                        print("WebSocket JSON decode failed: \(error)")
+                        print("[websocket] WebSocket JSON decode failed: \(error)")
                     }
                 }
             },
 
             connected: { [weak self] session in
-                print("WebSocket connected")
+                print("[websocket] Device connected")
                 self?.activeSessions.append(session)
             },
             disconnected: { [weak self] session in
                 guard let self = self else { return }
-                print("WebSocket disconnected")
+                print("[websocket] Device disconnected")
 
                 self.activeSessions.removeAll(where: { $0 === session })
 
@@ -179,27 +185,42 @@ class WebSocketServer: ObservableObject {
 
         if let adapterName = adapterName {
             if let exact = adapters.first(where: { $0.name == adapterName }) {
-                print("Selected adapter match: \(exact.name) -> \(exact.address)")
+                // Log only when selection changes
+                if lastLoggedSelectedAdapter?.name != exact.name || lastLoggedSelectedAdapter?.address != exact.address {
+                    print("[websocket] Selected adapter match: \(exact.name) -> \(exact.address)")
+                    lastLoggedSelectedAdapter = (exact.name, exact.address)
+                }
                 return exact.address
             }
-            print("Adapter \(adapterName) not found, falling back")
+            // [quiet] adapter not found can be noisy; keep for debugging
+            // print("[websocket] Adapter \(adapterName) not found, falling back")
         }
 
         // Auto mode
         if adapterName == nil {
             // Priority 1: Wi-Fi/Ethernet (en0, en1, en2…)
             if let primary = adapters.first(where: { $0.name.hasPrefix("en") }) {
-                print("Auto-selected Wi-Fi/Ethernet adapter: \(primary.name) -> \(primary.address)")
+                // Log only when selection changes
+                if lastLoggedSelectedAdapter?.name != primary.name || lastLoggedSelectedAdapter?.address != primary.address {
+                    print("[websocket] Auto-selected network adapter: \(primary.name) -> \(primary.address)")
+                    lastLoggedSelectedAdapter = (primary.name, primary.address)
+                }
                 return primary.address
             }
             // Priority 2: Standard private ranges (192.168, 10.x, 172.16–31)
             if let privateIP = adapters.first(where: { ipIsPrivatePreferred($0.address) }) {
-                print("Auto-selected private adapter: \(privateIP.name) -> \(privateIP.address)")
+                if lastLoggedSelectedAdapter?.name != privateIP.name || lastLoggedSelectedAdapter?.address != privateIP.address {
+                    print("[websocket] Auto-selected private adapter: \(privateIP.name) -> \(privateIP.address)")
+                    lastLoggedSelectedAdapter = (privateIP.name, privateIP.address)
+                }
                 return privateIP.address
             }
             // Priority 3: Any other adapter
             if let any = adapters.first {
-                print("Auto-selected fallback adapter: \(any.name) -> \(any.address)")
+                if lastLoggedSelectedAdapter?.name != any.name || lastLoggedSelectedAdapter?.address != any.address {
+                    print("[websocket] Auto-selected fallback adapter: \(any.name) -> \(any.address)")
+                    lastLoggedSelectedAdapter = (any.name, any.address)
+                }
                 return any.address
             }
         }
@@ -319,10 +340,10 @@ class WebSocketServer: ObservableObject {
                let action = dict["action"] as? String,
                let success = dict["success"] as? Bool {
                 let msg = dict["message"] as? String ?? ""
-                print("Notification action response id=\(id) action=\(action) success=\(success) message=\(msg)")
+                print("[websocket] Notification action response id=\(id) action=\(action) success=\(success) message=\(msg)")
             }
         case .notificationAction:
-            print("Warning: received 'notificationAction' from remote (ignored).")
+            print("[websocket] Warning: received 'notificationAction' from remote (ignored).")
         case .notificationUpdate:
             if let dict = message.data.value as? [String: Any],
                let nid = dict["id"] as? String {
@@ -375,14 +396,14 @@ class WebSocketServer: ObservableObject {
             if let dict = message.data.value as? [String: Any],
                let id = dict["id"] as? String,
                let success = dict["success"] as? Bool {
-                print("Dismissal \(success ? "succeeded" : "failed") for notification id: \(id)")
+                print("[websocket] Dismissal \(success ? "succeeded" : "failed") for notification id: \(id)")
             }
 
         case .mediaControlResponse:
             if let dict = message.data.value as? [String: Any],
                let action = dict["action"] as? String,
                let success = dict["success"] as? Bool {
-                print("Media control \(action) \(success ? "succeeded" : "failed")")
+                print("[websocket] Media control \(action) \(success ? "succeeded" : "failed")")
             }
 
         case .appIcons:
@@ -408,7 +429,7 @@ class WebSocketServer: ObservableObject {
                                 try data.write(to: fileURL, options: .atomic)
                                 iconPath = fileURL.path
                             } catch {
-                                print("Failed to write icon for \(package): \(error)")
+                                print("[websocket] Failed to write icon for \(package): \(error)")
                             }
                         }
 
@@ -499,7 +520,7 @@ class WebSocketServer: ObservableObject {
                 var set = outgoingAcks[id] ?? []
                 set.insert(index)
                 outgoingAcks[id] = set
-                print("Received ack for id=\(id) index=\(index) totalAcked=\(set.count)")
+                print("[websocket] (file-transfer) Received ack for id=\(id) index=\(index) totalAcked=\(set.count)")
             }
 
         case .fileTransferComplete:
@@ -516,7 +537,7 @@ class WebSocketServer: ObservableObject {
                         if let fileData = try? Data(contentsOf: state.tempUrl) {
                             let computed = SHA256.hash(data: fileData).compactMap { String(format: "%02x", $0) }.joined()
                             if computed != expected {
-                                print("Checksum mismatch for incoming file id=\(id), expected=\(expected), computed=\(computed)")
+                                print("[websocket] (file-transfer) Checksum mismatch for incoming file id=\(id), expected=\(expected), computed=\(computed)")
                                 // Post notification about checksum mismatch via AppState util
                                 AppState.shared.postNativeNotification(
                                     id: "incoming_file_\(id)_mismatch",
@@ -539,7 +560,7 @@ class WebSocketServer: ObservableObject {
                             try FileManager.default.moveItem(at: state.tempUrl, to: finalDest)
 
                             // Optionally: show a user notification (simple print for now)
-                            print("Saved incoming file to \(finalDest.path)")
+                            print("[websocket] (file-transfer) Saved incoming file to \(finalDest.path)")
 
                             // Mark as completed in AppState and post notification via AppState util
                             AppState.shared.completeIncoming(id: id, verified: nil)
@@ -550,7 +571,7 @@ class WebSocketServer: ObservableObject {
                                 body: "Saved to Downloads"
                             )
                         } catch {
-                            print("Failed to move incoming file: \(error)")
+                            print("[websocket] (file-transfer) Failed to move incoming file: \(error)")
                         }
                     }
 
@@ -560,7 +581,7 @@ class WebSocketServer: ObservableObject {
             if let dict = message.data.value as? [String: Any],
                let id = dict["id"] as? String,
                let verified = dict["verified"] as? Bool {
-                print("Received transferVerified for id=\(id) verified=\(verified)")
+                print("[websocket] (file-transfer) Received transferVerified for id=\(id) verified=\(verified)")
                 // Update AppState and show a confirmation notification via AppState util
                 AppState.shared.completeOutgoingVerified(id: id, verified: verified)
                 AppState.shared.postNativeNotification(
@@ -574,19 +595,19 @@ class WebSocketServer: ObservableObject {
         case .macMediaControl:
             if let dict = message.data.value as? [String: Any],
                let action = dict["action"] as? String {
-                print("Received Mac media control: \(action)")
+                print("[websocket] Received Mac media control: \(action)")
                 handleMacMediaControl(action: action)
             }
 
         case .macMediaControlResponse:
             // This case handles responses from Android to Mac media control responses
             // Currently not needed as Mac sends responses to Android, not vice versa
-            print("Received macMediaControlResponse (not typically expected)")
+            print("[websocket] Received macMediaControlResponse (not typically expected)")
 
         case .macInfo:
             // This case handles macInfo messages from Android to Mac
             // Currently not expected as Mac sends macInfo to Android, not vice versa
-            print("Received macInfo message from Android (not typically expected)")
+            print("[websocket] Received macInfo message from Android (not typically expected)")
         }
 
 
@@ -600,26 +621,26 @@ class WebSocketServer: ObservableObject {
         switch action {
         case "play":
             NowPlayingCLI.shared.play()
-            print("Mac media control: play")
+            print("[websocket] Mac media control: play")
 
         case "pause":
             NowPlayingCLI.shared.pause()
-            print("Mac media control: pause")
+            print("[websocket] Mac media control: pause")
 
         case "previous":
             NowPlayingCLI.shared.previous()
-            print("Mac media control: previous (using previous-track)")
+            print("[websocket] Mac media control: previous")
 
         case "next":
             NowPlayingCLI.shared.next()
-            print("Mac media control: next (using next-track)")
+            print("[websocket] Mac media control: next")
 
         case "stop":
             NowPlayingCLI.shared.stop()
-            print("Mac media control: stop")
+            print("[websocket] Mac media control: stop")
             
         default:
-            print("Unknown Mac media control action: \(action)")
+            print("[websocket] Unknown Mac media control action: \(action)")
         }
 
         // Send response back to Android
@@ -676,11 +697,11 @@ class WebSocketServer: ObservableObject {
                 let messageJsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
                 if let messageJsonString = String(data: messageJsonData, encoding: .utf8) {
                     sendToFirstAvailable(message: messageJsonString)
-                    print("Sent Mac info response to Android device: model=\(exactDeviceName), type=\(categoryType)")
+                    print("[websocket] Sent Mac info response: model=\(exactDeviceName), type=\(categoryType)")
                 }
             }
         } catch {
-            print("Error creating Mac info response: \(error)")
+            print("[websocket] Error creating Mac info response: \(error)")
         }
     }
 
@@ -843,7 +864,7 @@ class WebSocketServer: ObservableObject {
                 sendToFirstAvailable(message: jsonString)
             }
         } catch {
-            print("Error creating device status message: \(error)")
+            print("[websocket] Error creating device status message: \(error)")
         }
     }
 
@@ -927,7 +948,7 @@ class WebSocketServer: ObservableObject {
                 let elapsedMs = now.timeIntervalSince(entry.lastSent) * 1000.0
                 if elapsedMs > Double(ackWaitMs) {
                     if entry.attempts >= maxChunkRetries {
-                        print("Failed to get ack for chunk \(idx) after \(maxChunkRetries) attempts")
+                        print("[websocket] (file-transfer) Failed to get ack for chunk \(idx) after \(maxChunkRetries) attempts")
                         outgoingAcks.removeValue(forKey: transferId)
                         return
                     }
@@ -949,7 +970,7 @@ class WebSocketServer: ObservableObject {
     // Ensure progress shows 100%
     AppState.shared.updateOutgoingProgress(id: transferId, bytesTransferred: totalSize)
     let elapsed = Date().timeIntervalSince(startTime)
-        print("Completed sending \(totalSize) bytes in \(elapsed) s")
+        print("[websocket] (file-transfer) Completed sending \(totalSize) bytes in \(elapsed) s")
 
         // Send complete
     let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: totalSize, checksum: checksum)
@@ -982,16 +1003,16 @@ class WebSocketServer: ObservableObject {
         if let savedKey = defaults.string(forKey: "encryptionKey"),
            let keyData = Data(base64Encoded: savedKey) {
             symmetricKey = SymmetricKey(data: keyData)
-            print("Loaded existing symmetric key")
+            print("[websocket] (auth) Loaded existing symmetric key")
         } else {
             let base64Key = generateSymmetricKey()
             defaults.set(base64Key, forKey: "encryptionKey")
 
             if let keyData = Data(base64Encoded: base64Key) {
                 symmetricKey = SymmetricKey(data: keyData)
-                print("Generated and stored new symmetric key")
+                print("[websocket] (auth) Generated and stored new symmetric key")
             } else {
-                print("Failed to generate symmetric key")
+                print("[websocket] (auth) Failed to generate symmetric key")
             }
         }
     }
@@ -1010,7 +1031,7 @@ class WebSocketServer: ObservableObject {
     func setEncryptionKey(base64Key: String) {
         if let data = Data(base64Encoded: base64Key) {
             symmetricKey = SymmetricKey(data: data)
-            print("Encryption key set")
+            print("[websocket] (auth) Encryption key set")
         }
     }
 
@@ -1064,12 +1085,12 @@ class WebSocketServer: ObservableObject {
 
             for adapter in adapters {
                 let activeMark = (adapter.address == chosenIP) ? " [ACTIVE]" : ""
-                print("[Network] \(adapter.name) -> \(adapter.address)\(activeMark)")
+                print("[websocket] (network) \(adapter.name) -> \(adapter.address)\(activeMark)")
             }
 
             // Restart if the IP changed
             if let lastIP = lastKnownIP, lastIP != chosenIP {
-                print("Network IP changed from \(lastIP) to \(chosenIP ?? "N/A"), restarting WebSocket in 5 seconds")
+                print("[websocket] (network) IP changed from \(lastIP) to \(chosenIP ?? "N/A"), restarting WebSocket in 5 seconds")
                 lastKnownIP = chosenIP
                 AppState.shared.shouldRefreshQR = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
@@ -1081,7 +1102,8 @@ class WebSocketServer: ObservableObject {
                 lastKnownIP = chosenIP
             }
         } else {
-            print("[Network] No change detected")
+            // [quiet] No change is the common case; keep log line for debugging
+            // print("[websocket] (network) No change detected")
         }
     }
 

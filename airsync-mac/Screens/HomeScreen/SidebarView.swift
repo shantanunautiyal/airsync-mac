@@ -17,6 +17,19 @@ struct SidebarView: View {
     var body: some View {
         VStack{
 
+            HStack(alignment: .center) {
+                let name = appState.device?.name ?? "AirSync"
+                let truncated = name.count > 20
+                ? String(name.prefix(20)) + "..."
+                : name
+
+                Text(truncated)
+                    .font(.title3)
+            }
+            .padding(8)
+
+
+
             if let deviceVersion = appState.device?.version,
                isVersion(deviceVersion, lessThan: appState.minAndroidVersion) {
                 Label("Your Android app is outdated", systemImage: "iphone.badge.exclamationmark")

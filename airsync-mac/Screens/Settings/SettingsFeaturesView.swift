@@ -30,41 +30,10 @@ struct SettingsFeaturesView: View {
 
     var body: some View {
         VStack{
-            HStack {
-                Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
-                Spacer()
-
-                ZStack {
-                    Toggle(
-                        "",
-                        isOn: $appState.adbEnabled
-                    )
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
-
-                    // Transparent tap area on top to show popover even if disabled
-                    if !AppState.shared.isPlus && AppState.shared.licenseCheck {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                showingPlusPopover = true
-                            }
-                    }
-                }
-                .frame(width: 55)
-            }
-            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
-                PlusFeaturePopover(message: "Wireless ADB features are available in AirSync+")
-                    .onTapGesture {
-                        showingPlusPopover = false
-                    }
-            }
-
-            // Show port field if ADB toggle is on
-            if appState.isPlus, appState.adbEnabled{
+            ZStack{
                 HStack {
+                    Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
+                    Spacer()
 
                     if appState.adbConnected {
                         GlassButtonView(
@@ -88,10 +57,58 @@ struct SettingsFeaturesView: View {
                             }
                         )
                         .disabled(
-                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting
+                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting || !AppState.shared.isPlus
                         )
                     }
+
+
+                    ZStack {
+                        Toggle(
+                            "",
+                            isOn: $appState.adbEnabled
+                        )
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
+
+                    }
+                    .frame(width: 55)
+
                 }
+                
+                // Transparent tap area on top to show popover even if disabled
+                if !AppState.shared.isPlus && AppState.shared.licenseCheck {
+                    HStack{
+                        Spacer()
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showingPlusPopover = true
+                            }
+                            .frame(width: 500)
+                    }
+                }
+            }
+            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
+                PlusFeaturePopover(message: "Wireless ADB features are available in AirSync+")
+                    .onTapGesture {
+                        showingPlusPopover = false
+                    }
+            }
+
+
+            if let result = appState.adbConnectionResult {
+                VStack(alignment: .leading, spacing: 6) {
+                    ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
+                }
+                .transition(.opacity)
+            }
+
+            // Show port field if ADB toggle is on
+            if appState.isPlus, (appState.adbEnabled || appState.adbConnected){
+
+                Spacer()
 
                 HStack{
                     Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
@@ -104,7 +121,8 @@ struct SettingsFeaturesView: View {
                 VStack{
                     DisclosureGroup(isExpanded: $isExpanded) {
                         VStack(spacing: 10){
-
+                            Spacer()
+                            
                             HStack {
                                 Text("Video bitrate")
                                 Spacer()
@@ -155,62 +173,19 @@ struct SettingsFeaturesView: View {
                                     .frame(width: 60, alignment: .leading)
                             }
 
-                            HStack {
-                                Text("Stay on top")
-                                Spacer()
+                            SettingsToggleView(name: "Stay on top", icon: "inset.filled.toptrailing.rectangle.portrait", isOn: $scrcpyOnTop)
 
-                                Toggle("", isOn: $scrcpyOnTop)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Stay awake (charging)", icon: "cup.and.heat.waves", isOn: $stayAwake)
 
+                            SettingsToggleView(name: "Blank display", icon: "iphone.gen3.slash", isOn: $turnScreenOff)
 
-                            HStack {
-                                Text("Stay awake (charging)")
-                                Spacer()
+                            SettingsToggleView(name: "No audio", icon: "speaker.slash", isOn: $noAudio)
 
-                                Toggle("", isOn: $stayAwake)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Continue app after closing", icon: "arrow.turn.up.forward.iphone", isOn: $continueApp)
 
-                            HStack {
-                                Text("Blank display")
-                                Spacer()
+                            SettingsToggleView(name: "Direct keyboard input", icon: "keyboard.chevron.compact.down", isOn: $directKeyInput)
 
-                                Toggle("", isOn: $turnScreenOff)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("No audio")
-                                Spacer()
-
-                                Toggle("", isOn: $noAudio)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Continue app after closing")
-                                Spacer()
-
-                                Toggle("", isOn: $continueApp)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Direct keyboard input")
-                                Spacer()
-
-                                Toggle("", isOn: $directKeyInput)
-                                    .toggleStyle(.switch)
-                            }
-
-                            HStack {
-                                Text("Apps & Desktop mode shared resolution")
-                                Spacer()
-
-                                Toggle("", isOn: $scrcpyShareRes)
-                                    .toggleStyle(.switch)
-                            }
+                            SettingsToggleView(name: "Apps & Desktop mode shared resolution", icon: "ipad.sizes", isOn: $scrcpyShareRes)
 
                             HStack {
                                 Text(UserDefaults.standard.scrcpyShareRes ? "Desktop and App mirroring" :"Desktop mode")
@@ -267,22 +242,12 @@ struct SettingsFeaturesView: View {
                         Label("Mirroring Settings", systemImage: "gear")
                             .font(.subheadline)
                             .bold()
-                            .padding()
                     }
                     .onAppear {
                         tempBitrate = Double(AppState.shared.scrcpyBitrate)
                         tempResolution = Double(AppState.shared.scrcpyResolution)
                     }
                     .focusEffectDisabled()
-                    .padding(.bottom, 7)
-
-
-                    if let result = appState.adbConnectionResult {
-                        VStack(alignment: .leading, spacing: 6) {
-                            ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
-                        }
-                        .transition(.opacity)
-                    }
 
                 }
             }
@@ -298,34 +263,12 @@ struct SettingsFeaturesView: View {
 
 
         VStack{
-//            HStack{
-//                Label("Sync device status", systemImage: "battery.75percent")
-//                Spacer()
-//                Toggle("", isOn: .constant(false))
-//                    .toggleStyle(.switch)
-//                    .disabled(true)
-//            }
 
-            HStack{
-                Label("Sync clipboard", systemImage: "clipboard")
-                Spacer()
-                Toggle("", isOn: $appState.isClipboardSyncEnabled)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Sync clipboard", icon: "clipboard", isOn: $appState.isClipboardSyncEnabled)
 
-            HStack{
-                Label("Sync notification dismissals", systemImage: "bell.badge")
-                Spacer()
-                Toggle("", isOn: $appState.dismissNotif)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Sync notification dismissals", icon: "bell.badge", isOn: $appState.dismissNotif)
 
-            HStack{
-                Label("Send now playing status", systemImage: "play.circle")
-                Spacer()
-                Toggle("", isOn: $appState.sendNowPlayingStatus)
-                    .toggleStyle(.switch)
-            }
+            SettingsToggleView(name: "Send now playing status", icon: "play.circle", isOn: $appState.sendNowPlayingStatus)
 
         }
         .padding()

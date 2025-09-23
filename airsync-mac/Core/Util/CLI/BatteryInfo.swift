@@ -25,7 +25,7 @@ class BatteryInfo {
         do {
             try process.run()
         } catch {
-            print("Failed to run pmset: \(error)")
+            print("[battery-info] Failed to run pmset: \(error)")
             return nil
         }
 
