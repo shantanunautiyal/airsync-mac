@@ -97,7 +97,7 @@ class MacInfoSyncManager: ObservableObject {
             // Fetch now playing info and send device status with music info
             NowPlayingCLI.shared.fetchNowPlaying { [weak self] info in
                 guard let info = info else {
-                    print("[mac-info-sync] No now playing info")
+//                    print("[mac-info-sync] No now playing info")
                     // Still send device status without music info
                     self?.sendDeviceStatusWithoutMusic()
                     return

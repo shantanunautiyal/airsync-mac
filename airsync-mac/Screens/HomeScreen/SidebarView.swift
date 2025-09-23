@@ -17,11 +17,17 @@ struct SidebarView: View {
     var body: some View {
         VStack{
 
-            HStack(alignment: .center){
-                Text(appState.device?.name ?? "AirSync")
+            HStack(alignment: .center) {
+                let name = appState.device?.name ?? "AirSync"
+                let truncated = name.count > 20
+                ? String(name.prefix(20)) + "..."
+                : name
+
+                Text(truncated)
                     .font(.title3)
             }
             .padding(8)
+
 
 
             if let deviceVersion = appState.device?.version,
