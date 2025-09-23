@@ -18,7 +18,7 @@ struct AboutView: View {
             VStack {
                 ScrollView {
                     VStack(spacing: 16) {
-                        Text("About AirSync BETA")
+                        Text("About AirSync")
                             .font(.title2)
                             .bold()
 

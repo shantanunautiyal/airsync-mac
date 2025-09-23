@@ -51,7 +51,6 @@ struct SaveAndRestartButton: View {
             .controlSize(.large)
             .applyGlassIfAvailable()
         }
-        .padding()
     }
 }
 

@@ -39,12 +39,6 @@ struct PlusFeaturesView: View {
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(12)
 
-            Text("During the beta period, you can use the code i-am-a-tester to test AirSync+ for free.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 520)
-
             HStack(spacing: 16) {
                 GlassButtonView(
                     label: "Get AirSync+",

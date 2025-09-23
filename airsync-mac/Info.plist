@@ -3,19 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AndroidVersion</key>
-	<string>2.0.32</string>
-	<key>ForceUpdateKey</key>
-	<string>001</string>
-	<key>SUEnableDownloaderService</key>
-	<true/>
-	<key>SUEnableInstallerLauncherService</key>
-	<true/>
-	<key>SUFeedURL</key>
-	<string>https://sameerasw.github.io/airsync-mac/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>sHwLY7+V1LUTP7lmY9FYK8FAZgn2zlUhYCEiDazyaMQ=</string>
-	<key>UpdateFeedURL</key>
-	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
+	<string>2.0.33</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>
@@ -36,5 +24,17 @@
 			</array>
 		</dict>
 	</dict>
+	<key>ForceUpdateKey</key>
+	<string>001</string>
+	<key>SUEnableDownloaderService</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://sameerasw.github.io/airsync-mac/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>sHwLY7+V1LUTP7lmY9FYK8FAZgn2zlUhYCEiDazyaMQ=</string>
+	<key>UpdateFeedURL</key>
+	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
 </dict>
 </plist>

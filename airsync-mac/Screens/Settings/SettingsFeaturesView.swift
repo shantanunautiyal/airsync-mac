@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct SettingsFeaturesView: View {
     @ObservedObject var appState = AppState.shared
@@ -25,6 +26,10 @@ struct SettingsFeaturesView: View {
     @State private var isDragging = false
     @State private var xCoords: String = "0"
     @State private var yCoords: String = "0"
+
+    // New state for notification permissions
+    @State private var notificationsGranted = false
+    @State private var notificationsChecked = false
 
     @State var isExpanded = false
 
@@ -270,11 +275,44 @@ struct SettingsFeaturesView: View {
 
             SettingsToggleView(name: "Send now playing status", icon: "play.circle", isOn: $appState.sendNowPlayingStatus)
 
+            HStack {
+                Label("System Notifications", systemImage: "bell.badge")
+
+                Spacer()
+
+                GlassButtonView(
+                    label: notificationsGranted ? "Enabled" : "Grant Permission",
+                    systemImage: notificationsGranted ? "checkmark.circle.fill" : "bell.badge",
+                    primary: !notificationsGranted,
+                    action: {
+                        openNotificationSettings()
+                    }
+                )
+                .disabled(notificationsGranted)
+                .transition(.identity)
+            }
+
         }
         .padding()
         .onAppear{
-
             adbPortString = String(appState.adbPort)
+            checkNotificationPermissions()
+        }
+    }
+
+    // MARK: - Notification Permission Helpers
+    func checkNotificationPermissions() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                notificationsGranted = (settings.authorizationStatus == .authorized)
+                notificationsChecked = true
+            }
+        }
+    }
+
+    func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
         }
     }
 }

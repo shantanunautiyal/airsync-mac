@@ -45,7 +45,8 @@ struct SettingsPlusView: View {
                 }
 
                 if appState.isPlus {
-                    // New: button to review Plus features (with confetti) — placed left to Unregister
+                    HStack{
+                        Text(appState.isPlus ? "Active" : "Not active")
                         GlassButtonView(
                             label: "What’s in Plus",
                             systemImage: "sparkles",
@@ -53,6 +54,7 @@ struct SettingsPlusView: View {
                                 showPlusUnlockedSheet = true
                             }
                         )
+                    }
                 }
             }
 
