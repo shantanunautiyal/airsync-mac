@@ -25,7 +25,7 @@
 		</dict>
 	</dict>
 	<key>ForceUpdateKey</key>
-	<string>001</string>
+	<string>002</string>
 	<key>SUEnableDownloaderService</key>
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
