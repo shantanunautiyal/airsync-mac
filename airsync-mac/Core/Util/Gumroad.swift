@@ -18,30 +18,6 @@ class Gumroad {
     let appState = AppState.shared
 
     func checkLicenseKeyValidity(key: String, save: Bool, isNewRegistration: Bool) async throws -> Bool {
-        // Tester shortcut (kept)
-        if key == "i-am-a-tester" {
-            if save {
-                AppState.shared.setPlusTemporarily(true)
-                AppState.shared.licenseDetails = LicenseDetails(
-                    key: key,
-                    email: "tester@example.com",
-                    productName: "Test Mode",
-                    orderNumber: 0,
-                    purchaserID: "tester",
-                    usesCount: 0,
-                    price: 0,
-                    currency: "usd",
-                    saleTimestamp: "",
-                    subscriptionCancelledAt: nil,
-                    subscriptionEndedAt: nil,
-                    subscriptionFailedAt: nil,
-                    refunded: false,
-                    disputed: false,
-                    chargebacked: false
-                )
-            }
-            return true
-        }
 
         // Select product id based on chosen plan
         let selectedPlan = UserDefaults.standard.licensePlanType
