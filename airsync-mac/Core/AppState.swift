@@ -53,6 +53,8 @@ class AppState: ObservableObject {
             .bool(forKey: "hideDockIcon")
         self.alwaysOpenWindow = UserDefaults.standard
             .bool(forKey: "alwaysOpenWindow")
+        self.notificationSound = UserDefaults.standard
+            .string(forKey: "notificationSound") ?? "default"
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
         
@@ -219,6 +221,12 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var notificationSound: String {
+        didSet {
+            UserDefaults.standard.set(notificationSound, forKey: "notificationSound")
+        }
+    }
+
     @Published var dismissNotif: Bool {
         didSet {
             UserDefaults.standard.set(dismissNotif, forKey: "dismissNotif")
@@ -370,7 +378,14 @@ class AppState: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "\(appName) - \(title)"
         content.body = body
-        content.sound = .default
+        
+        // Use custom sound if selected, otherwise use default
+        if notificationSound == "default" {
+            content.sound = .default
+        } else {
+            // For system sounds, we need to use the .aiff extension
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("\(notificationSound).aiff"))
+        }
 
         content.userInfo["nid"] = id
         if let pkg = package { content.userInfo["package"] = pkg }

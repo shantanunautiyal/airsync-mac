@@ -279,23 +279,47 @@ struct SettingsFeaturesView: View {
                 Label("System Notifications", systemImage: "bell.badge")
 
                 Spacer()
-
-                GlassButtonView(
-                    label: notificationsGranted ? "Enabled" : "Grant Permission",
-                    systemImage: notificationsGranted ? "checkmark.circle.fill" : "bell.badge",
-                    primary: !notificationsGranted,
-                    action: {
-                        openNotificationSettings()
+                
+                if notificationsGranted {
+                    // Show sound picker when notifications are enabled
+                    Picker("", selection: $appState.notificationSound) {
+                        Text("Default").tag("default")
+                        ForEach(SystemSounds.availableSounds, id: \.self) { sound in
+                            Text(sound).tag(sound)
+                        }
                     }
-                )
-                .disabled(notificationsGranted)
-                .transition(.identity)
+                    .pickerStyle(MenuPickerStyle())
+                    .frame(minWidth: 100)
+                    
+                    Button(action: {
+                        SystemSounds.playSound(appState.notificationSound)
+                    }) {
+                        Image(systemName: "play.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Test notification sound")
+                } else {
+                    // Show enable button when notifications are not granted
+                    GlassButtonView(
+                        label: "Grant Permission",
+                        systemImage: "bell.badge",
+                        primary: true,
+                        action: {
+                            openNotificationSettings()
+                        }
+                    )
+                }
             }
 
         }
         .padding()
         .onAppear{
             adbPortString = String(appState.adbPort)
+            checkNotificationPermissions()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // Refresh notification permissions when app becomes active
+            // This helps update the UI when user returns from System Preferences
             checkNotificationPermissions()
         }
     }
