@@ -630,7 +630,8 @@ class AppState: ObservableObject {
         let availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
         
         // Check if the saved adapter is still available
-        guard let matchingAdapter = availableAdapters.first(where: { $0.name == savedName }) else {
+        guard availableAdapters
+            .first(where: { $0.name == savedName }) != nil else {
             print("[state] Saved network adapter '\(savedName)' not found, falling back to auto")
             return nil // Fall back to auto
         }
