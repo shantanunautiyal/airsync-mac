@@ -52,11 +52,35 @@ struct ScannerView: View {
                 .frame(width: 250, height: 250)
                 .padding()
             } else if let qrImage = qrImage {
-                Text("Scan to connect")
-                    .font(.title)
-                    .padding()
+                HStack{
+                    Text("Scan to connect")
+                        .font(.title)
+                        .padding()
 
-                Spacer()
+                    if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
+                        Label {
+                            Text(info.text)
+                                .foregroundColor(info.color)
+                        } icon: {
+                            Image(systemName: info.icon)
+                                .foregroundColor(info.color)
+                        }
+                        .padding(10)
+                        .background(.clear)
+                        .glassEffect(in: .rect(cornerRadius: 20))
+                    } else {
+                        Label {
+                            Text(info.text)
+                                .foregroundColor(info.color)
+                        } icon: {
+                            Image(systemName: info.icon)
+                                .foregroundColor(info.color)
+                        }
+                        .padding(10)
+                        .background(.thinMaterial, in: .rect(cornerRadius: 20))
+                    }
+                }
+                .padding(.bottom, 8)
 
                 Image(decorative: qrImage, scale: 1.0)
                     .resizable()
@@ -114,7 +138,9 @@ struct ScannerView: View {
                         .transition(.opacity)
                 }
             }
-            
+
+            Spacer()
+
             // --- Quick Connect Button ---
             if let lastDevice = quickConnectManager.getLastConnectedDevice() {
                 VStack(spacing: 8) {
@@ -156,31 +182,6 @@ struct ScannerView: View {
                 .padding(.top, 12)
             }
 
-
-            if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
-                Label {
-                    Text(info.text)
-                        .foregroundColor(info.color)
-                } icon: {
-                    Image(systemName: info.icon)
-                        .foregroundColor(info.color)
-                }
-                .padding()
-                .background(.clear)
-                .glassEffect(in: .rect(cornerRadius: 20))
-                .padding()
-            } else {
-                Label {
-                    Text(info.text)
-                        .foregroundColor(info.color)
-                } icon: {
-                    Image(systemName: info.icon)
-                        .foregroundColor(info.color)
-                }
-                .padding()
-                .background(.thinMaterial, in: .rect(cornerRadius: 20))
-                .padding()
-            }
             Spacer()
         }
         .onAppear {
