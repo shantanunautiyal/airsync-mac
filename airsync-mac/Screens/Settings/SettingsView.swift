@@ -129,6 +129,13 @@ struct SettingsView: View {
                         }
 
                         HStack{
+                            Label("Always Open Window", systemImage: "macwindow")
+                            Spacer()
+                            Toggle("", isOn: $appState.alwaysOpenWindow)
+                                .toggleStyle(.switch)
+                        }
+
+                        HStack{
                             Label("Menubar text", systemImage: "menubar.arrow.up.rectangle")
                             Spacer()
                             Toggle("", isOn: $appState.showMenubarText)

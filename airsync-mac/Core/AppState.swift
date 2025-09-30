@@ -51,6 +51,8 @@ class AppState: ObservableObject {
             .bool(forKey: "toolbarContrast")
         self.hideDockIcon = UserDefaults.standard
             .bool(forKey: "hideDockIcon")
+        self.alwaysOpenWindow = UserDefaults.standard
+            .bool(forKey: "alwaysOpenWindow")
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
         
@@ -199,6 +201,12 @@ class AppState: ObservableObject {
         didSet {
             UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon")
             updateDockIconVisibility()
+        }
+    }
+
+    @Published var alwaysOpenWindow: Bool {
+        didSet {
+            UserDefaults.standard.set(alwaysOpenWindow, forKey: "alwaysOpenWindow")
         }
     }
 
