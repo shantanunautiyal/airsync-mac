@@ -99,7 +99,16 @@ class AppState: ObservableObject {
 
     @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
 
-    @Published var device: Device? = nil
+    @Published var device: Device? = nil {
+        didSet {
+            // Automatically switch to the appropriate tab when device connection state changes
+            if device == nil {
+                selectedTab = .qr
+            } else {
+                selectedTab = .notifications
+            }
+        }
+    }
     @Published var notifications: [Notification] = []
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
