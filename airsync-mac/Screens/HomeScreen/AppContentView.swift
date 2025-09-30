@@ -113,7 +113,10 @@ struct AppContentView: View {
                                 Button("Refresh", systemImage: "repeat"){
                                     WebSocketServer.shared.stop()
                                     WebSocketServer.shared.start()
-                                    appState.shouldRefreshQR = true
+                                    // Delay QR refresh to ensure server has started
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        appState.shouldRefreshQR = true
+                                    }
                                 }
                                 .help("Refresh server")
                             }

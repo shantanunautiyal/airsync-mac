@@ -1083,6 +1083,9 @@ class WebSocketServer: ObservableObject {
         if adapterAddresses != lastAddresses {
             lastKnownAdapters = adapters
 
+            // Revalidate the current network adapter selection
+            AppState.shared.revalidateNetworkAdapter()
+
             for adapter in adapters {
                 let activeMark = (adapter.address == chosenIP) ? " [ACTIVE]" : ""
                 print("[websocket] (network) \(adapter.name) -> \(adapter.address)\(activeMark)")

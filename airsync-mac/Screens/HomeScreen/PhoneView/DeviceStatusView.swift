@@ -91,19 +91,20 @@ struct DeviceStatusView: View {
 
                 if let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
                    !title.isEmpty && showMediaToggle {
-                        GlassButtonView(
-                            label: "Music Player",
-                            systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
-                            iconOnly: true,
-                            primary: false,
-                            action: {
-                                withAnimation(.easeInOut(duration: 0.28)) {
-                                    appState.isMusicCardHidden.toggle()
-                                }
+                    
+                    GlassButtonView(
+                        label: "Music Player",
+                        systemImage: appState.status?.music.isPlaying == true ? "play.rectangle" : "music.note",
+                        iconOnly: true,
+                        primary: false,
+                        action: {
+                            withAnimation(.easeInOut(duration: 0.28)) {
+                                appState.isMusicCardHidden.toggle()
                             }
-                        )
-                        .help("Show player")
-                        .transition(.opacity.combined(with: .scale))
+                        }
+                    )
+                    .help(appState.isMusicCardHidden ? "Show player" : "Hide player")
+                    .transition(.opacity.combined(with: .scale))
                 }
             }
             .padding(.bottom, appState.isMusicCardHidden ? 0 : 8)
@@ -115,6 +116,41 @@ struct DeviceStatusView: View {
             .easeInOut(duration: 0.25),
             value: "\(appState.status?.battery.level ?? 0)-\(appState.status?.music.volume ?? 0)"
         )
+        .onAppear {
+            // Ensure media card is collapsed at startup if no media is present
+            checkAndCollapseIfNoMedia()
+        }
+        .onChange(of: appState.status?.music.title) { _, newTitle in
+            // Auto-collapse music card when there's no media playing
+            checkAndCollapseIfNoMedia()
+        }
+        .onChange(of: appState.status?.music.artist) { _, newArtist in
+            // Also check when artist changes (could become empty)
+            checkAndCollapseIfNoMedia()
+        }
+    }
+    
+    // Helper function to check if there's valid media info and collapse if not
+    private func checkAndCollapseIfNoMedia() {
+        let hasValidMedia = {
+            // Check if we have status and music info
+            guard let music = appState.status?.music else {
+                return false
+            }
+            
+            // Check if title and artist are non-empty after trimming
+            let title = music.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let artist = music.artist.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            return !title.isEmpty && !artist.isEmpty
+        }()
+        
+        // If no valid media info and card is currently expanded, collapse it
+        if !hasValidMedia && !appState.isMusicCardHidden {
+            withAnimation(.easeInOut(duration: 0.28)) {
+                appState.isMusicCardHidden = true
+            }
+        }
     }
 
     // Battery icon helper

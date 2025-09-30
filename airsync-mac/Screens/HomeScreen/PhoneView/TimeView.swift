@@ -130,7 +130,7 @@ struct TimeView: View {
         let minute = String(format: "%02d", components.minute ?? 0)
 
         // Desired size and weight
-        let fontSize: CGFloat = 90
+        let fontSize: CGFloat = 85
         // Use a rounded NSFont for the liquid glass path
         let roundedNSFont = roundedFont(ofSize: fontSize, weight: .black)
 
