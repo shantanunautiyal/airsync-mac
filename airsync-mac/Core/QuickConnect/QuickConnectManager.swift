@@ -192,15 +192,13 @@ class QuickConnectManager: ObservableObject {
             inet_aton(device.ipAddress, &addr.sin_addr)
             
             let messageData = udpMessage.data(using: .utf8) ?? Data()
-            messageData.withUnsafeBytes { bytes in
+            _ = messageData.withUnsafeBytes { bytes in
                 withUnsafePointer(to: addr) { addrPtr in
                     addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
-                        sendto(socket, bytes.bindMemory(to: Int8.self).baseAddress, messageData.count, 0, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                        return sendto(socket, bytes.bindMemory(to: Int8.self).baseAddress, messageData.count, 0, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
                     }
                 }
             }
-            
-            print("[quick-connect] UDP wake-up message sent to \(device.ipAddress):\(Self.ANDROID_UDP_WAKEUP_PORT)")
         }
     }
 }
