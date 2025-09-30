@@ -113,6 +113,47 @@ struct ScannerView: View {
                         .transition(.opacity)
                 }
             }
+            
+            // --- Quick Connect Button ---
+            if let lastDevice = appState.lastConnectedDevice {
+                VStack(spacing: 8) {
+                    Text("Last connected device:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(lastDevice.name)
+                                .font(.system(size: 14, weight: .medium))
+                            Text("\(lastDevice.ipAddress)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.trailing, 16)
+
+                        GlassButtonView(
+                            label: "Reconnect",
+                            systemImage: "bolt.circle",
+                            action: {
+                                WebSocketServer.shared.wakeUpLastConnectedDevice()
+                            }
+                        )
+
+                        GlassButtonView(
+                            label: "Clear",
+                            systemImage: "xmark.circle",
+                            iconOnly: true,
+                            action: {
+                                appState.clearLastConnectedDevice()
+                            }
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.thinMaterial, in: .rect(cornerRadius: 16))
+                }
+                .padding(.top, 12)
+            }
 
 
             if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
@@ -156,6 +197,8 @@ struct ScannerView: View {
         .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
             // Network adapter changed, regenerate QR with new IP
             generateQRAsync()
+            // Refresh device info for new network
+            appState.refreshDeviceForCurrentNetwork()
         }
         .onChange(of: appState.myDevice?.port) { _, _ in
             // Port changed, regenerate QR

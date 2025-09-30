@@ -26,6 +26,8 @@ enum MessageType: String, Codable {
     case fileTransferComplete
     case fileChunkAck
     case transferVerified
+    // wake up / quick connect
+    case wakeUpRequest
 }
 
 struct Message: Codable {
