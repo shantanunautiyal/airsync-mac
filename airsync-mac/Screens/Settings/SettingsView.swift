@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var deviceName: String = ""
     @State private var port: String = "6996"
     @State private var availableAdapters: [(name: String, address: String)] = []
+    @State private var currentIPAddress: String = "N/A"
 
 
     var body: some View {
@@ -36,20 +37,26 @@ struct SettingsView: View {
                         }
                         .onAppear {
                             availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
+                            currentIPAddress = WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
                         }
                         .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
+                            // Update IP address immediately
+                            currentIPAddress = WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
+                            
                             WebSocketServer.shared.stop()
                             if let port = UInt16(port) {
                                 WebSocketServer.shared.start(port: port)
                             } else {
                                 WebSocketServer.shared.start()
                             }
+                            // Refresh QR code since IP address may have changed
+                            appState.shouldRefreshQR = true
                         }
 
                         ConnectionInfoText(
                             label: "IP Address",
                             icon: "wifi",
-                            text: WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
+                            text: currentIPAddress
                         )
 
                         HStack {

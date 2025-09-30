@@ -46,7 +46,10 @@ struct SaveAndRestartButton: View {
                 WebSocketServer.shared.start(port: portNumber)
                 onRestart?(portNumber)
 
-                appState.shouldRefreshQR = true
+                // Delay QR refresh to ensure server has restarted
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    appState.shouldRefreshQR = true
+                }
             }
             .controlSize(.large)
             .applyGlassIfAvailable()

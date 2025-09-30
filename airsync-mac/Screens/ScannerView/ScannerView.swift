@@ -153,6 +153,18 @@ struct ScannerView: View {
                 appState.shouldRefreshQR = false
             }
         }
+        .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
+            // Network adapter changed, regenerate QR with new IP
+            generateQRAsync()
+        }
+        .onChange(of: appState.myDevice?.port) { _, _ in
+            // Port changed, regenerate QR
+            generateQRAsync()
+        }
+        .onChange(of: appState.myDevice?.name) { _, _ in
+            // Device name changed, regenerate QR
+            generateQRAsync()
+        }
 
     }
 
