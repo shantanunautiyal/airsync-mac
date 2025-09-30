@@ -75,6 +75,10 @@ class AppState: ObservableObject {
     // Initialize persisted UI toggles
     self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
 
+        // Load and validate saved network adapter
+        let savedAdapterName = UserDefaults.standard.string(forKey: "selectedNetworkAdapterName")
+        self.selectedNetworkAdapterName = validateAndGetNetworkAdapter(savedName: savedAdapterName)
+
         self.myDevice = Device(
             name: name,
             ipAddress: WebSocketServer.shared
@@ -119,7 +123,11 @@ class AppState: ObservableObject {
     @Published var adbConnected: Bool = false
     @Published var adbConnecting: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
-    @Published var selectedNetworkAdapterName: String? // e.g., "en0"
+    @Published var selectedNetworkAdapterName: String? { // e.g., "en0"
+        didSet {
+            UserDefaults.standard.set(selectedNetworkAdapterName, forKey: "selectedNetworkAdapterName")
+        }
+    }
     @Published var showMenubarText: Bool {
         didSet {
             UserDefaults.standard.set(showMenubarText, forKey: "showMenubarText")
@@ -597,5 +605,44 @@ class AppState: ObservableObject {
                 NSApp.setActivationPolicy(.regular)
             }
         }
+    }
+    
+    /// Revalidates the current network adapter selection and falls back to auto if no longer valid
+    func revalidateNetworkAdapter() {
+        let currentSelection = selectedNetworkAdapterName
+        let validated = validateAndGetNetworkAdapter(savedName: currentSelection)
+        
+        if currentSelection != validated {
+            print("[state] Network adapter changed from '\(currentSelection ?? "auto")' to '\(validated ?? "auto")'")
+            selectedNetworkAdapterName = validated
+            shouldRefreshQR = true
+        }
+    }
+    
+    /// Validates a saved network adapter name and returns it if available with valid IP, otherwise returns nil (auto)
+    private func validateAndGetNetworkAdapter(savedName: String?) -> String? {
+        guard let savedName = savedName else {
+            print("[state] No saved network adapter, using auto selection")
+            return nil // Auto mode
+        }
+        
+        // Get available adapters from WebSocketServer
+        let availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
+        
+        // Check if the saved adapter is still available
+        guard let matchingAdapter = availableAdapters.first(where: { $0.name == savedName }) else {
+            print("[state] Saved network adapter '\(savedName)' not found, falling back to auto")
+            return nil // Fall back to auto
+        }
+        
+        // Verify the adapter has a valid IP address
+        let ipAddress = WebSocketServer.shared.getLocalIPAddress(adapterName: savedName)
+        guard let validIP = ipAddress, !validIP.isEmpty, validIP != "127.0.0.1" else {
+            print("[state] Saved network adapter '\(savedName)' has no valid IP (\(ipAddress ?? "nil")), falling back to auto")
+            return nil // Fall back to auto
+        }
+        
+        print("[state] Using saved network adapter: \(savedName) -> \(validIP)")
+        return savedName
     }
 }
