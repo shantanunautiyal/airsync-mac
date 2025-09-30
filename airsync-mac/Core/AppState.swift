@@ -95,8 +95,7 @@ class AppState: ObservableObject {
         self.licenseDetails = loadLicenseDetailsFromUserDefaults()
 
         loadAppsFromDisk()
-        loadDeviceHistoryFromDisk()
-        loadLastConnectedDevice()
+        // QuickConnectManager handles its own initialization
 
 //        postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
     }
@@ -107,7 +106,7 @@ class AppState: ObservableObject {
         didSet {
             // Store the last connected device when a new device connects
             if let newDevice = device {
-                saveLastConnectedDevice(newDevice)
+                QuickConnectManager.shared.saveLastConnectedDevice(newDevice)
             }
             
             // Automatically switch to the appropriate tab when device connection state changes
@@ -122,18 +121,6 @@ class AppState: ObservableObject {
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
     @Published var port: UInt16 = Defaults.serverPort
-    
-    // Store last connected devices per network (key: Mac IP, value: Device)
-    @Published var lastConnectedDevices: [String: Device] = [:]
-    
-    // Computed property for current network's last connected device
-    var lastConnectedDevice: Device? {
-        guard let currentIP = WebSocketServer.shared.getLocalIPAddress(
-            adapterName: selectedNetworkAdapterName
-        ) else { return nil }
-        return lastConnectedDevices[currentIP]
-    }
-
     @Published var androidApps: [String: AndroidApp] = [:]
 
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
@@ -695,71 +682,5 @@ class AppState: ObservableObject {
         
         print("[state] Using saved network adapter: \(savedName) -> \(validIP)")
         return savedName
-    }
-    
-    // MARK: - Last Connected Device Management
-    
-    private func saveLastConnectedDevice(_ device: Device) {
-        guard let currentMacIP = WebSocketServer.shared.getLocalIPAddress(
-            adapterName: selectedNetworkAdapterName
-        ) else {
-            print("[state] Cannot save device - no current Mac IP available")
-            return
-        }
-        
-        DispatchQueue.main.async {
-            self.lastConnectedDevices[currentMacIP] = device
-            self.saveDeviceHistoryToDisk()
-        }
-        print("[state] Saved last connected device for network \(currentMacIP): \(device.name) (\(device.ipAddress))")
-    }
-    
-    private func loadLastConnectedDevice() {
-        loadDeviceHistoryFromDisk()
-        
-        if let currentIP = WebSocketServer.shared.getLocalIPAddress(
-            adapterName: selectedNetworkAdapterName
-        ), let device = lastConnectedDevices[currentIP] {
-            print("[state] Loaded last connected device for network \(currentIP): \(device.name) (\(device.ipAddress))")
-        }
-    }
-    
-    func clearLastConnectedDevice() {
-        guard let currentMacIP = WebSocketServer.shared.getLocalIPAddress(
-            adapterName: selectedNetworkAdapterName
-        ) else { return }
-        
-        DispatchQueue.main.async {
-            self.lastConnectedDevices.removeValue(forKey: currentMacIP)
-            self.saveDeviceHistoryToDisk()
-        }
-        print("[state] Cleared last connected device for network \(currentMacIP)")
-    }
-    
-    // MARK: - Device History Persistence
-    
-    private func saveDeviceHistoryToDisk() {
-        if let encoded = try? JSONEncoder().encode(lastConnectedDevices) {
-            UserDefaults.standard.set(encoded, forKey: "deviceHistory")
-        }
-    }
-    
-    private func loadDeviceHistoryFromDisk() {
-        guard let data = UserDefaults.standard.data(forKey: "deviceHistory"),
-              let history = try? JSONDecoder().decode([String: Device].self, from: data) else {
-            return
-        }
-        
-        self.lastConnectedDevices = history
-        print("[state] Loaded device history for \(history.count) networks")
-    }
-    
-    // MARK: - Network Change Handling
-    
-    func refreshDeviceForCurrentNetwork() {
-        // This method should be called when the network adapter changes
-        // It will trigger UI updates for the current network's last connected device
-        objectWillChange.send()
-        print("[state] Refreshed device info for current network")
     }
 }

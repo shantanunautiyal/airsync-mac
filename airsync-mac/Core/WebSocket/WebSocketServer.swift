@@ -24,10 +24,6 @@ enum WebSocketStatus {
 
 class WebSocketServer: ObservableObject {
     static let shared = WebSocketServer()
-    
-    // Android wake-up ports
-    private static let ANDROID_HTTP_WAKEUP_PORT = 8888
-    private static let ANDROID_UDP_WAKEUP_PORT = 8889
 
     private var server = HttpServer()
     private var activeSessions: [WebSocketSession] = []
@@ -1119,127 +1115,11 @@ class WebSocketServer: ObservableObject {
         }
     }
     
-    // MARK: - Quick Connect/Wake Up Device
+    // MARK: - Quick Connect Delegate
     
-    /// Attempts to wake up and trigger a connection from the last connected Android device
+    /// Delegates wake-up functionality to QuickConnectManager
     func wakeUpLastConnectedDevice() {
-        guard let lastDevice = AppState.shared.lastConnectedDevice else {
-            print("[websocket] No last connected device to wake up")
-            return
-        }
-        
-        print("[websocket] Attempting to wake up device: \(lastDevice.name) at \(lastDevice.ipAddress)")
-        print("[websocket] Will try HTTP port \(Self.ANDROID_HTTP_WAKEUP_PORT), then UDP port \(Self.ANDROID_UDP_WAKEUP_PORT) if needed")
-        
-        // Try multiple approaches to wake up the device
-        Task {
-            await sendWakeUpRequest(to: lastDevice)
-        }
-    }
-    
-    private func sendWakeUpRequest(to device: Device) async {
-        // Get current connection info to send in wake-up request
-        guard let currentIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName),
-              let currentPort = localPort else {
-            print("[websocket] Cannot wake up device - no current connection info available")
-            return
-        }
-        
-        let macName = AppState.shared.myDevice?.name ?? "My Mac"
-        
-        // Create wake-up message with current connection details (no auth key needed)
-        let wakeUpMessage = """
-        {
-            "type": "wakeUpRequest",
-            "data": {
-                "macIP": "\(currentIP)",
-                "macPort": \(currentPort),
-                "macName": "\(macName)",
-                "isPlus": \(AppState.shared.isPlus)
-            }
-        }
-        """
-        
-        // Try to send HTTP POST request to the Android device
-        await sendHTTPWakeUpRequest(to: device, message: wakeUpMessage)
-    }
-    
-    private func sendHTTPWakeUpRequest(to device: Device, message: String) async {
-        print("[websocket] Trying HTTP wake-up to \(device.ipAddress):\(Self.ANDROID_HTTP_WAKEUP_PORT)")
-        
-        // Construct URL for Android device's HTTP endpoint (Android listens on port 8888 for HTTP)
-        guard let url = URL(string: "http://\(device.ipAddress):\(Self.ANDROID_HTTP_WAKEUP_PORT)/wakeup") else {
-            print("[websocket] Invalid wake-up URL for device")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = message.data(using: .utf8)
-        request.timeoutInterval = 5.0
-        
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("[websocket] Wake-up request response: \(httpResponse.statusCode)")
-                if httpResponse.statusCode == 200 {
-                    print("[websocket] Wake-up request successful - device should reconnect soon")
-                    
-                    // Show user feedback
-                    DispatchQueue.main.async {
-                        AppState.shared.postNativeNotification(
-                            id: "wakeup_success",
-                            appName: "AirSync",
-                            title: "Wake-up sent",
-                            body: "Attempting to reconnect to \(device.name)"
-                        )
-                    }
-                } else {
-                    print("[websocket] Wake-up request failed with status: \(httpResponse.statusCode)")
-                }
-            }
-        } catch {
-            print("[websocket] Failed to send wake-up request: \(error)")
-            
-            // Fallback: Try UDP broadcast
-            await sendUDPWakeUpRequest(to: device, message: message)
-        }
-    }
-    
-    private func sendUDPWakeUpRequest(to device: Device, message: String) async {
-        print("[websocket] Trying UDP wake-up to \(device.ipAddress):\(Self.ANDROID_UDP_WAKEUP_PORT) as fallback")
-        
-        // Simple UDP wake-up attempt (fire and forget)
-        let udpMessage = "AIRSYNC_WAKEUP:\(message)"
-        
-        DispatchQueue.global(qos: .background).async {
-            // Create UDP socket and send wake-up message
-            let socket = socket(AF_INET, SOCK_DGRAM, 0)
-            defer { close(socket) }
-            
-            guard socket >= 0 else {
-                print("[websocket] Failed to create UDP socket")
-                return
-            }
-            
-            var addr = sockaddr_in()
-            addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = UInt16(Self.ANDROID_UDP_WAKEUP_PORT).bigEndian  // Android listens on port 8889 for UDP
-            inet_aton(device.ipAddress, &addr.sin_addr)
-            
-            let messageData = udpMessage.data(using: .utf8) ?? Data()
-            messageData.withUnsafeBytes { bytes in
-                withUnsafePointer(to: addr) { addrPtr in
-                    addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
-                        sendto(socket, bytes.bindMemory(to: Int8.self).baseAddress, messageData.count, 0, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
-                    }
-                }
-            }
-            
-            print("[websocket] UDP wake-up message sent to \(device.ipAddress):\(Self.ANDROID_UDP_WAKEUP_PORT)")
-        }
+        QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
 
 

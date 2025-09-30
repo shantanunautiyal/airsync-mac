@@ -12,6 +12,7 @@ import CryptoKit
 
 struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
+    @StateObject private var quickConnectManager = QuickConnectManager.shared
     @State private var qrImage: CGImage?
     @State private var copyStatus: String?
     @State private var hasValidIP: Bool = true
@@ -115,7 +116,7 @@ struct ScannerView: View {
             }
             
             // --- Quick Connect Button ---
-            if let lastDevice = appState.lastConnectedDevice {
+            if let lastDevice = quickConnectManager.getLastConnectedDevice() {
                 VStack(spacing: 8) {
                     Text("Last connected device:")
                         .font(.caption)
@@ -135,7 +136,7 @@ struct ScannerView: View {
                             label: "Reconnect",
                             systemImage: "bolt.circle",
                             action: {
-                                WebSocketServer.shared.wakeUpLastConnectedDevice()
+                                quickConnectManager.wakeUpLastConnectedDevice()
                             }
                         )
 
@@ -144,7 +145,7 @@ struct ScannerView: View {
                             systemImage: "xmark.circle",
                             iconOnly: true,
                             action: {
-                                appState.clearLastConnectedDevice()
+                                quickConnectManager.clearLastConnectedDevice()
                             }
                         )
                     }
@@ -198,7 +199,7 @@ struct ScannerView: View {
             // Network adapter changed, regenerate QR with new IP
             generateQRAsync()
             // Refresh device info for new network
-            appState.refreshDeviceForCurrentNetwork()
+            quickConnectManager.refreshDeviceForCurrentNetwork()
         }
         .onChange(of: appState.myDevice?.port) { _, _ in
             // Port changed, regenerate QR
