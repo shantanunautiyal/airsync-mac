@@ -36,5 +36,9 @@
 	<string>sHwLY7+V1LUTP7lmY9FYK8FAZgn2zlUhYCEiDazyaMQ=</string>
 	<key>UpdateFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>OSAScriptingDefinition</key>
+	<string>AirSync.sdef</string>
 </dict>
 </plist>

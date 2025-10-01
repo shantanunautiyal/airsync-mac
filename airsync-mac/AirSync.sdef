@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary title="AirSync Terminology">
+    <suite name="AirSync Suite" code="AirS" description="Commands for controlling AirSync">
+        <class name="application" code="capp" description="The AirSync application">
+            <cocoa class="NSApplication"/>
+        </class>
+
+        <command name="disconnect" code="AirSdisc" description="Disconnect the currently connected device">
+            <cocoa class="AirSyncDisconnectCommand"/>
+            <result type="boolean" description="Returns true if disconnection was successful"/>
+        </command>
+
+        <command name="get status" code="AirSstat" description="Get the status of the connected device">
+            <cocoa class="AirSyncStatusCommand"/>
+            <result type="text" description="Returns device status information"/>
+        </command>
+    </suite>
+</dictionary>
