@@ -30,5 +30,26 @@
             <cocoa class="AirSyncGetMediaCommand"/>
             <result type="text" description="Returns media information as JSON or status message"/>
         </command>
+        
+        <command name="launch mirroring" code="AirSlaun" description="Launch full device mirroring via scrcpy">
+            <cocoa class="AirSyncLaunchMirroringCommand"/>
+            <result type="text" description="Returns launch status or error information as JSON"/>
+        </command>
+        
+        <command name="get apps" code="AirSapps" description="Get list of installed Android apps with icons">
+            <cocoa class="AirSyncGetAppsCommand"/>
+            <result type="text" description="Returns apps list as JSON with base64 icons"/>
+        </command>
+        
+        <command name="mirror app" code="AirSmapp" description="Launch mirroring for a specific app by package name">
+            <cocoa class="AirSyncMirrorAppCommand"/>
+            <direct-parameter type="text" description="Package name of the app to mirror"/>
+            <result type="text" description="Returns launch status or error information as JSON"/>
+        </command>
+        
+        <command name="desktop mode" code="AirSdesk" description="Launch desktop mode mirroring">
+            <cocoa class="AirSyncDesktopModeCommand"/>
+            <result type="text" description="Returns launch status or error information as JSON"/>
+        </command>
     </suite>
 </dictionary>

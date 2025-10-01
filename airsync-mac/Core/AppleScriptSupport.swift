@@ -146,3 +146,288 @@ class AirSyncGetMediaCommand: NSScriptCommand {
         }
     }
 }
+
+@objc(AirSyncLaunchMirroringCommand)
+class AirSyncLaunchMirroringCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        // Check if device is connected
+        guard let device = AppState.shared.device else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "no_device_connected",
+                "message": "No Android device connected. Please connect a device first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+        
+        // Check if ADB is available
+        guard ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "adb_not_found",
+                "message": "ADB not found. Please install via Homebrew: brew install android-platform-tools"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "ADB not found"
+        }
+        
+        // Check if scrcpy is available
+        guard ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "scrcpy_not_found",
+                "message": "scrcpy not found. Please install via Homebrew: brew install scrcpy"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "scrcpy not found"
+        }
+        
+        // Check if ADB is connected
+        guard AppState.shared.adbConnected else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "adb_not_connected",
+                "message": "ADB not connected. Please enable wireless debugging on your Android device and connect via ADB first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "ADB not connected"
+        }
+        
+        // Start mirroring
+        DispatchQueue.main.async {
+            ADBConnector.startScrcpy(
+                ip: device.ipAddress,
+                port: AppState.shared.adbPort,
+                deviceName: device.name
+            )
+        }
+        
+        let successInfo: [String: Any] = [
+            "success": true,
+            "message": "Launching mirroring for \(device.name)",
+            "device": device.name,
+            "ip": device.ipAddress
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Starting mirroring for \(device.name)"
+    }
+}
+
+@objc(AirSyncGetAppsCommand)
+class AirSyncGetAppsCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        guard AppState.shared.device != nil else {
+            return "No device connected"
+        }
+        
+        let apps = Array(AppState.shared.androidApps.values).sorted { $0.name.lowercased() < $1.name.lowercased() }
+        
+        var appsArray: [[String: Any]] = []
+        
+        for app in apps {
+            var appIconBase64: String? = nil
+            
+            // Convert app icon to base64 if available
+            if let iconPath = app.iconUrl,
+               let imageData = NSImage(contentsOfFile: iconPath)?.tiffRepresentation,
+               let bitmapRep = NSBitmapImageRep(data: imageData),
+               let pngData = bitmapRep.representation(using: NSBitmapImageRep.FileType.png, properties: [:]) {
+                appIconBase64 = pngData.base64EncodedString()
+            }
+            
+            let appInfo: [String: Any] = [
+                "package_name": app.packageName,
+                "name": app.name,
+                "system_app": app.systemApp,
+                "listening": app.listening,
+                "icon": appIconBase64 ?? ""
+            ]
+            
+            appsArray.append(appInfo)
+        }
+        
+        let result: [String: Any] = [
+            "apps": appsArray,
+            "count": appsArray.count
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: result, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Failed to serialize apps information"
+    }
+}
+
+@objc(AirSyncMirrorAppCommand)
+class AirSyncMirrorAppCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        // Check if device is connected
+        guard let device = AppState.shared.device else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "no_device_connected",
+                "message": "No Android device connected. Please connect a device first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+        
+        // Check if ADB is connected
+        guard AppState.shared.adbConnected else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "adb_not_connected",
+                "message": "ADB not connected. Please enable wireless debugging and connect via ADB first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "ADB not connected"
+        }
+        
+        // Get package name from command arguments
+        guard let packageName = self.directParameter as? String, !packageName.isEmpty else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "missing_package_name",
+                "message": "Package name is required. Usage: mirror app \"com.example.app\""
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Package name required"
+        }
+        
+        // Check if app exists
+        guard let app = AppState.shared.androidApps[packageName] else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "app_not_found",
+                "message": "App with package name '\(packageName)' not found on device."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "App not found: \(packageName)"
+        }
+        
+        // Start app-specific mirroring
+        DispatchQueue.main.async {
+            ADBConnector.startScrcpy(
+                ip: device.ipAddress,
+                port: AppState.shared.adbPort,
+                deviceName: device.name,
+                package: packageName
+            )
+        }
+        
+        let successInfo: [String: Any] = [
+            "success": true,
+            "message": "Launching app-specific mirroring for \(app.name)",
+            "app_name": app.name,
+            "package_name": packageName,
+            "device": device.name
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Starting app mirroring for \(app.name)"
+    }
+}
+
+@objc(AirSyncDesktopModeCommand)
+class AirSyncDesktopModeCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        // Check if device is connected
+        guard let device = AppState.shared.device else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "no_device_connected",
+                "message": "No Android device connected. Please connect a device first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+        
+        // Check if ADB is connected
+        guard AppState.shared.adbConnected else {
+            let errorInfo: [String: Any] = [
+                "success": false,
+                "error": "adb_not_connected",
+                "message": "ADB not connected. Please enable wireless debugging and connect via ADB first."
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "ADB not connected"
+        }
+        
+        // Start desktop mode mirroring
+        DispatchQueue.main.async {
+            ADBConnector.startScrcpy(
+                ip: device.ipAddress,
+                port: AppState.shared.adbPort,
+                deviceName: device.name,
+                desktop: true
+            )
+        }
+        
+        let successInfo: [String: Any] = [
+            "success": true,
+            "message": "Launching desktop mode mirroring for \(device.name)",
+            "device": device.name,
+            "mode": "desktop",
+            "note": "Desktop mode requires Android 15+ and vendor support"
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Starting desktop mode mirroring for \(device.name)"
+    }
+}
