@@ -6,14 +6,29 @@
             <cocoa class="NSApplication"/>
         </class>
 
-        <command name="disconnect" code="AirSdisc" description="Disconnect the currently connected device">
+                <command name="disconnect" code="AirSdisc" description="Disconnect the currently connected device">
             <cocoa class="AirSyncDisconnectCommand"/>
-            <result type="boolean" description="Returns true if disconnection was successful"/>
+            <result type="text" description="Returns disconnection status message"/>
         </command>
-
+        
         <command name="get status" code="AirSstat" description="Get the status of the connected device">
             <cocoa class="AirSyncStatusCommand"/>
             <result type="text" description="Returns device status information"/>
+        </command>
+        
+        <command name="reconnect" code="AirSrcon" description="Reconnect to the last connected device">
+            <cocoa class="AirSyncReconnectCommand"/>
+            <result type="text" description="Returns reconnection attempt status"/>
+        </command>
+        
+        <command name="get notifications" code="AirSntfs" description="Get the last 20 notifications from connected device">
+            <cocoa class="AirSyncGetNotificationsCommand"/>
+            <result type="text" description="Returns notifications as JSON or status message"/>
+        </command>
+        
+        <command name="get media" code="AirSmdia" description="Get current media playback status and volume">
+            <cocoa class="AirSyncGetMediaCommand"/>
+            <result type="text" description="Returns media information as JSON or status message"/>
         </command>
     </suite>
 </dictionary>
