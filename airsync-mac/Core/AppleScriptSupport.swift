@@ -1,4 +1,4 @@
-osascript -e 'tell application "AirSync" to disconnect'//
+//
 //  AppleScriptSupport.swift
 //  AirSync
 //
@@ -82,12 +82,21 @@ class AirSyncGetNotificationsCommand: NSScriptCommand {
             }
 
             let notificationData = notifications.map { notif in
-                return [
+                var data: [String: Any] = [
                     "title": notif.title,
                     "body": notif.body,
                     "app": notif.app,
-                    "id": notif.id.uuidString
+                    "id": notif.id.uuidString,
+                    "package": notif.package
                 ]
+                
+                // Add app icon as base64 if available
+                if let iconPath = appState.androidApps[notif.package]?.iconUrl,
+                   let iconData = NSData(contentsOfFile: iconPath) {
+                    data["app_icon_base64"] = iconData.base64EncodedString()
+                }
+                
+                return data
             }
 
             if let jsonData = try? JSONSerialization.data(withJSONObject: notificationData, options: .prettyPrinted),
@@ -109,7 +118,7 @@ class AirSyncGetMediaCommand: NSScriptCommand {
 
         if let device = appState.device {
             if let music = appState.status?.music {
-                let mediaInfo = [
+                var mediaInfo: [String: Any] = [
                     "title": music.title,
                     "artist": music.artist,
                     "is_playing": String(music.isPlaying),
@@ -117,6 +126,11 @@ class AirSyncGetMediaCommand: NSScriptCommand {
                     "is_muted": String(music.isMuted),
                     "like_status": music.likeStatus
                 ]
+
+                // Add album art as base64 if available (albumArt is already base64)
+                if !music.albumArt.isEmpty {
+                    mediaInfo["album_art_base64"] = music.albumArt
+                }
 
                 if let jsonData = try? JSONSerialization.data(withJSONObject: mediaInfo, options: .prettyPrinted),
                    let jsonString = String(data: jsonData, encoding: .utf8) {
