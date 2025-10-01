@@ -150,6 +150,11 @@ class AirSyncGetMediaCommand: NSScriptCommand {
 @objc(AirSyncLaunchMirroringCommand)
 class AirSyncLaunchMirroringCommand: NSScriptCommand {
     override func performDefaultImplementation() -> Any? {
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            return "Requires AirSync+"
+        }
+        
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -238,6 +243,11 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
 @objc(AirSyncGetAppsCommand)
 class AirSyncGetAppsCommand: NSScriptCommand {
     override func performDefaultImplementation() -> Any? {
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            return "Requires AirSync+"
+        }
+        
         guard AppState.shared.device != nil else {
             return "No device connected"
         }
@@ -290,6 +300,11 @@ class AirSyncGetAppsCommand: NSScriptCommand {
 @objc(AirSyncMirrorAppCommand)
 class AirSyncMirrorAppCommand: NSScriptCommand {
     override func performDefaultImplementation() -> Any? {
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            return "Requires AirSync+"
+        }
+        
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -380,6 +395,11 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
 @objc(AirSyncDesktopModeCommand)
 class AirSyncDesktopModeCommand: NSScriptCommand {
     override func performDefaultImplementation() -> Any? {
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            return "Requires AirSync+"
+        }
+        
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -434,5 +454,65 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
         }
         
         return "Starting desktop mode mirroring for \(device.name)"
+    }
+}
+
+@objc(AirSyncConnectADBCommand)
+class AirSyncConnectADBCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            return "Requires AirSync+"
+        }
+        
+        // Check if device is connected
+        guard let device = AppState.shared.device else {
+            return "No device connected"
+        }
+        
+        // Check if already connecting
+        guard !AppState.shared.adbConnecting else {
+            return "ADB connection already in progress"
+        }
+        
+        // Check if already connected
+        if AppState.shared.adbConnected {
+            return "Connected"
+        }
+        
+        // Start ADB connection (like the Connect ADB button in settings)
+        DispatchQueue.main.async {
+            ADBConnector.connectToADB(ip: device.ipAddress)
+        }
+        
+        // Wait a moment for the connection attempt to complete
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = "Connecting..."
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            if AppState.shared.adbConnected {
+                result = "Connected"
+            } else if let errorResult = AppState.shared.adbConnectionResult {
+                // Parse common error messages
+                let lowercased = errorResult.lowercased()
+                if lowercased.contains("not found") {
+                    result = "ADB not found. Please install via Homebrew: brew install android-platform-tools"
+                } else if lowercased.contains("no results") || lowercased.contains("mdns") {
+                    result = "Device not found. Make sure wireless debugging is enabled and device is on same network"
+                } else if lowercased.contains("protocol fault") || lowercased.contains("connection reset") {
+                    result = "ADB connection failed. Another ADB instance may be using the device"
+                } else if lowercased.contains("refused") {
+                    result = "Connection refused. Check if wireless debugging is enabled"
+                } else {
+                    result = "Connection failed. Check ADB console in settings for details"
+                }
+            } else {
+                result = "Connection failed"
+            }
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        return result
     }
 }

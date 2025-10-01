@@ -51,5 +51,10 @@
             <cocoa class="AirSyncDesktopModeCommand"/>
             <result type="text" description="Returns launch status or error information as JSON"/>
         </command>
+        
+        <command name="connect adb" code="AirSconn" description="Connect to ADB for wireless debugging">
+            <cocoa class="AirSyncConnectADBCommand"/>
+            <result type="text" description="Returns connection status or error message"/>
+        </command>
     </suite>
 </dictionary>
