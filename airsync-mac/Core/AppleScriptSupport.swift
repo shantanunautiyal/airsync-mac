@@ -89,13 +89,13 @@ class AirSyncGetNotificationsCommand: NSScriptCommand {
                     "id": notif.id.uuidString,
                     "package": notif.package
                 ]
-                
+
                 // Add app icon as base64 if available
                 if let iconPath = appState.androidApps[notif.package]?.iconUrl,
                    let iconData = NSData(contentsOfFile: iconPath) {
                     data["app_icon_base64"] = iconData.base64EncodedString()
                 }
-                
+
                 return data
             }
 
@@ -154,7 +154,7 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
         guard AppState.shared.isPlus else {
             return "Requires AirSync+"
         }
-        
+
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -162,14 +162,14 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
                 "error": "no_device_connected",
                 "message": "No Android device connected. Please connect a device first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "No device connected"
         }
-        
+
         // Check if ADB is available
         guard ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil else {
             let errorInfo: [String: Any] = [
@@ -177,14 +177,14 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
                 "error": "adb_not_found",
                 "message": "ADB not found. Please install via Homebrew: brew install android-platform-tools"
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "ADB not found"
         }
-        
+
         // Check if scrcpy is available
         guard ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil else {
             let errorInfo: [String: Any] = [
@@ -192,14 +192,14 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
                 "error": "scrcpy_not_found",
                 "message": "scrcpy not found. Please install via Homebrew: brew install scrcpy"
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "scrcpy not found"
         }
-        
+
         // Check if ADB is connected
         guard AppState.shared.adbConnected else {
             let errorInfo: [String: Any] = [
@@ -207,14 +207,14 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
                 "error": "adb_not_connected",
                 "message": "ADB not connected. Please enable wireless debugging on your Android device and connect via ADB first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "ADB not connected"
         }
-        
+
         // Start mirroring
         DispatchQueue.main.async {
             ADBConnector.startScrcpy(
@@ -223,19 +223,19 @@ class AirSyncLaunchMirroringCommand: NSScriptCommand {
                 deviceName: device.name
             )
         }
-        
+
         let successInfo: [String: Any] = [
             "success": true,
             "message": "Launching mirroring for \(device.name)",
             "device": device.name,
             "ip": device.ipAddress
         ]
-        
+
         if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             return jsonString
         }
-        
+
         return "Starting mirroring for \(device.name)"
     }
 }
@@ -247,23 +247,23 @@ class AirSyncGetAppsCommand: NSScriptCommand {
         guard AppState.shared.isPlus else {
             return "Requires AirSync+"
         }
-        
+
         guard AppState.shared.device != nil else {
             return "No device connected"
         }
-        
+
         // Check if ADB is connected
         guard AppState.shared.adbConnected else {
             return "ADB is not connected"
         }
-        
+
         let apps = Array(AppState.shared.androidApps.values).sorted { $0.name.lowercased() < $1.name.lowercased() }
-        
+
         var appsArray: [[String: Any]] = []
-        
+
         for app in apps {
             var appIconBase64: String? = nil
-            
+
             // Convert app icon to base64 if available
             if let iconPath = app.iconUrl,
                let imageData = NSImage(contentsOfFile: iconPath)?.tiffRepresentation,
@@ -271,7 +271,7 @@ class AirSyncGetAppsCommand: NSScriptCommand {
                let pngData = bitmapRep.representation(using: NSBitmapImageRep.FileType.png, properties: [:]) {
                 appIconBase64 = pngData.base64EncodedString()
             }
-            
+
             let appInfo: [String: Any] = [
                 "package_name": app.packageName,
                 "name": app.name,
@@ -279,20 +279,20 @@ class AirSyncGetAppsCommand: NSScriptCommand {
                 "listening": app.listening,
                 "icon": appIconBase64 ?? ""
             ]
-            
+
             appsArray.append(appInfo)
         }
-        
+
         let result: [String: Any] = [
             "apps": appsArray,
             "count": appsArray.count
         ]
-        
+
         if let jsonData = try? JSONSerialization.data(withJSONObject: result, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             return jsonString
         }
-        
+
         return "Failed to serialize apps information"
     }
 }
@@ -304,7 +304,7 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
         guard AppState.shared.isPlus else {
             return "Requires AirSync+"
         }
-        
+
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -312,14 +312,14 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
                 "error": "no_device_connected",
                 "message": "No Android device connected. Please connect a device first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "No device connected"
         }
-        
+
         // Check if ADB is connected
         guard AppState.shared.adbConnected else {
             let errorInfo: [String: Any] = [
@@ -327,14 +327,14 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
                 "error": "adb_not_connected",
                 "message": "ADB not connected. Please enable wireless debugging and connect via ADB first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "ADB not connected"
         }
-        
+
         // Get package name from command arguments
         guard let packageName = self.directParameter as? String, !packageName.isEmpty else {
             let errorInfo: [String: Any] = [
@@ -342,14 +342,14 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
                 "error": "missing_package_name",
                 "message": "Package name is required. Usage: mirror app \"com.example.app\""
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "Package name required"
         }
-        
+
         // Check if app exists
         guard let app = AppState.shared.androidApps[packageName] else {
             let errorInfo: [String: Any] = [
@@ -357,14 +357,14 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
                 "error": "app_not_found",
                 "message": "App with package name '\(packageName)' not found on device."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "App not found: \(packageName)"
         }
-        
+
         // Start app-specific mirroring
         DispatchQueue.main.async {
             ADBConnector.startScrcpy(
@@ -374,7 +374,7 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
                 package: packageName
             )
         }
-        
+
         let successInfo: [String: Any] = [
             "success": true,
             "message": "Launching app-specific mirroring for \(app.name)",
@@ -382,12 +382,12 @@ class AirSyncMirrorAppCommand: NSScriptCommand {
             "package_name": packageName,
             "device": device.name
         ]
-        
+
         if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             return jsonString
         }
-        
+
         return "Starting app mirroring for \(app.name)"
     }
 }
@@ -399,7 +399,7 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
         guard AppState.shared.isPlus else {
             return "Requires AirSync+"
         }
-        
+
         // Check if device is connected
         guard let device = AppState.shared.device else {
             let errorInfo: [String: Any] = [
@@ -407,14 +407,14 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
                 "error": "no_device_connected",
                 "message": "No Android device connected. Please connect a device first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "No device connected"
         }
-        
+
         // Check if ADB is connected
         guard AppState.shared.adbConnected else {
             let errorInfo: [String: Any] = [
@@ -422,14 +422,14 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
                 "error": "adb_not_connected",
                 "message": "ADB not connected. Please enable wireless debugging and connect via ADB first."
             ]
-            
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "ADB not connected"
         }
-        
+
         // Start desktop mode mirroring
         DispatchQueue.main.async {
             ADBConnector.startScrcpy(
@@ -439,7 +439,7 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
                 desktop: true
             )
         }
-        
+
         let successInfo: [String: Any] = [
             "success": true,
             "message": "Launching desktop mode mirroring for \(device.name)",
@@ -447,12 +447,12 @@ class AirSyncDesktopModeCommand: NSScriptCommand {
             "mode": "desktop",
             "note": "Desktop mode requires Android 15+ and vendor support"
         ]
-        
+
         if let jsonData = try? JSONSerialization.data(withJSONObject: successInfo, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             return jsonString
         }
-        
+
         return "Starting desktop mode mirroring for \(device.name)"
     }
 }
@@ -464,31 +464,31 @@ class AirSyncConnectADBCommand: NSScriptCommand {
         guard AppState.shared.isPlus else {
             return "Requires AirSync+"
         }
-        
+
         // Check if device is connected
         guard let device = AppState.shared.device else {
             return "No device connected"
         }
-        
+
         // Check if already connecting
         guard !AppState.shared.adbConnecting else {
             return "ADB connection already in progress"
         }
-        
+
         // Check if already connected
         if AppState.shared.adbConnected {
             return "Connected"
         }
-        
+
         // Start ADB connection (like the Connect ADB button in settings)
         DispatchQueue.main.async {
             ADBConnector.connectToADB(ip: device.ipAddress)
         }
-        
+
         // Wait a moment for the connection attempt to complete
         let semaphore = DispatchSemaphore(value: 0)
         var result = "Connecting..."
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             if AppState.shared.adbConnected {
                 result = "Connected"
@@ -511,8 +511,204 @@ class AirSyncConnectADBCommand: NSScriptCommand {
             }
             semaphore.signal()
         }
-        
+
         semaphore.wait()
         return result
+    }
+}
+
+@objc(AirSyncMediaControlCommand)
+class AirSyncMediaControlCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        guard let action = self.directParameter as? String else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Missing action parameter. Available actions: play, pause, toggle, next, previous, like, unlike, toggle_like"
+            ]
+
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Error: Missing action parameter"
+        }
+
+        // Check if user has Plus subscription
+        guard AppState.shared.isPlus else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Media control requires AirSync Plus subscription",
+                "requires_plus": true
+            ]
+
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Media control requires AirSync+"
+        }
+
+        let appState = AppState.shared
+
+        guard appState.device != nil else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "No device connected"
+            ]
+
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+
+        let webSocketServer = WebSocketServer.shared
+        var resultInfo: [String: Any] = [:]
+
+        // Store the current media state before the command
+        let previousMusicState = appState.status?.music
+
+        switch action.lowercased() {
+        case "play":
+            webSocketServer.togglePlayPause()
+            resultInfo = [
+                "status": "success",
+                "action": "play",
+                "message": "Play command sent"
+            ]
+
+        case "pause":
+            webSocketServer.togglePlayPause()
+            resultInfo = [
+                "status": "success",
+                "action": "pause",
+                "message": "Pause command sent"
+            ]
+
+        case "toggle", "toggle_play_pause", "playpause":
+            webSocketServer.togglePlayPause()
+            resultInfo = [
+                "status": "success",
+                "action": "toggle_play_pause",
+                "message": "Toggle play/pause command sent"
+            ]
+
+        case "next", "skip_next":
+            webSocketServer.skipNext()
+            resultInfo = [
+                "status": "success",
+                "action": "next",
+                "message": "Next track command sent"
+            ]
+
+        case "previous", "skip_previous", "prev":
+            webSocketServer.skipPrevious()
+            resultInfo = [
+                "status": "success",
+                "action": "previous",
+                "message": "Previous track command sent"
+            ]
+
+        case "like":
+            webSocketServer.like()
+            resultInfo = [
+                "status": "success",
+                "action": "like",
+                "message": "Like command sent"
+            ]
+
+        case "unlike":
+            webSocketServer.unlike()
+            resultInfo = [
+                "status": "success",
+                "action": "unlike",
+                "message": "Unlike command sent"
+            ]
+
+        case "toggle_like":
+            webSocketServer.toggleLike()
+            resultInfo = [
+                "status": "success",
+                "action": "toggle_like",
+                "message": "Toggle like command sent"
+            ]
+
+        default:
+            resultInfo = [
+                "status": "error",
+                "message": "Invalid action: \(action). Available actions: play, pause, toggle, next, previous, like, unlike, toggle_like"
+            ]
+        }
+
+        // Wait for updated media information (only for successful commands)
+        if resultInfo["status"] as? String == "success" {
+            // Give some time for the command to execute and update the state
+            let semaphore = DispatchSemaphore(value: 0)
+            var attempts = 0
+            let maxAttempts = 20 // 2 seconds total (20 * 100ms)
+
+            DispatchQueue.global(qos: .userInitiated).async {
+                while attempts < maxAttempts {
+                    usleep(250_000) // Wait 100ms
+                    attempts += 1
+
+                    // Check if media state has been updated
+                    DispatchQueue.main.sync {
+                        let currentMusic = appState.status?.music
+
+                        // For track changes (next/previous), wait for title/artist change
+                        if ["next", "skip_next", "previous", "skip_previous", "prev"].contains(action.lowercased()) {
+                            if let prev = previousMusicState, let current = currentMusic {
+                                if prev.title != current.title || prev.artist != current.artist {
+                                    semaphore.signal()
+                                    return
+                                }
+                            }
+                        }
+                        // For play/pause, wait for isPlaying state change
+                        else if ["play", "pause", "toggle", "toggle_play_pause", "playpause"].contains(action.lowercased()) {
+                            if let prev = previousMusicState, let current = currentMusic {
+                                if prev.isPlaying != current.isPlaying {
+                                    semaphore.signal()
+                                    return
+                                }
+                            }
+                        }
+                        // For like actions, wait for like status change
+                        else if ["like", "unlike", "toggle_like"].contains(action.lowercased()) {
+                            if let prev = previousMusicState, let current = currentMusic {
+                                if prev.likeStatus != current.likeStatus {
+                                    semaphore.signal()
+                                    return
+                                }
+                            }
+                        }
+                    }
+                }
+                // Timeout reached
+                semaphore.signal()
+            }
+
+            // Wait for either state change or timeout
+            _ = semaphore.wait(timeout: .now() + 1.5) // 2.5 second maximum wait
+        }
+
+        // Add current media status if available (now with updated info)
+        if let music = appState.status?.music {
+            resultInfo["current_media"] = [
+                "title": music.title,
+                "artist": music.artist,
+                "is_playing": music.isPlaying,
+                "like_status": music.likeStatus
+            ]
+        }
+
+        if let jsonData = try? JSONSerialization.data(withJSONObject: resultInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+
+        return "Media control action completed"
     }
 }

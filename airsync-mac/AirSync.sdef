@@ -56,5 +56,11 @@
             <cocoa class="AirSyncConnectADBCommand"/>
             <result type="text" description="Returns connection status or error message"/>
         </command>
+        
+        <command name="media control" code="AirSmctl" description="Control media playback (play, pause, next, previous, like, unlike). Requires AirSync Plus.">
+            <cocoa class="AirSyncMediaControlCommand"/>
+            <direct-parameter type="text" description="Media control action: play, pause, toggle, next, previous, like, unlike, toggle_like"/>
+            <result type="text" description="Returns action status and current media information as JSON"/>
+        </command>
     </suite>
 </dictionary>
