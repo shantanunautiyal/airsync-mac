@@ -242,6 +242,11 @@ class AirSyncGetAppsCommand: NSScriptCommand {
             return "No device connected"
         }
         
+        // Check if ADB is connected
+        guard AppState.shared.adbConnected else {
+            return "ADB is not connected"
+        }
+        
         let apps = Array(AppState.shared.androidApps.values).sorted { $0.name.lowercased() < $1.name.lowercased() }
         
         var appsArray: [[String: Any]] = []
