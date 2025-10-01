@@ -62,5 +62,17 @@
             <direct-parameter type="text" description="Media control action: play, pause, toggle, next, previous, like, unlike, toggle_like"/>
             <result type="text" description="Returns action status and current media information as JSON"/>
         </command>
+        
+        <command name="notification action" code="AirSnact" description="Take action on a specific notification (reply, button press)">
+            <cocoa class="AirSyncNotificationActionCommand"/>
+            <direct-parameter type="text" description="Format: 'notification_id|action_name' or 'notification_id|action_name|reply_text'"/>
+            <result type="text" description="Returns action status as JSON"/>
+        </command>
+        
+        <command name="dismiss notification" code="AirSdiss" description="Dismiss a specific notification by ID">
+            <cocoa class="AirSyncDismissNotificationCommand"/>
+            <direct-parameter type="text" description="Notification ID to dismiss"/>
+            <result type="text" description="Returns dismissal status as JSON"/>
+        </command>
     </suite>
 </dictionary>

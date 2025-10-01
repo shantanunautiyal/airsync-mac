@@ -87,8 +87,18 @@ class AirSyncGetNotificationsCommand: NSScriptCommand {
                     "body": notif.body,
                     "app": notif.app,
                     "id": notif.id.uuidString,
-                    "package": notif.package
+                    "package": notif.package,
+                    "nid": notif.nid
                 ]
+                
+                // Add available actions
+                let actionData = notif.actions.map { action in
+                    [
+                        "name": action.name,
+                        "type": action.type.rawValue
+                    ]
+                }
+                data["actions"] = actionData
 
                 // Add app icon as base64 if available
                 if let iconPath = appState.androidApps[notif.package]?.iconUrl,
@@ -710,5 +720,169 @@ class AirSyncMediaControlCommand: NSScriptCommand {
         }
 
         return "Media control action completed"
+    }
+}
+
+@objc(AirSyncNotificationActionCommand)
+class AirSyncNotificationActionCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        // Expecting format: "notification_id|action_name" or "notification_id|action_name|reply_text"
+        guard let parameter = self.directParameter as? String else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Missing parameter. Format: 'notification_id|action_name' or 'notification_id|action_name|reply_text'"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Error: Missing parameter"
+        }
+        
+        let components = parameter.components(separatedBy: "|")
+        guard components.count >= 2 else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Invalid parameter format. Use: 'notification_id|action_name' or 'notification_id|action_name|reply_text'"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Error: Invalid parameter format"
+        }
+        
+        let notificationId = components[0]
+        let actionName = components[1]
+        let replyText = components.count > 2 ? components[2] : nil
+        
+        let appState = AppState.shared
+        
+        guard appState.device != nil else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "No device connected"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+        
+        // Find the notification by ID
+        guard let notification = appState.notifications.first(where: { $0.id.uuidString == notificationId }) else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Notification not found with ID: \(notificationId)"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Notification not found"
+        }
+        
+        // Verify the action exists
+        guard notification.actions.contains(where: { $0.name == actionName }) else {
+            let availableActions = notification.actions.map { $0.name }.joined(separator: ", ")
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Action '\(actionName)' not available. Available actions: \(availableActions)"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Action not available"
+        }
+        
+        // Send the notification action
+        WebSocketServer.shared.sendNotificationAction(id: notification.nid, name: actionName, text: replyText)
+        
+        let resultInfo: [String: Any] = [
+            "status": "success",
+            "message": "Notification action sent",
+            "notification_id": notificationId,
+            "action_name": actionName,
+            "reply_text": replyText ?? "",
+            "notification_title": notification.title
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: resultInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Notification action sent"
+    }
+}
+
+@objc(AirSyncDismissNotificationCommand)
+class AirSyncDismissNotificationCommand: NSScriptCommand {
+    override func performDefaultImplementation() -> Any? {
+        guard let notificationId = self.directParameter as? String else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Missing notification ID parameter"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Error: Missing notification ID"
+        }
+        
+        let appState = AppState.shared
+        
+        guard appState.device != nil else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "No device connected"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "No device connected"
+        }
+        
+        // Find the notification by ID
+        guard let notification = appState.notifications.first(where: { $0.id.uuidString == notificationId }) else {
+            let errorInfo: [String: Any] = [
+                "status": "error",
+                "message": "Notification not found with ID: \(notificationId)"
+            ]
+            
+            if let jsonData = try? JSONSerialization.data(withJSONObject: errorInfo, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return "Notification not found"
+        }
+        
+        // Dismiss the notification
+        WebSocketServer.shared.dismissNotification(id: notification.nid)
+        
+        let resultInfo: [String: Any] = [
+            "status": "success",
+            "message": "Notification dismissed",
+            "notification_id": notificationId,
+            "notification_title": notification.title
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: resultInfo, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        }
+        
+        return "Notification dismissed"
     }
 }
