@@ -52,8 +52,11 @@ struct MenuBarLabelView: View {
             }
         }
         .onAppear {
-            // On first launch (onboarding not completed), automatically open main window
-            if !hasPairedDeviceOnce && !didTriggerFirstLaunchOpen {
+            // Open main window if:
+            // 1. First launch (onboarding not completed), OR
+            // 2. "Always open window" setting is enabled
+            // Note: didTriggerFirstLaunchOpen resets on each app launch since it's @State
+            if (!hasPairedDeviceOnce || appState.alwaysOpenWindow) && !didTriggerFirstLaunchOpen {
                 didTriggerFirstLaunchOpen = true
                 // Slight delay to ensure everything is set up
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {

@@ -126,7 +126,9 @@ struct AppContentView: View {
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
             .frame(minWidth: 550)
         }
-        .onChange(of: appState.device) {
+        .onAppear {
+            // Ensure the correct tab is selected when the view appears
+            // This fixes the bug where the scanner tab shows even when connected
             if appState.device == nil {
                 AppState.shared.selectedTab = .qr
             } else {

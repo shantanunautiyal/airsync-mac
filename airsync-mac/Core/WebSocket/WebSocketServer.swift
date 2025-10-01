@@ -608,6 +608,11 @@ class WebSocketServer: ObservableObject {
             // This case handles macInfo messages from Android to Mac
             // Currently not expected as Mac sends macInfo to Android, not vice versa
             print("[websocket] Received macInfo message from Android (not typically expected)")
+            
+        case .wakeUpRequest:
+            // This case handles wake-up requests from Android to Mac
+            // Currently not expected as Mac sends wake-up requests to Android, not vice versa
+            print("[websocket] Received wakeUpRequest from Android (not typically expected)")
         }
 
 
@@ -1108,6 +1113,13 @@ class WebSocketServer: ObservableObject {
             // [quiet] No change is the common case; keep log line for debugging
             // print("[websocket] (network) No change detected")
         }
+    }
+    
+    // MARK: - Quick Connect Delegate
+    
+    /// Delegates wake-up functionality to QuickConnectManager
+    func wakeUpLastConnectedDevice() {
+        QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
 
 

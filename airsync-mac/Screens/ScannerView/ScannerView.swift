@@ -12,6 +12,7 @@ import CryptoKit
 
 struct ScannerView: View {
     @ObservedObject var appState = AppState.shared
+    @StateObject private var quickConnectManager = QuickConnectManager.shared
     @State private var qrImage: CGImage?
     @State private var copyStatus: String?
     @State private var hasValidIP: Bool = true
@@ -51,11 +52,35 @@ struct ScannerView: View {
                 .frame(width: 250, height: 250)
                 .padding()
             } else if let qrImage = qrImage {
-                Text("Scan to connect")
-                    .font(.title)
-                    .padding()
+                HStack{
+                    Text("Scan to connect")
+                        .font(.title)
+                        .padding()
 
-                Spacer()
+                    if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
+                        Label {
+                            Text(info.text)
+                                .foregroundColor(info.color)
+                        } icon: {
+                            Image(systemName: info.icon)
+                                .foregroundColor(info.color)
+                        }
+                        .padding(10)
+                        .background(.clear)
+                        .glassEffect(in: .rect(cornerRadius: 20))
+                    } else {
+                        Label {
+                            Text(info.text)
+                                .foregroundColor(info.color)
+                        } icon: {
+                            Image(systemName: info.icon)
+                                .foregroundColor(info.color)
+                        }
+                        .padding(10)
+                        .background(.thinMaterial, in: .rect(cornerRadius: 20))
+                    }
+                }
+                .padding(.bottom, 8)
 
                 Image(decorative: qrImage, scale: 1.0)
                     .resizable()
@@ -114,31 +139,49 @@ struct ScannerView: View {
                 }
             }
 
+            Spacer()
 
-            if !UIStyle.pretendOlderOS, #available(macOS 26.0, *) {
-                Label {
-                    Text(info.text)
-                        .foregroundColor(info.color)
-                } icon: {
-                    Image(systemName: info.icon)
-                        .foregroundColor(info.color)
+            // --- Quick Connect Button ---
+            if let lastDevice = quickConnectManager.getLastConnectedDevice() {
+                VStack(spacing: 8) {
+                    Text("Last connected device:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(lastDevice.name)
+                                .font(.system(size: 14, weight: .medium))
+                            Text("\(lastDevice.ipAddress)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.trailing, 16)
+
+                        GlassButtonView(
+                            label: "Reconnect",
+                            systemImage: "bolt.circle",
+                            action: {
+                                quickConnectManager.wakeUpLastConnectedDevice()
+                            }
+                        )
+
+                        GlassButtonView(
+                            label: "Clear",
+                            systemImage: "xmark.circle",
+                            iconOnly: true,
+                            action: {
+                                quickConnectManager.clearLastConnectedDevice()
+                            }
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.thinMaterial, in: .rect(cornerRadius: 16))
                 }
-                .padding()
-                .background(.clear)
-                .glassEffect(in: .rect(cornerRadius: 20))
-                .padding()
-            } else {
-                Label {
-                    Text(info.text)
-                        .foregroundColor(info.color)
-                } icon: {
-                    Image(systemName: info.icon)
-                        .foregroundColor(info.color)
-                }
-                .padding()
-                .background(.thinMaterial, in: .rect(cornerRadius: 20))
-                .padding()
+                .padding(.top, 12)
             }
+
             Spacer()
         }
         .onAppear {
@@ -156,6 +199,8 @@ struct ScannerView: View {
         .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
             // Network adapter changed, regenerate QR with new IP
             generateQRAsync()
+            // Refresh device info for new network
+            quickConnectManager.refreshDeviceForCurrentNetwork()
         }
         .onChange(of: appState.myDevice?.port) { _, _ in
             // Port changed, regenerate QR

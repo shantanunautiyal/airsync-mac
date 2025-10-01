@@ -51,6 +51,10 @@ class AppState: ObservableObject {
             .bool(forKey: "toolbarContrast")
         self.hideDockIcon = UserDefaults.standard
             .bool(forKey: "hideDockIcon")
+        self.alwaysOpenWindow = UserDefaults.standard
+            .bool(forKey: "alwaysOpenWindow")
+        self.notificationSound = UserDefaults.standard
+            .string(forKey: "notificationSound") ?? "default"
         self.dismissNotif = UserDefaults.standard
             .bool(forKey: "dismissNotif")
         
@@ -91,18 +95,32 @@ class AppState: ObservableObject {
         self.licenseDetails = loadLicenseDetailsFromUserDefaults()
 
         loadAppsFromDisk()
+        // QuickConnectManager handles its own initialization
 
 //        postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
     }
 
     @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
 
-    @Published var device: Device? = nil
+    @Published var device: Device? = nil {
+        didSet {
+            // Store the last connected device when a new device connects
+            if let newDevice = device {
+                QuickConnectManager.shared.saveLastConnectedDevice(newDevice)
+            }
+            
+            // Automatically switch to the appropriate tab when device connection state changes
+            if device == nil {
+                selectedTab = .qr
+            } else {
+                selectedTab = .notifications
+            }
+        }
+    }
     @Published var notifications: [Notification] = []
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
     @Published var port: UInt16 = Defaults.serverPort
-
     @Published var androidApps: [String: AndroidApp] = [:]
 
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
@@ -199,6 +217,18 @@ class AppState: ObservableObject {
         didSet {
             UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon")
             updateDockIconVisibility()
+        }
+    }
+
+    @Published var alwaysOpenWindow: Bool {
+        didSet {
+            UserDefaults.standard.set(alwaysOpenWindow, forKey: "alwaysOpenWindow")
+        }
+    }
+
+    @Published var notificationSound: String {
+        didSet {
+            UserDefaults.standard.set(notificationSound, forKey: "notificationSound")
         }
     }
 
@@ -353,7 +383,14 @@ class AppState: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "\(appName) - \(title)"
         content.body = body
-        content.sound = .default
+        
+        // Use custom sound if selected, otherwise use default
+        if notificationSound == "default" {
+            content.sound = .default
+        } else {
+            // For system sounds, we need to use the .aiff extension
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("\(notificationSound).aiff"))
+        }
 
         content.userInfo["nid"] = id
         if let pkg = package { content.userInfo["package"] = pkg }
@@ -630,7 +667,8 @@ class AppState: ObservableObject {
         let availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters()
         
         // Check if the saved adapter is still available
-        guard let matchingAdapter = availableAdapters.first(where: { $0.name == savedName }) else {
+        guard availableAdapters
+            .first(where: { $0.name == savedName }) != nil else {
             print("[state] Saved network adapter '\(savedName)' not found, falling back to auto")
             return nil // Fall back to auto
         }
