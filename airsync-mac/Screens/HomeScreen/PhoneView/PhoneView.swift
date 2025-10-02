@@ -78,23 +78,30 @@ struct PhoneView: View {
                     }
             )
             .onAppear { updateImage() }
-            .onChange(of: appState.status?.music.isPlaying) { updateImage() }
-            .onChange(of: appState.status?.music.albumArt) { updateImage() }
-            .onChange(of: AppState.shared.currentDeviceWallpaperBase64) { updateImage() }
+            .onChange(of: appState.status?.music.isPlaying) { _, _ in updateImage() }
+            .onChange(of: appState.status?.music.albumArt) { _, _ in updateImage() }
+            .onChange(of: appState.currentDeviceWallpaperBase64) { _, _ in updateImage() }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
     private func updateImage() {
-        let base64 = (appState.status?.music.isPlaying ?? false)
-            ? appState.status?.music.albumArt
-            : AppState.shared.currentDeviceWallpaperBase64
-
-        guard let base64 = base64,
-              let data = Data(base64Encoded: base64.stripBase64Prefix()),
-              let nsImage = NSImage(data: data) else { return }
-        // Setting displayedImage triggers fade in representable
-        displayedImage = nsImage
+        // Always use the device wallpaper for the PhoneView background
+        guard let raw = appState.currentDeviceWallpaperBase64 else {
+            print("[phone-view] No wallpaper base64 available.")
+            return
+        }
+        let cleaned = raw.stripBase64Prefix()
+        if cleaned.isEmpty {
+            print("[phone-view] Empty wallpaper base64 string. Waiting for next update.")
+            return
+        }
+        if let data = Data(base64Encoded: cleaned, options: .ignoreUnknownCharacters),
+           let nsImage = NSImage(data: data) {
+            displayedImage = nsImage
+        } else {
+            print("[phone-view] Failed to decode image base64 (length=\(cleaned.count)).")
+        }
     }
 }
 

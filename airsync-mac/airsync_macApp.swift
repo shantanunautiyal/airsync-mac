@@ -152,7 +152,8 @@ extension View {
             window.collectionBehavior.insert(.moveToActiveSpace)
             // Make window transparent during onboarding
             if appState.isOnboardingActive {
-                window.alphaValue = 0.0
+                // Keep window visible but dimmed during onboarding to avoid fully invisible UI if sheet fails
+                window.alphaValue = 0.6
                 window.isOpaque = false
             } else {
                 window.alphaValue = 1.0
@@ -164,7 +165,8 @@ extension View {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.3
                 if isActive {
-                    window.animator().alphaValue = 0.0
+                    // Dim instead of hiding completely
+                    window.animator().alphaValue = 0.6
                     window.isOpaque = false
                 } else {
                     window.animator().alphaValue = 1.0

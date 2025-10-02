@@ -20,6 +20,7 @@ enum MessageType: String, Codable {
     case macMediaControlResponse
     case appIcons
     case clipboardUpdate
+    case volumeControlResponse
     // file transfer
     case fileTransferInit
     case fileChunk
@@ -28,6 +29,8 @@ enum MessageType: String, Codable {
     case transferVerified
     // wake up / quick connect
     case wakeUpRequest
+    case startMirrorRequest
+    case stopMirrorRequest
 }
 
 struct Message: Codable {

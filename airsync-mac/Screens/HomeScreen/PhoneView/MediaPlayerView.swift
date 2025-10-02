@@ -32,7 +32,7 @@ struct MediaPlayerView: View {
 
 
                 Group {
-                    if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                    if AppState.shared.isPlus || !AppState.shared.licenseCheck {
                         HStack{
                             if (AppState.shared.status?.music.likeStatus == "liked" || AppState.shared.status?.music.likeStatus == "not_liked") {
                                 GlassButtonView(

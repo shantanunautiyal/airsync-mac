@@ -28,6 +28,13 @@ struct OnboardingView: View {
     @State private var timer: Timer?
     @State private var glowOpacity: Double = 0
 
+    private func finishOnboarding() {
+        hasPairedDeviceOnce = true
+        UserDefaults.standard.markOnboardingCompleted()
+        AppState.shared.isOnboardingActive = false
+        dismiss()
+    }
+
     var body: some View {
         ZStack {
             VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
@@ -71,15 +78,25 @@ struct OnboardingView: View {
 
                     case .done:
                         Color.clear.onAppear {
-                            hasPairedDeviceOnce = true
-                            UserDefaults.standard.markOnboardingCompleted()
-                            AppState.shared.isOnboardingActive = false
-                            dismiss()
+                            finishOnboarding()
                         }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding()
+
+            // Always-visible Skip control to recover from onboarding issues
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { finishOnboarding() }) {
+                        Label("Skip", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(8)
+                }
+                Spacer()
+            }
         }
         .onChange(of: currentStep) { old, new in
             if new == .plusFeatures {

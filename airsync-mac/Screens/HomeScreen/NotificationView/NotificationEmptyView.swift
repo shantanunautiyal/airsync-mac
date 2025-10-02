@@ -13,7 +13,11 @@ struct NotificationEmptyView: View {
             Text(loc: "notifications.empty.emoji")
                 .font(.title)
                 .padding()
-            Label(L("notifications.empty.title"), systemImage: "tray")
+            Label {
+                Text(loc: "notifications.empty.title")
+            } icon: {
+                Image(systemName: "tray")
+            }
             .padding()
         }
     }

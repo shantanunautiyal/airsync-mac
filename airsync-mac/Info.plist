@@ -38,6 +38,8 @@
 	<string>https://sameerasw.github.io/airsync-mac/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>sHwLY7+V1LUTP7lmY9FYK8FAZgn2zlUhYCEiDazyaMQ=</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>AirSync uses Bluetooth to discover and connect to your Android device for syncing notifications and other data.</string>
 	<key>UpdateFeedURL</key>
 	<string>https://sameerasw.github.io/airsync-mac/releases/latest</string>
 </dict>

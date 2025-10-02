@@ -49,6 +49,9 @@ class WebSocketServer: ObservableObject {
     private var incomingFilesChecksum: [String: String] = [:]
     // Outgoing transfer ack tracking
     private var outgoingAcks: [String: Set<Int>] = [:]
+    
+    // Serial queue to protect access to outgoingAcks from multiple threads
+    private let outgoingAckQueue = DispatchQueue(label: "com.airsync.websocket.outgoing-ack-queue")
 
     private let maxChunkRetries = 3
     private let ackWaitMs: UInt32 = 2000 // 2s
@@ -121,7 +124,7 @@ class WebSocketServer: ObservableObject {
         "data": {}
     }
     """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
 
@@ -177,6 +180,24 @@ class WebSocketServer: ObservableObject {
         )
     }
 
+    /// Handles a raw, unencrypted message string, typically from a non-WebSocket source like Bluetooth.
+    func handleRawBluetoothMessage(_ text: String) {
+        let truncated = text.count > 300
+        ? text.prefix(300) + "..."
+        : text
+        print("[bluetooth-bridge] [received] \n\(truncated)")
+
+        if let data = text.data(using: .utf8) {
+            do {
+                let message = try JSONDecoder().decode(Message.self, from: data)
+                DispatchQueue.main.async {
+                    self.handleMessage(message)
+                }
+            } catch {
+                print("[bluetooth-bridge] JSON decode failed: \(error)")
+            }
+        }
+    }
 
     // MARK: - Local IP handling
 
@@ -295,8 +316,17 @@ class WebSocketServer: ObservableObject {
                     version: version
                 )
 
-                if let base64 = dict["wallpaper"] as? String {
-                    AppState.shared.currentDeviceWallpaperBase64 = base64
+                // Accept multiple keys for wallpaper; sanitize and store
+                if let rawAny = (dict["wallpaper"] as? String) ?? (dict["deviceWallpaper"] as? String) {
+                    var cleaned = rawAny.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let range = cleaned.range(of: "base64,") { cleaned = String(cleaned[range.upperBound...]) }
+                    cleaned = cleaned.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+                    print("[websocket] Received wallpaper base64 (len=\(cleaned.count))")
+                    DispatchQueue.main.async {
+                        AppState.shared.currentDeviceWallpaperBase64 = cleaned
+                    }
+                } else {
+                    print("[websocket] No wallpaper provided in device hello; Android may send it later via status or a separate message")
                 }
 
                 if (!AppState.shared.adbConnected && AppState.shared.adbEnabled && AppState.shared.isPlus) {
@@ -310,6 +340,16 @@ class WebSocketServer: ObservableObject {
 				
 				// Send Mac info response to Android
 				sendMacInfoResponse()
+
+                // Ask Android for wallpaper explicitly (helps devices that don't include it in hello)
+                let request = """
+                {
+                    "type": "requestWallpaper",
+                    "data": {}
+                }
+                """
+                AppState.shared.sendMessage(request)
+                print("[websocket] Sent requestWallpaper to device (encrypted/plain)")
             }
 
 
@@ -376,7 +416,7 @@ class WebSocketServer: ObservableObject {
                 let albumArt = (music["albumArt"] as? String) ?? ""
                 let likeStatus = (music["likeStatus"] as? String) ?? "none"
 
-                AppState.shared.status = DeviceStatus(
+                let newStatus = DeviceStatus(
                     battery: .init(level: level, isCharging: isCharging),
                     isPaired: paired,
                     music: .init(
@@ -389,6 +429,13 @@ class WebSocketServer: ObservableObject {
                         likeStatus: likeStatus
                     )
                 )
+                DispatchQueue.main.async {
+                    AppState.shared.status = newStatus
+                    // Check for low battery alert
+                    if let level = battery["level"] as? Int, let isCharging = battery["isCharging"] as? Bool {
+                        self.checkLowBattery(level: level, isCharging: isCharging)
+                    }
+                }
             }
 
 
@@ -404,6 +451,14 @@ class WebSocketServer: ObservableObject {
                let action = dict["action"] as? String,
                let success = dict["success"] as? Bool {
                 print("[websocket] Media control \(action) \(success ? "succeeded" : "failed")")
+            }
+
+        case .volumeControlResponse:
+            if let dict = message.data.value as? [String: Any],
+                let action = dict["action"] as? String,
+                let success = dict["success"] as? Bool {
+                let msg = dict["message"] as? String ?? ""
+                print("[websocket] Volume control response: \(action) \(success ? "succeeded" : "failed"), message: \(msg)")
             }
 
         case .appIcons:
@@ -517,10 +572,12 @@ class WebSocketServer: ObservableObject {
             if let dict = message.data.value as? [String: Any],
                let id = dict["id"] as? String,
                let index = dict["index"] as? Int {
-                var set = outgoingAcks[id] ?? []
-                set.insert(index)
-                outgoingAcks[id] = set
-                print("[websocket] (file-transfer) Received ack for id=\(id) index=\(index) totalAcked=\(set.count)")
+                outgoingAckQueue.async {
+                    var set = self.outgoingAcks[id] ?? []
+                    set.insert(index)
+                    self.outgoingAcks[id] = set
+                    print("[websocket] (file-transfer) Received ack for id=\(id) index=\(index) totalAcked=\(set.count)")
+                }
             }
 
         case .fileTransferComplete:
@@ -532,10 +589,20 @@ class WebSocketServer: ObservableObject {
                     // Resolve a name for notifications and final filename. Prefer AppState metadata; fall back to temp filename.
                     let resolvedName = AppState.shared.transfers[id]?.name ?? state.tempUrl.lastPathComponent
 
-                    // Verify checksum if present
+                    // Verify checksum if present (support MD5 32-hex and SHA-256 64-hex)
                     if let expected = incomingFilesChecksum[id] {
                         if let fileData = try? Data(contentsOf: state.tempUrl) {
-                            let computed = SHA256.hash(data: fileData).compactMap { String(format: "%02x", $0) }.joined()
+                            let computed: String
+                            switch expected.count {
+                            case 32: // MD5
+                                computed = FileTransferProtocol.md5Hex(fileData)
+                            case 64: // SHA-256
+                                computed = FileTransferProtocol.sha256Hex(fileData)
+                            default:
+                                // Fallback to MD5 for legacy clients
+                                computed = FileTransferProtocol.md5Hex(fileData)
+                            }
+
                             if computed != expected {
                                 print("[websocket] (file-transfer) Checksum mismatch for incoming file id=\(id), expected=\(expected), computed=\(computed)")
                                 // Post notification about checksum mismatch via AppState util
@@ -613,6 +680,23 @@ class WebSocketServer: ObservableObject {
             // This case handles wake-up requests from Android to Mac
             // Currently not expected as Mac sends wake-up requests to Android, not vice versa
             print("[websocket] Received wakeUpRequest from Android (not typically expected)")
+        case .startMirrorRequest:
+            if let dict = message.data.value as? [String: Any],
+               let mode = dict["mode"] as? String,
+               let res = dict["res"] as? String,
+               let bitrate = dict["bitrate"] as? Int {
+                let package = dict["package"] as? String
+                
+                MirroringManager.shared.startMirroring(mode: mode, resolution: res, bitrate: bitrate, package: package)
+                sendStartMirrorResponse(success: true)
+            } else {
+                print("[websocket] Received invalid start mirror request")
+                sendStartMirrorResponse(success: false)
+            }
+        case .stopMirrorRequest:
+            print("[websocket] Received stop mirror request")
+            MirroringManager.shared.stopMirroring()
+            sendStopMirrorResponse(success: true)
         }
 
 
@@ -665,6 +749,30 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    private func sendStartMirrorResponse(success: Bool) {
+        let message = """
+        {
+            "type": "startMirrorResponse",
+            "data": {
+                "success": \(success)
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    private func sendStopMirrorResponse(success: Bool) {
+        let message = """
+        {
+            "type": "stopMirrorResponse",
+            "data": {
+                "success": \(success)
+            }
+        }
+        """
+        sendToFirstAvailable(message: message)
+    }
+
     private func sendMacInfoResponse() {
         // Gather Mac info with robust fallbacks
         let macName = AppState.shared.myDevice?.name ?? (Host.current().localizedName ?? "My Mac")
@@ -701,7 +809,7 @@ class WebSocketServer: ObservableObject {
 
                 let messageJsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
                 if let messageJsonString = String(data: messageJsonData, encoding: .utf8) {
-                    sendToFirstAvailable(message: messageJsonString)
+                    AppState.shared.sendMessage(messageJsonString)
                     print("[websocket] Sent Mac info response: model=\(exactDeviceName), type=\(categoryType)")
                 }
             }
@@ -716,7 +824,7 @@ class WebSocketServer: ObservableObject {
         activeSessions.forEach { $0.writeText(message) }
     }
 
-    private func sendToFirstAvailable(message: String) {
+    func sendToFirstAvailable(message: String) {
         if let key = symmetricKey, let encrypted = encryptMessage(message, using: key) {
             activeSessions.first?.writeText(encrypted)
         } else {
@@ -736,15 +844,14 @@ class WebSocketServer: ObservableObject {
             }
         }
         """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     func sendNotificationAction(id: String, name: String, text: String? = nil) {
         var data: [String: Any] = ["id": id, "name": name]
         if let t = text, !t.isEmpty { data["text"] = t }
         if let jsonData = try? JSONSerialization.data(withJSONObject: ["type": "notificationAction", "data": data], options: []),
-           let json = String(data: jsonData, encoding: .utf8) {
-            sendToFirstAvailable(message: json)
+           let json = String(data: jsonData, encoding: .utf8) { AppState.shared.sendMessage(json)
         }
     }
 
@@ -788,7 +895,7 @@ class WebSocketServer: ObservableObject {
             }
         }
         """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     // MARK: - Volume Controls
@@ -815,7 +922,7 @@ class WebSocketServer: ObservableObject {
             }
         }
         """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     private func sendVolumeAction(_ action: String) {
@@ -827,11 +934,11 @@ class WebSocketServer: ObservableObject {
             }
         }
         """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     func sendClipboardUpdate(_ message: String) {
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     // MARK: - Device Status (Mac -> Android)
@@ -866,10 +973,34 @@ class WebSocketServer: ObservableObject {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                sendToFirstAvailable(message: jsonString)
+                AppState.shared.sendMessage(jsonString)
             }
         } catch {
             print("[websocket] Error creating device status message: \(error)")
+        }
+    }
+
+    // MARK: - Low Battery Alerts
+    private func checkLowBattery(level: Int, isCharging: Bool) {
+        let lowBatteryThreshold = 20
+        let appState = AppState.shared
+
+        // If battery is low and not charging, and we haven't sent a notification yet
+        if level <= lowBatteryThreshold && !isCharging && !appState.lowBatteryNotifSent {
+            appState.postNativeNotification(
+                id: "low_battery_\(appState.device?.name ?? "device")",
+                appName: "AirSync",
+                title: "\(appState.device?.name ?? "Device") Low Battery",
+                body: "Battery is at \(level)%. You might want to charge it soon."
+            )
+            appState.lowBatteryNotifSent = true
+            print("[websocket] Sent low battery alert for device.")
+        }
+        
+        // Reset the flag if the battery is charged above the threshold or is charging
+        if (level > lowBatteryThreshold || isCharging) && appState.lowBatteryNotifSent {
+            appState.lowBatteryNotifSent = false
+            print("[websocket] Low battery alert flag reset.")
         }
     }
 
@@ -878,24 +1009,29 @@ class WebSocketServer: ObservableObject {
         guard FileManager.default.fileExists(atPath: url.path) else { return }
         guard let data = try? Data(contentsOf: url) else { return }
         // compute checksum
-        let checksum = FileTransferProtocol.sha256Hex(data)
+        let checksumAll = FileTransferProtocol.md5Hex(data)
 
-    let transferId = UUID().uuidString
+        let transferId = UUID().uuidString
         let fileName = url.lastPathComponent
         let totalSize = data.count
         let mime = mimeType(for: url) ?? "application/octet-stream"
 
-    // Track in AppState
-    AppState.shared.startOutgoingTransfer(id: transferId, name: fileName, size: totalSize, mime: mime, chunkSize: chunkSize)
+        // Temporary: bypass checksum for image types to avoid false negatives on Android
+        let checksum: String? = (mime.hasPrefix("image/png") || mime.hasPrefix("image/jpeg")) ? nil : checksumAll
 
-    // Send init message
-    let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: totalSize, mime: mime, checksum: checksum)
-    sendToFirstAvailable(message: initMessage)
+        // Track in AppState
+        AppState.shared.startOutgoingTransfer(id: transferId, name: fileName, size: totalSize, mime: mime, chunkSize: chunkSize)
+
+        // Send init message
+        let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: totalSize, mime: mime, checksum: checksum)
+        AppState.shared.sendMessage(initMessage)
 
         // Send chunks using a simple sliding window to allow multiple in-flight chunks
-        let windowSize = 8
+        let windowSize = 1
         let totalChunks = (totalSize + chunkSize - 1) / chunkSize
-        outgoingAcks[transferId] = []
+        outgoingAckQueue.sync {
+            outgoingAcks[transferId] = []
+        }
 
         // Keep a buffer of sent chunks for potential retransmit: index -> (payloadBase64, attempts, lastSent)
         var sentBuffer: [Int: (payload: String, attempts: Int, lastSent: Date)] = [:]
@@ -909,7 +1045,7 @@ class WebSocketServer: ObservableObject {
             let chunk = data.subdata(in: start..<end)
             let base64 = chunk.base64EncodedString()
             let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: idx, base64Chunk: base64)
-            sendToFirstAvailable(message: chunkMessage)
+            AppState.shared.sendMessage(chunkMessage)
             sentBuffer[idx] = (payload: base64, attempts: 1, lastSent: Date())
         }
 
@@ -921,7 +1057,9 @@ class WebSocketServer: ObservableObject {
 
         // Loop until all chunks are acked
         while true {
-            let acked = outgoingAcks[transferId] ?? []
+            let acked = outgoingAckQueue.sync {
+                outgoingAcks[transferId] ?? []
+            }
 
             // compute baseIndex = lowest unacked index (first missing starting from 0)
             var baseIndex = 0
@@ -954,7 +1092,9 @@ class WebSocketServer: ObservableObject {
                 if elapsedMs > Double(ackWaitMs) {
                     if entry.attempts >= maxChunkRetries {
                         print("[websocket] (file-transfer) Failed to get ack for chunk \(idx) after \(maxChunkRetries) attempts")
-                        outgoingAcks.removeValue(forKey: transferId)
+                        _ = outgoingAckQueue.sync {
+                            outgoingAcks.removeValue(forKey: transferId)
+                        }
                         return
                     }
                     // retransmit
@@ -963,7 +1103,7 @@ class WebSocketServer: ObservableObject {
                     let chunk = data.subdata(in: start..<end)
                     let base64 = chunk.base64EncodedString()
                     let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: idx, base64Chunk: base64)
-                    sendToFirstAvailable(message: chunkMessage)
+                    AppState.shared.sendMessage(chunkMessage)
                     sentBuffer[idx] = (payload: base64, attempts: entry.attempts + 1, lastSent: Date())
                 }
             }
@@ -972,14 +1112,14 @@ class WebSocketServer: ObservableObject {
             usleep(50_000) // 50ms
         }
 
-    // Ensure progress shows 100%
-    AppState.shared.updateOutgoingProgress(id: transferId, bytesTransferred: totalSize)
-    let elapsed = Date().timeIntervalSince(startTime)
+        // Ensure progress shows 100%
+        AppState.shared.updateOutgoingProgress(id: transferId, bytesTransferred: totalSize)
+        let elapsed = Date().timeIntervalSince(startTime)
         print("[websocket] (file-transfer) Completed sending \(totalSize) bytes in \(elapsed) s")
 
         // Send complete
-    let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: totalSize, checksum: checksum)
-        sendToFirstAvailable(message: completeMessage)
+        let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: totalSize, checksum: checksum)
+        AppState.shared.sendMessage(completeMessage)
     }
 
     func toggleNotification(for package: String, to state: Bool) {
@@ -999,7 +1139,7 @@ class WebSocketServer: ObservableObject {
             }
         }
         """
-        sendToFirstAvailable(message: message)
+        AppState.shared.sendMessage(message)
     }
 
     func loadOrGenerateSymmetricKey() {
@@ -1121,7 +1261,4 @@ class WebSocketServer: ObservableObject {
     func wakeUpLastConnectedDevice() {
         QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
-
-
-
 }

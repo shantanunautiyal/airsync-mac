@@ -17,7 +17,7 @@ struct AppContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                switch AppState.shared.selectedTab {
+                switch appState.selectedTab {
                 case .notifications:
                     NotificationView()
                         .transition(.blurReplace)
@@ -124,29 +124,36 @@ struct AppContentView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
-            .frame(minWidth: 550)
+            .frame(minWidth: 550, minHeight: 400)
         }
         .onAppear {
-            // Ensure the correct tab is selected when the view appears
-            // This fixes the bug where the scanner tab shows even when connected
-            if appState.device == nil {
-                AppState.shared.selectedTab = .qr
+            print("AppContentView onAppear")
+            DispatchQueue.main.async {
+                // Ensure the correct tab is selected when the view appears
+                // This fixes the bug where the scanner tab shows even when connected
+                if appState.device == nil {
+                    AppState.shared.selectedTab = .qr
+                } else {
+                    AppState.shared.selectedTab = .notifications
+                }
+            }
+        }
+        .onChange(of: appState.device) { _, newValue in
+            if newValue == nil {
+                appState.selectedTab = .qr
             } else {
-                AppState.shared.selectedTab = .notifications
+                if appState.selectedTab == .qr {
+                    appState.selectedTab = .notifications
+                }
             }
         }
         .toolbar {
             ToolbarItem(placement: .secondaryAction) {
                 Picker("Tab", selection: $appState.selectedTab) {
-                    ForEach(TabIdentifier.availableTabs) { tab in
-                        Button(L(tab.rawValue), systemImage: tab.icon) {}
-                                .labelStyle(.iconOnly)
-                                .tag(tab)
+                    ForEach(AppState.availableTabs) { tab in
+                        Label(L(tab.rawValue), systemImage: tab.icon)
+                            .tag(tab)
                             .help(L(tab.rawValue))
-                                .keyboardShortcut(
-                                    tab.shortcut,
-                                    modifiers: .command
-                                )
                     }
                 }
                 .pickerStyle(.palette)
@@ -167,7 +174,7 @@ struct AppContentView: View {
         .alert(isPresented: $showDisconnectAlert) {
             Alert(
                 title: Text("Disconnect Device"),
-                message: Text("Do you want to disconnect \"\(appState.device?.name ?? "device")\"?"),
+                message: Text("Do you want to disconnect \(appState.device?.name ?? "device")?"),
                 primaryButton: .destructive(Text("Disconnect")) {
                     appState.disconnectDevice()
                     ADBConnector.disconnectADB()
@@ -184,4 +191,3 @@ struct AppContentView: View {
 #Preview {
     AppContentView()
 }
-

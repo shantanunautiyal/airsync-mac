@@ -61,7 +61,7 @@ struct SettingsPlusView: View {
 
             // License input + check
             if !appState.isPlus {
-                TextField(L("license.enterKey"), text: $licenseKey)
+                TextField(NSLocalizedString("license.enterKey", comment: ""), text: $licenseKey)
                     .textFieldStyle(.roundedBorder)
                     .disabled(isCheckingLicense)
 
@@ -191,8 +191,7 @@ struct SettingsPlusView: View {
         // Why Plus section
         DisclosureGroup(isExpanded: $isExpanded) {
             Text("""
-Keeps me inspired to continue and maybe even to publish to the Apple app store and Google Play Store. Think of it as a little donation to keep this project alive and evolving.
-That said, I know not everyone who wants the full experience can afford it. If that’s you, please don’t hesitate to reach out. 😊
+Keeps me inspired to continue and maybe even to publish to the Apple app store and Google Play Store. Think of it as a little donation to keep this project alive and evolving. That said, I know not everyone who wants the full experience can afford it. If that’s you, please don’t hesitate to reach out. 😊
 
 The source code is available on GitHub, and you're more than welcome to build with all Plus features free — for personal use which also opens for contributions which is a win-win!.
 As a thank-you for supporting the app, AirSync+ unlocks some nice extras: media controls, synced widgets, low battery alerts, wireless ADB, and more to come as I keep adding new features.
@@ -206,7 +205,7 @@ Enjoy the app!
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(8)
         } label: {
-            Text(L("plus.why"))
+            Text(NSLocalizedString("plus.why", comment: ""))
                 .font(.subheadline)
                 .bold()
         }

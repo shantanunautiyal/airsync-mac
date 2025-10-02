@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+internal import Combine
 
 struct HomeView: View {
     @ObservedObject var appState = AppState.shared
@@ -14,6 +15,7 @@ struct HomeView: View {
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
     @State var showOnboarding = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var cancellable: AnyCancellable?
     
     private var needsOnboarding: Bool {
         // Show onboarding if either:
@@ -41,27 +43,45 @@ struct HomeView: View {
         )
         // Show onboarding sheet when needed
         .onAppear {
+            print("HomeView onAppear")
             if needsOnboarding {
                 showOnboarding = true
                 appState.isOnboardingActive = true
             }
-            updateSidebarVisibility()
-        }
-        .onChange(of: appState.device) { _, _ in
-            updateSidebarVisibility()
+            setupDeviceChangeSubscription()
+            DispatchQueue.main.async {
+                updateSidebarVisibility()
+            }
+            // Watchdog: if the onboarding sheet fails to present (e.g., resource missing),
+            // restore window visibility so the app isn't invisible.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                if showOnboarding && AppState.shared.isOnboardingActive {
+                    // If the sheet didn't present, don't keep the main window hidden/dimmed forever
+                    print("[onboarding] Watchdog restoring window visibility — sheet may have failed to present")
+                    AppState.shared.isOnboardingActive = false
+                }
+            }
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView()
                 .frame(minWidth: 640, minHeight: 420)
         }
         .onChange(of: showOnboarding) { oldValue, newValue in
+            print("HomeView onChange(of: showOnboarding)")
             if !newValue {
                 appState.isOnboardingActive = false
             }
         }
-        .onChange(of: appState.isOnboardingActive) { oldValue, newValue in
-            // Force view update to refresh window properties
-        }
+
+    }
+
+    private func setupDeviceChangeSubscription() {
+        cancellable = appState.$device
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { _ in
+                print("HomeView device changed")
+                updateSidebarVisibility()
+            }
     }
 
     private func updateSidebarVisibility() {

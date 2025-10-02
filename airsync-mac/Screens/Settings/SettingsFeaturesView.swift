@@ -62,7 +62,7 @@ struct SettingsFeaturesView: View {
                             }
                         )
                         .disabled(
-                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting || !AppState.shared.isPlus
+                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting || (!AppState.shared.isPlus && AppState.shared.licenseCheck)
                         )
                     }
 
@@ -111,7 +111,7 @@ struct SettingsFeaturesView: View {
             }
 
             // Show port field if ADB toggle is on
-            if appState.isPlus, (appState.adbEnabled || appState.adbConnected){
+            if (appState.isPlus || !AppState.shared.licenseCheck), (appState.adbEnabled || appState.adbConnected){
 
                 Spacer()
 
@@ -138,7 +138,10 @@ struct SettingsFeaturesView: View {
                                     step: 1,
                                     onEditingChanged: { editing in
                                         if !editing {
-                                            AppState.shared.scrcpyBitrate = Int(tempBitrate)
+                                            let value = Int(tempBitrate)
+                                            DispatchQueue.main.async {
+                                                AppState.shared.scrcpyBitrate = value
+                                            }
                                         }
                                         isDragging = editing
                                     }
@@ -162,9 +165,10 @@ struct SettingsFeaturesView: View {
                                     step: 200,
                                     onEditingChanged: { editing in
                                         if !editing {
-                                            AppState.shared.scrcpyResolution = Int(
-                                                tempResolution
-                                            )
+                                            let value = Int(tempResolution)
+                                            DispatchQueue.main.async {
+                                                AppState.shared.scrcpyResolution = value
+                                            }
                                         }
                                         isDragging = editing
                                     }
@@ -216,6 +220,7 @@ struct SettingsFeaturesView: View {
                                     .onChange(of: xCoords) { oldValue, newValue in
                                         xCoords = newValue.filter { "0123456789".contains($0) }
                                     }
+                                    .frame(width: 50)
                                     .disabled(
                                         !manualPosition
                                     )
@@ -225,6 +230,7 @@ struct SettingsFeaturesView: View {
                                     .onChange(of: yCoords) { oldValue, newValue in
                                         yCoords = newValue.filter { "0123456789".contains($0) }
                                     }
+                                    .frame(width: 50)
                                     .disabled(
                                         !manualPosition
                                     )
@@ -274,6 +280,14 @@ struct SettingsFeaturesView: View {
             SettingsToggleView(name: "Sync notification dismissals", icon: "bell.badge", isOn: $appState.dismissNotif)
 
             SettingsToggleView(name: "Send now playing status", icon: "play.circle", isOn: $appState.sendNowPlayingStatus)
+
+            HStack {
+                Label("Bluetooth Discovery", systemImage: "dot.radiowaves.left.and.right")
+                Spacer()
+                Toggle("", isOn: $appState.isBluetoothEnabled)
+                    .toggleStyle(.switch)
+                    .help(appState.isBluetoothEnabled ? "Stop scanning for devices via Bluetooth LE" : "Start scanning for devices via Bluetooth LE")
+            }
 
             HStack {
                 Label("System Notifications", systemImage: "bell.badge")

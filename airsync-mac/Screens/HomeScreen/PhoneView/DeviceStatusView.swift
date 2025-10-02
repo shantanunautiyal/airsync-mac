@@ -30,12 +30,19 @@ struct DeviceStatusView: View {
             HStack(spacing: 8) {
                 let batteryLevel = appState.status?.battery.level ?? 100
                 let batteryIsCharging = appState.status?.battery.isCharging ?? false
-
-
+                
+                // Connection Type Indicator
+                if let device = appState.device {
+                    Image(systemName: device.ipAddress == "BLE" ? "b.circle.fill" : "wifi")
+                        .help(device.ipAddress == "BLE" ? "Connected via Bluetooth" : "Connected via Wi-Fi")
+                        .foregroundColor(device.ipAddress == "BLE" ? .blue : .accentColor)
+                }
+                
                 HStack{
                     Image(systemName: batteryIcon(for: batteryLevel, isCharging: batteryIsCharging))
                         .help("\(batteryLevel)%")
                         .contentTransition(.symbolEffect)
+                    
                     Text("\(batteryLevel)%")
                         .font(.caption2)
                 }
@@ -50,7 +57,7 @@ struct DeviceStatusView: View {
                     iconOnly: true,
                     primary: false,
                     action: {
-                        if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                        if AppState.shared.isPlus || !AppState.shared.licenseCheck {
                             if let currentVolume = appState.status?.music.volume {
                                 tempVolume = Double(currentVolume)
                             }

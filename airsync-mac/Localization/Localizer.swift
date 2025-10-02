@@ -35,7 +35,18 @@ final class Localizer: ObservableObject {
         }
     }
 
-    func text(_ key: String) -> String { strings[key] ?? key }
+    func text(_ key: String) -> String {
+        if let value = strings[key] {
+            return value
+        } else {
+            #if DEBUG
+            print("[localizer] Missing key: \(key)")
+            #endif
+            // Provide a readable fallback from the last path component of the key
+            let fallback = key.split(separator: ".").last.map { String($0).replacingOccurrences(of: "_", with: " ") } ?? key
+            return fallback.capitalized
+        }
+    }
 }
 
 /// Convenience SwiftUI helper

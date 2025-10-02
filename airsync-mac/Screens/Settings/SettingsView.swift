@@ -154,7 +154,7 @@ struct SettingsView: View {
                                     in: 10...80,
                                     step: 5
                                 )
-                                .frame(width: 200)
+                                .frame(maxWidth: 200)
                                 .controlSize(.small)
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))

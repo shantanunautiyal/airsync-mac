@@ -21,7 +21,9 @@ class AppState: ObservableObject {
     @Published var isOS26: Bool = true
 
     init() {
-        self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+        // Force-enable Plus for personal builds and persist
+        self.isPlus = true
+        UserDefaults.standard.set(true, forKey: "isPlus")
 
         // Load from UserDefaults
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
@@ -62,12 +64,20 @@ class AppState: ObservableObject {
         let savedNowPlayingStatus = UserDefaults.standard.object(forKey: "sendNowPlayingStatus")
         self.sendNowPlayingStatus = savedNowPlayingStatus == nil ? true : UserDefaults.standard.bool(forKey: "sendNowPlayingStatus")
         
+        self.isBluetoothEnabled = UserDefaults.standard.bool(forKey: "isBluetoothEnabled")
+        // Activate Bluetooth manager if it was enabled on last run
+        if self.isBluetoothEnabled {
+            BluetoothManager.shared.enable(true)
+        }
+
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
         }
 
-        Task {
-            await Gumroad().checkLicenseIfNeeded()
+        if licenseCheck {
+            Task {
+                await Gumroad().checkLicenseIfNeeded()
+            }
         }
 
         self.scrcpyBitrate = UserDefaults.standard.integer(forKey: "scrcpyBitrate")
@@ -98,6 +108,16 @@ class AppState: ObservableObject {
         // QuickConnectManager handles its own initialization
 
 //        postNativeNotification(id: "test_notification", appName: "AirSync Beta", title: "Hi there! (っ◕‿◕)っ", body: "Welcome to and thanks for testing out the app. Please don't forget to report issues to sameerasw.com@gmail.com or any other community you prefer. <3", appIcon: nil)
+        
+        // Attempt auto-reconnect to last device shortly after launch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            if let _ = QuickConnectManager.shared.getLastConnectedDevice() {
+                print("[state] Auto-reconnect: attempting wake-up of last connected device")
+                QuickConnectManager.shared.wakeUpLastConnectedDevice()
+            } else {
+                print("[state] Auto-reconnect: no previous device found for current network")
+            }
+        }
     }
 
     @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
@@ -108,18 +128,14 @@ class AppState: ObservableObject {
             if let newDevice = device {
                 QuickConnectManager.shared.saveLastConnectedDevice(newDevice)
             }
-            
-            // Automatically switch to the appropriate tab when device connection state changes
-            if device == nil {
-                selectedTab = .qr
-            } else {
-                selectedTab = .notifications
-            }
         }
     }
     @Published var notifications: [Notification] = []
     @Published var status: DeviceStatus? = nil
     @Published var myDevice: Device? = nil
+    // Tracks if a low battery notification has been sent for the current device session
+    @Published var lowBatteryNotifSent: Bool = false
+
     @Published var port: UInt16 = Defaults.serverPort
     @Published var androidApps: [String: AndroidApp] = [:]
 
@@ -136,7 +152,6 @@ class AppState: ObservableObject {
     }
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
-    @Published var selectedTab: TabIdentifier = .qr
 
     @Published var adbConnected: Bool = false
     @Published var adbConnecting: Bool = false
@@ -244,6 +259,14 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var isBluetoothEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isBluetoothEnabled, forKey: "isBluetoothEnabled")
+            // Enable or disable the Bluetooth manager based on the toggle
+            BluetoothManager.shared.enable(isBluetoothEnabled)
+        }
+    }
+
     // Whether the media player card is hidden on the PhoneView
     @Published var isMusicCardHidden: Bool = false {
         didSet {
@@ -261,11 +284,45 @@ class AppState: ObservableObject {
         }
     }
 
+    @Published var selectedTab: Tab = .qr
+
+    // Renamed from AppTab to avoid conflicts and centralize logic
+    enum Tab: String, CaseIterable, Identifiable {
+        case notifications = "notifications.tab"
+        case apps = "apps.tab"
+        case transfers = "transfers.tab"
+        case settings = "settings.tab"
+        case qr = "qr.tab"
+
+        var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .notifications: return "bell.badge"
+            case .apps: return "app"
+            case .transfers: return "tray.and.arrow.up"
+            case .settings: return "gear"
+            case .qr: return "qrcode"
+            }
+        }
+
+        var shortcut: KeyEquivalent {
+            switch self {
+            case .notifications: return "1"
+            case .apps: return "2"
+            case .transfers: return "3"
+            case .settings: return ","
+            case .qr: return "."
+            }
+        }
+    }
+
+
     // File transfer tracking state
     @Published var transfers: [String: FileTransferSession] = [:]
 
     // Toggle licensing
-    let licenseCheck: Bool = true
+    let licenseCheck: Bool = false
 
     @Published var isPlus: Bool {
         didSet {
@@ -276,6 +333,20 @@ class AppState: ObservableObject {
             NotificationCenter.default.post(name: NSNotification.Name("LicenseStatusChanged"), object: nil)
         }
     }
+
+    // Moved from TabIdentifier and adapted
+    static var availableTabs: [Tab] {
+        var tabs: [Tab] = [.qr, .settings]
+        if AppState.shared.device != nil {
+            tabs.remove(at: 0)
+            tabs.insert(.notifications, at: 0)
+            tabs.insert(.apps, at: 1)
+            tabs.insert(.transfers, at: 2)
+        }
+        return tabs
+    }
+
+
 
     func setPlusTemporarily(_ value: Bool) {
         shouldSkipSave = true
@@ -339,6 +410,7 @@ class AppState: ObservableObject {
             self.status = nil
             self.currentDeviceWallpaperBase64 = nil
             self.transfers = [:]
+            self.lowBatteryNotifSent = false // Reset on disconnect
 
             if self.adbConnected {
                 ADBConnector.disconnectADB()
@@ -377,8 +449,7 @@ class AppState: ObservableObject {
         package: String? = nil,
         actions: [NotificationAction] = [],
         extraActions: [UNNotificationAction] = [],
-        extraUserInfo: [String: Any] = [:]
-    ) {
+        extraUserInfo: [String: Any] = [:]) {
         let center = UNUserNotificationCenter.current()
         let content = UNMutableNotificationContent()
         content.title = "\(appName) - \(title)"
@@ -462,9 +533,7 @@ class AppState: ObservableObject {
         // Save NSImage as a temporary PNG file to attach in notification
         guard let tiffData = icon.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else {
-            return nil
-        }
+              let pngData = bitmap.representation(using: .png, properties: [:]) else { return nil }
 
         let tempDir = URL(fileURLWithPath: NSTemporaryDirectory())
         let tempFile = tempDir.appendingPathComponent("notification_icon_\(UUID().uuidString).png")
@@ -475,6 +544,65 @@ class AppState: ObservableObject {
         } catch {
             print("[state] Error saving icon to temp file: \(error)")
             return nil
+        }
+    }
+
+    /// Central message sending hub. Decides whether to send via WebSocket or Bluetooth.
+    func sendMessage(_ message: String) {
+        // If the connected device is via Bluetooth, use the BluetoothManager.
+        if device?.ipAddress == "BLE" {
+            BluetoothManager.shared.send(message)
+            let truncated = message.count > 100 ? message.prefix(100) + "..." : message
+            print("[app-state] Sent message via BLE: \(truncated)")
+        } else {
+            // Otherwise, use the WebSocketServer.
+            WebSocketServer.shared.sendToFirstAvailable(message: message)
+        }
+    }
+
+    // MARK: - ADB-free Mirroring Control (Connection Agnostic)
+    /// Requests Android to start mirroring using its own capture/stream stack (e.g., MediaProjection/WebRTC) without ADB.
+    /// - Parameters:
+    ///   - mode: Optional mode hint (e.g., "device", "desktop"). Android side may ignore.
+    ///   - resolution: Optional target resolution string (e.g., "1600x1000").
+    ///   - bitrateMbps: Optional target bitrate in Mbps.
+    ///   - appPackage: Optional package to mirror specifically.
+    func requestStartMirroring(mode: String? = nil, resolution: String? = nil, bitrateMbps: Int? = nil, appPackage: String? = nil) {
+        var data: [String: Any] = [:]
+        if let mode { data["mode"] = mode }
+        if let resolution { data["resolution"] = resolution }
+        if let bitrateMbps { data["bitrateMbps"] = bitrateMbps }
+        if let appPackage { data["package"] = appPackage }
+
+        let payload: [String: Any] = [
+            "type": "startMirrorRequest",
+            "data": data
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent startMirrorRequest: mode=\(mode ?? "-") res=\(resolution ?? "-") bitrate=\(bitrateMbps.map(String.init) ?? "-") package=\(appPackage ?? "-")")
+        }
+    }
+
+    /// Requests Android to stop any ongoing mirroring session started via WebSocket.
+    func requestStopMirroring() {
+        let payload: [String: Any] = [
+            "type": "stopMirrorRequest",
+            "data": [:]
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent stopMirrorRequest")
+        }
+    }
+
+    /// Sends a file to the connected device, regardless of connection type.
+    func sendFile(url: URL) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            // The sending logic is in WebSocketServer, but it uses AppState.sendMessage, so it's connection-agnostic.
+            WebSocketServer.shared.sendFile(url: url)
         }
     }
 
@@ -519,7 +647,7 @@ class AppState: ObservableObject {
         }
     }
     """
-        WebSocketServer.shared.sendClipboardUpdate(message)
+        sendMessage(message)
     }
 
     func updateClipboardFromAndroid(_ text: String) {

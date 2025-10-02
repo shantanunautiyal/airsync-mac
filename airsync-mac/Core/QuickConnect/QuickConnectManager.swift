@@ -22,6 +22,12 @@ class QuickConnectManager: ObservableObject {
     // Store last connected devices per network (key: Mac IP, value: Device)
     @Published var lastConnectedDevices: [String: Device] = [:]
     
+    // Serial queue to protect access to lastConnectedDevices from multiple threads
+    private let deviceHistoryQueue = DispatchQueue(label: "com.airsync.device-history-queue")
+    
+    // Cooldown to prevent spamming wake-up requests
+    private var isWakeUpOnCooldown = false
+    
     private init() {
         loadDeviceHistoryFromDisk()
     }
@@ -30,8 +36,10 @@ class QuickConnectManager: ObservableObject {
     
     /// Gets the last connected device for the current network
     func getLastConnectedDevice() -> Device? {
-        guard let currentIP = getCurrentMacIP() else { return nil }
-        return lastConnectedDevices[currentIP]
+        deviceHistoryQueue.sync {
+            guard let currentIP = getCurrentMacIP() else { return nil }
+            return lastConnectedDevices[currentIP]
+        }
     }
     
     /// Saves a device as the last connected for the current network
@@ -41,9 +49,11 @@ class QuickConnectManager: ObservableObject {
             return
         }
         
-        DispatchQueue.main.async {
-            self.lastConnectedDevices[currentMacIP] = device
-            self.saveDeviceHistoryToDisk()
+        deviceHistoryQueue.async {
+            DispatchQueue.main.async {
+                self.lastConnectedDevices[currentMacIP] = device
+            }
+            self.saveDeviceHistoryToDisk_internal()
         }
         print("[quick-connect] Saved last connected device for network \(currentMacIP): \(device.name) (\(device.ipAddress))")
     }
@@ -52,19 +62,32 @@ class QuickConnectManager: ObservableObject {
     func clearLastConnectedDevice() {
         guard let currentMacIP = getCurrentMacIP() else { return }
         
-        DispatchQueue.main.async {
-            self.lastConnectedDevices.removeValue(forKey: currentMacIP)
-            self.saveDeviceHistoryToDisk()
+        deviceHistoryQueue.async {
+            DispatchQueue.main.async {
+                self.lastConnectedDevices.removeValue(forKey: currentMacIP)
+            }
+            self.saveDeviceHistoryToDisk_internal()
         }
         print("[quick-connect] Cleared last connected device for network \(currentMacIP)")
     }
     
     /// Attempts to wake up and reconnect to the last connected device
     func wakeUpLastConnectedDevice() {
+        // Prevent spamming if a wake-up was just sent
+        guard !isWakeUpOnCooldown else {
+            print("[quick-connect] Wake-up is on cooldown, skipping.")
+            return
+        }
+        
         guard let lastDevice = getLastConnectedDevice() else {
             print("[quick-connect] No last connected device to wake up")
             return
         }
+        
+        // Set cooldown
+        isWakeUpOnCooldown = true
+        // Reset cooldown after a few seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { self.isWakeUpOnCooldown = false }
         
         print("[quick-connect] Attempting to wake up device: \(lastDevice.name) at \(lastDevice.ipAddress)")
         print("[quick-connect] Will try HTTP port \(Self.ANDROID_HTTP_WAKEUP_PORT), then UDP port \(Self.ANDROID_UDP_WAKEUP_PORT) if needed")
@@ -92,20 +115,21 @@ class QuickConnectManager: ObservableObject {
         return WebSocketServer.shared.localPort
     }
     
-    private func saveDeviceHistoryToDisk() {
+    private func saveDeviceHistoryToDisk_internal() {
         if let encoded = try? JSONEncoder().encode(lastConnectedDevices) {
             UserDefaults.standard.set(encoded, forKey: Self.DEVICE_HISTORY_KEY)
         }
     }
     
     private func loadDeviceHistoryFromDisk() {
-        guard let data = UserDefaults.standard.data(forKey: Self.DEVICE_HISTORY_KEY),
-              let history = try? JSONDecoder().decode([String: Device].self, from: data) else {
-            return
+        deviceHistoryQueue.sync {
+            guard let data = UserDefaults.standard.data(forKey: Self.DEVICE_HISTORY_KEY),
+                  let history = try? JSONDecoder().decode([String: Device].self, from: data) else {
+                return
+            }
+            self.lastConnectedDevices = history
+            print("[quick-connect] Loaded device history for \(history.count) networks")
         }
-        
-        self.lastConnectedDevices = history
-        print("[quick-connect] Loaded device history for \(history.count) networks")
     }
     
     // MARK: - Wake-up Implementation
