@@ -32,7 +32,7 @@ struct SidebarView: View {
 
             if let deviceVersion = appState.device?.version,
                isVersion(deviceVersion, lessThan: appState.minAndroidVersion) {
-                Label("Your Android app is outdated", systemImage: "iphone.badge.exclamationmark")
+                Label(L("sidebar.androidAppOutdated"), systemImage: "iphone.badge.exclamationmark")
                     .padding(4)
             }
 
@@ -56,7 +56,7 @@ struct SidebarView: View {
                         )
                         .transition(.identity)
                     } else {
-                        Label("Connect your device", systemImage: "arrow.2.circlepath.circle")
+                        Label(L("sidebar.connectDevice"), systemImage: "arrow.2.circlepath.circle")
                     }
                 }
                 .padding(16)

@@ -37,7 +37,7 @@ struct SettingsFeaturesView: View {
         VStack{
             ZStack{
                 HStack {
-                    Label("Auto connect ADB", systemImage: "bolt.horizontal.circle")
+                    Label(L("settings.features.autoConnectADB"), systemImage: "bolt.horizontal.circle")
                     Spacer()
 
                     if appState.adbConnected {
@@ -116,7 +116,7 @@ struct SettingsFeaturesView: View {
                 Spacer()
 
                 HStack{
-                    Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
+                    Label(L("settings.features.appMirroring"), systemImage: "apps.iphone.badge.plus")
                     Spacer()
                     Toggle("", isOn: $appState.mirroringPlus)
                         .toggleStyle(.switch)
@@ -250,7 +250,7 @@ struct SettingsFeaturesView: View {
                             }
                         }
                     } label: {
-                        Label("Mirroring Settings", systemImage: "gear")
+                        Label(L("settings.features.mirroringSettings"), systemImage: "gear")
                             .font(.subheadline)
                             .bold()
                     }
@@ -282,7 +282,7 @@ struct SettingsFeaturesView: View {
             SettingsToggleView(name: "Send now playing status", icon: "play.circle", isOn: $appState.sendNowPlayingStatus)
 
             HStack {
-                Label("Bluetooth Discovery", systemImage: "dot.radiowaves.left.and.right")
+                Label(L("settings.features.bluetoothDiscovery"), systemImage: "dot.radiowaves.left.and.right")
                 Spacer()
                 Toggle("", isOn: $appState.isBluetoothEnabled)
                     .toggleStyle(.switch)
@@ -290,7 +290,7 @@ struct SettingsFeaturesView: View {
             }
 
             HStack {
-                Label("System Notifications", systemImage: "bell.badge")
+                Label(L("settings.features.systemNotifications"), systemImage: "bell.badge")
 
                 Spacer()
                 

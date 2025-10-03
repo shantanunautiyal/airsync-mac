@@ -118,6 +118,8 @@ class AppState: ObservableObject {
                 print("[state] Auto-reconnect: no previous device found for current network")
             }
         }
+
+        self.registerMirrorApprovalHandler()
     }
 
     @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
@@ -138,6 +140,11 @@ class AppState: ObservableObject {
 
     @Published var port: UInt16 = Defaults.serverPort
     @Published var androidApps: [String: AndroidApp] = [:]
+
+    // SMS conversations received from the connected device
+    @Published var smsConversations: [SmsConversation] = []
+    // Phone call logs received from the connected device
+    @Published var callLogs: [CallLogEntry] = []
 
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
     @Published var isClipboardSyncEnabled: Bool {
@@ -291,6 +298,9 @@ class AppState: ObservableObject {
         case notifications = "notifications.tab"
         case apps = "apps.tab"
         case transfers = "transfers.tab"
+        case sms = "sms.tab"
+        case calls = "calls.tab"
+        case health = "health.tab"
         case settings = "settings.tab"
         case qr = "qr.tab"
 
@@ -298,11 +308,14 @@ class AppState: ObservableObject {
 
         var icon: String {
             switch self {
-            case .notifications: return "bell.badge"
-            case .apps: return "app"
-            case .transfers: return "tray.and.arrow.up"
-            case .settings: return "gear"
-            case .qr: return "qrcode"
+            case .notifications: return "bell.badge.fill"
+            case .apps: return "square.grid.2x2.fill"
+            case .transfers: return "arrow.up.doc.fill"
+            case .sms: return "message.fill"
+            case .calls: return "phone.fill"
+            case .health: return "heart.fill"
+            case .settings: return "gearshape.fill"
+            case .qr: return "qrcode.viewfinder"
             }
         }
 
@@ -311,6 +324,9 @@ class AppState: ObservableObject {
             case .notifications: return "1"
             case .apps: return "2"
             case .transfers: return "3"
+            case .sms: return "4"
+            case .calls: return "6"
+            case .health: return "5"
             case .settings: return ","
             case .qr: return "."
             }
@@ -336,37 +352,39 @@ class AppState: ObservableObject {
 
     // Moved from TabIdentifier and adapted
     static var availableTabs: [Tab] {
-        var tabs: [Tab] = [.qr, .settings]
-        if AppState.shared.device != nil {
-            tabs.remove(at: 0)
-            tabs.insert(.notifications, at: 0)
-            tabs.insert(.apps, at: 1)
-            tabs.insert(.transfers, at: 2)
+        // Default for disconnected state
+        if AppState.shared.device == nil {
+            // Show QR, Health and Settings even when not connected so Health UI is reachable
+            return [.qr, .health, .settings]
         }
-        return tabs
+
+        // When a device is connected, show full set with Health included
+        return [
+            .notifications,
+            .apps,
+            .transfers,
+            .sms,
+            .calls,
+            .health,
+            .settings
+        ]
     }
 
 
-
-    func setPlusTemporarily(_ value: Bool) {
-        shouldSkipSave = true
-        isPlus = value
-        shouldSkipSave = false
-    }
-
-    // Remove notification by model instance and system notif center
-    func removeNotification(_ notif: Notification) {
-        DispatchQueue.main.async {
-            withAnimation {
-                self.notifications.removeAll { $0.id == notif.id }
-            }
-            if self.dismissNotif {
-                WebSocketServer.shared.dismissNotification(id: notif.nid)
-            }
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notif.nid])
+    /// Central message sending hub. Decides whether to send via WebSocket or Bluetooth.
+    func sendMessage(_ message: String) {
+        // If the connected device is via Bluetooth, use the BluetoothManager.
+        if device?.ipAddress == "BLE" {
+            BluetoothManager.shared.send(message)
+            let truncated = message.count > 100 ? String(message.prefix(100)) + "..." : message
+            print("[app-state] Sent message via BLE: \(truncated)")
+        } else {
+            // Otherwise, use the WebSocketServer.
+            WebSocketServer.shared.sendToFirstAvailable(message: message)
         }
     }
 
+    // Remove notification by id and system notif center
     func removeNotificationById(_ nid: String) {
         DispatchQueue.main.async {
             withAnimation {
@@ -379,12 +397,28 @@ class AppState: ObservableObject {
         }
     }
 
+    // Remove notification by model instance and system notif center
+    func removeNotification(_ notif: Notification) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.notifications.removeAll { $0.id == notif.id }
+            }
+            if self.dismissNotif {
+                WebSocketServer.shared.dismissNotification(id: notif.nid)
+            }
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notif.nid])
+            print("[app-state] Removed notification nid=\(notif.nid)")
+        }
+    }
+
     func hideNotification(_ notif: Notification) {
         DispatchQueue.main.async {
             withAnimation {
                 self.notifications.removeAll { $0.id == notif.id }
             }
-            self.removeNotification(notif)
+            // Also remove from system center for consistency
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notif.nid])
+            print("[app-state] Hid notification nid=\(notif.nid)")
         }
     }
 
@@ -396,47 +430,7 @@ class AppState: ObservableObject {
                 }
             }
             UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        }
-    }
-
-    func disconnectDevice() {
-        DispatchQueue.main.async {
-            // Send request to remote device to disconnect
-            WebSocketServer.shared.sendDisconnectRequest()
-
-            // Then locally reset state
-            self.device = nil
-            self.notifications.removeAll()
-            self.status = nil
-            self.currentDeviceWallpaperBase64 = nil
-            self.transfers = [:]
-            self.lowBatteryNotifSent = false // Reset on disconnect
-
-            if self.adbConnected {
-                ADBConnector.disconnectADB()
-            }
-        }
-    }
-
-    func addNotification(_ notif: Notification) {
-        DispatchQueue.main.async {
-            withAnimation {
-                self.notifications.insert(notif, at: 0)
-            }
-            // Trigger native macOS notification
-            var appIcon: NSImage? = nil
-            if let iconPath = self.androidApps[notif.package]?.iconUrl {
-                appIcon = NSImage(contentsOfFile: iconPath)
-            }
-            self.postNativeNotification(
-                id: notif.nid,
-                appName: notif.app,
-                title: notif.title,
-                body: notif.body,
-                appIcon: appIcon,
-                package: notif.package,
-                actions: notif.actions
-            )
+            print("[app-state] Cleared all notifications (in-memory and system center)")
         }
     }
 
@@ -547,16 +541,62 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Central message sending hub. Decides whether to send via WebSocket or Bluetooth.
-    func sendMessage(_ message: String) {
-        // If the connected device is via Bluetooth, use the BluetoothManager.
-        if device?.ipAddress == "BLE" {
-            BluetoothManager.shared.send(message)
-            let truncated = message.count > 100 ? message.prefix(100) + "..." : message
-            print("[app-state] Sent message via BLE: \(truncated)")
-        } else {
-            // Otherwise, use the WebSocketServer.
-            WebSocketServer.shared.sendToFirstAvailable(message: message)
+    /// Adds a notification to in-memory list and posts a native macOS notification.
+    func addNotification(_ notif: Notification) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.notifications.insert(notif, at: 0)
+            }
+            // Trigger native macOS notification
+            var appIcon: NSImage? = nil
+            if let iconPath = self.androidApps[notif.package]?.iconUrl {
+                appIcon = NSImage(contentsOfFile: iconPath)
+            }
+            self.postNativeNotification(
+                id: notif.nid,
+                appName: notif.app,
+                title: notif.title,
+                body: notif.body,
+                appIcon: appIcon,
+                package: notif.package,
+                actions: notif.actions
+            )
+            print("[app-state] Added notification nid=\(notif.nid) app=\(notif.app) title=\(notif.title)")
+        }
+    }
+
+    /// Disconnects the current device and resets related state.
+    func disconnectDevice() {
+        DispatchQueue.main.async {
+            // Ask remote to disconnect (best-effort)
+            WebSocketServer.shared.sendDisconnectRequest()
+
+            // Reset local state
+            self.device = nil
+            self.notifications.removeAll()
+            self.status = nil
+            self.currentDeviceWallpaperBase64 = nil
+            self.transfers = [:]
+            self.lowBatteryNotifSent = false
+
+            if self.adbConnected {
+                ADBConnector.disconnectADB()
+            }
+            print("[app-state] Device disconnected; state reset")
+        }
+    }
+    
+    /// Sends a mirror start response back to Android (connection-agnostic).
+    /// Use this instead of calling private WebSocketServer APIs from other files.
+    func sendStartMirrorResponse(success: Bool) {
+        let payload: [String: Any] = [
+            "type": "startMirrorResponse",
+            "data": ["success": success]
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent startMirrorResponse: success=\(success)")
         }
     }
 
@@ -570,8 +610,15 @@ class AppState: ObservableObject {
     func requestStartMirroring(mode: String? = nil, resolution: String? = nil, bitrateMbps: Int? = nil, appPackage: String? = nil) {
         var data: [String: Any] = [:]
         if let mode { data["mode"] = mode }
-        if let resolution { data["resolution"] = resolution }
-        if let bitrateMbps { data["bitrateMbps"] = bitrateMbps }
+        // Include both new and legacy keys to maximize compatibility with Android/server implementations
+        if let resolution {
+            data["resolution"] = resolution
+            data["res"] = resolution
+        }
+        if let bitrateMbps {
+            data["bitrateMbps"] = bitrateMbps
+            data["bitrate"] = bitrateMbps
+        }
         if let appPackage { data["package"] = appPackage }
 
         let payload: [String: Any] = [
@@ -811,4 +858,97 @@ class AppState: ObservableObject {
         print("[state] Using saved network adapter: \(savedName) -> \(validIP)")
         return savedName
     }
+    
+    // MARK: - Health Data Request (Android -> Mac)
+    /// Requests latest health snapshot from the connected Android device.
+    func requestHealthData() {
+        let message = """
+        {
+            "type": "requestHealthData",
+            "data": {}
+        }
+        """
+        sendMessage(message)
+        print("[app-state] Sent requestHealthData")
+    }
+
+    // MARK: - Calls & Messages Requests (Android -> Mac)
+    /// Requests recent call logs from the connected Android device.
+    /// - Parameter limit: Maximum number of entries to request (device side may clamp).
+    func requestCallLogs(limit: Int = 50) {
+        let payload: [String: Any] = [
+            "type": "requestCallLogs",
+            "data": ["limit": limit]
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent requestCallLogs(limit: \(limit))")
+        }
+    }
+
+    /// Requests recent SMS conversations from the connected Android device.
+    func requestSmsConversations() {
+        let payload: [String: Any] = [
+            "type": "requestSmsConversations",
+            "data": [:]
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent requestSmsConversations")
+        }
+    }
+
+    /// Replaces current call logs with the provided array (to be called by network layer upon response).
+    func setCallLogs(_ logs: [CallLogEntry]) {
+        DispatchQueue.main.async {
+            self.callLogs = logs
+        }
+    }
 }
+
+extension AppState {
+    /// Call this during app initialization to route mirror approval actions.
+    func registerMirrorApprovalHandler() {
+        UNUserNotificationCenter.current().delegate = NotificationActionRouter.shared
+    }
+}
+
+final class NotificationActionRouter: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationActionRouter()
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        let info = response.notification.request.content.userInfo
+        guard let type = info["type"] as? String, type == "startMirrorRequest" else { return }
+
+        let mode = (info["mode"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let res = (info["resolution"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let bitrate = info["bitrate"] as? Int
+        let pkg = (info["package"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+
+        switch response.actionIdentifier {
+        case "MIRROR_ACCEPT":
+            // Start mirroring on Mac and send positive response back to Android
+            MirroringManager.shared.startMirroring(mode: mode ?? "desktop", resolution: res ?? "1600x1000", bitrate: bitrate ?? 6, package: pkg)
+            AppState.shared.sendStartMirrorResponse(success: true)
+        case "MIRROR_REJECT":
+            AppState.shared.sendStartMirrorResponse(success: false)
+        case "MIRROR_CANCEL":
+            // Neutral response — treat as reject
+            AppState.shared.sendStartMirrorResponse(success: false)
+        default:
+            break
+        }
+    }
+}
+
+struct CallLogEntry: Codable, Identifiable {
+    let id: String            // Unique identifier per call (e.g., Android _id or generated UUID)
+    let name: String?         // Cached contact name if available
+    let number: String        // E.164 or raw dialed number
+    let type: String          // "incoming", "outgoing", "missed", "rejected", etc.
+    let timestamp: Int64      // Epoch milliseconds
+    let durationSeconds: Int  // Call duration in seconds
+}
+

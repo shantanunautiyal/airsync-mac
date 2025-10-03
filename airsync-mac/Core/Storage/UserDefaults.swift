@@ -6,6 +6,7 @@
 //
 
 import Foundation
+internal import Combine
 
 extension UserDefaults {
     private enum Keys {

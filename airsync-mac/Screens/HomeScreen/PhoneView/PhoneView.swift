@@ -86,21 +86,24 @@ struct PhoneView: View {
     }
 
     private func updateImage() {
-        // Always use the device wallpaper for the PhoneView background
-        guard let raw = appState.currentDeviceWallpaperBase64 else {
-            print("[phone-view] No wallpaper base64 available.")
-            return
-        }
-        let cleaned = raw.stripBase64Prefix()
-        if cleaned.isEmpty {
-            print("[phone-view] Empty wallpaper base64 string. Waiting for next update.")
-            return
-        }
-        if let data = Data(base64Encoded: cleaned, options: .ignoreUnknownCharacters),
-           let nsImage = NSImage(data: data) {
-            displayedImage = nsImage
+        // Prefer live base64 wallpaper from the device; fallback to cached file on disk
+        if let raw = appState.currentDeviceWallpaperBase64 {
+            let cleaned = raw.stripBase64Prefix()
+            if !cleaned.isEmpty, let data = Data(base64Encoded: cleaned, options: .ignoreUnknownCharacters), let nsImage = NSImage(data: data) {
+                displayedImage = nsImage
+                return
+            } else {
+                print("[phone-view] Failed to decode live wallpaper base64 (len=\(raw.count)). Falling back to cached file if available.")
+            }
         } else {
-            print("[phone-view] Failed to decode image base64 (length=\(cleaned.count)).")
+            print("[phone-view] No live wallpaper base64 available. Falling back to cached file if available.")
+        }
+
+        // Fallback: try cached wallpaper path saved per device
+        if let path = appState.currentWallpaperPath, FileManager.default.fileExists(atPath: path), let img = NSImage(contentsOfFile: path) {
+            displayedImage = img
+        } else {
+            print("[phone-view] No cached wallpaper found at path: \(appState.currentWallpaperPath ?? "nil")")
         }
     }
 }
@@ -108,3 +111,4 @@ struct PhoneView: View {
 #Preview {
     PhoneView()
 }
+

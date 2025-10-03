@@ -178,6 +178,16 @@ class WebSocketServer: ObservableObject {
                 }
             }
         )
+
+        server["/video"] = websocket(
+            binary: { [weak self] session, data in
+                self?.handleVideoData(data)
+            }
+        )
+    }
+
+    private func handleVideoData(_ data: [UInt8]) {
+        MirroringManager.shared.handleVideoFrame(data: Data(data))
     }
 
     /// Handles a raw, unencrypted message string, typically from a non-WebSocket source like Bluetooth.
@@ -350,6 +360,11 @@ class WebSocketServer: ObservableObject {
                 """
                 AppState.shared.sendMessage(request)
                 print("[websocket] Sent requestWallpaper to device (encrypted/plain)")
+                
+                // Proactively request health snapshot shortly after connect
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    AppState.shared.requestHealthData()
+                }
             }
 
 
@@ -438,6 +453,25 @@ class WebSocketServer: ObservableObject {
                 }
             }
 
+        case .health:
+            if let dict = message.data.value as? [String: Any] {
+                let hr = dict["heartRate"] as? Int ?? dict["hr"] as? Int ?? 0
+                let steps = dict["steps"] as? Int ?? 0
+                let calories = dict["calories"] as? Int ?? 0
+                let distance = dict["distance"] as? Double ?? (dict["distanceKm"] as? Double ?? 0.0)
+                let sleep = dict["sleepHours"] as? Double ?? (dict["sleep"] as? Double ?? 0.0)
+
+                // Log a concise summary
+                print("[health] Received: HR=\(hr) BPM, steps=\(steps), calories=\(calories), distance=\(distance) km, sleep=\(sleep) h")
+
+                DispatchQueue.main.async {
+                    HealthDataManager.shared.healthData.heartRate = hr
+                    HealthDataManager.shared.healthData.steps = steps
+                    HealthDataManager.shared.healthData.calories = calories
+                    HealthDataManager.shared.healthData.distance = distance
+                    HealthDataManager.shared.healthData.sleepHours = sleep
+                }
+            }
 
         case .dismissalResponse:
             if let dict = message.data.value as? [String: Any],
@@ -693,10 +727,121 @@ class WebSocketServer: ObservableObject {
                 print("[websocket] Received invalid start mirror request")
                 sendStartMirrorResponse(success: false)
             }
+        case .smsConversations:
+            if let arr = message.data.value as? [[String: Any]] {
+                var convs: [SmsConversation] = []
+                for item in arr {
+                    if let json = try? JSONSerialization.data(withJSONObject: item, options: []),
+                       let conv = try? JSONDecoder().decode(SmsConversation.self, from: json) {
+                        convs.append(conv)
+                    }
+                }
+                DispatchQueue.main.async {
+                    AppState.shared.smsConversations = convs
+                }
+            }
+        case .smsMessages:
+            // smsMessages contains messages for a particular conversation
+            if let dict = message.data.value as? [String: Any],
+               let convId = dict["conversationId"] as? String,
+               let msgsArr = dict["messages"] as? [[String: Any]] {
+                var messages: [SmsMessage] = []
+                for m in msgsArr {
+                    if let d = try? JSONSerialization.data(withJSONObject: m, options: []),
+                       let msg = try? JSONDecoder().decode(SmsMessage.self, from: d) {
+                        messages.append(msg)
+                    }
+                }
+                DispatchQueue.main.async {
+                    if let idx = AppState.shared.smsConversations.firstIndex(where: { $0.id == convId }) {
+                        AppState.shared.smsConversations[idx].messages = messages
+                    } else if let first = messages.first {
+                        // Create a new conversation if not found
+                        let conv = SmsConversation(id: convId, address: first.from, messages: messages)
+                        AppState.shared.smsConversations.append(conv)
+                    }
+                }
+            }
+        case .smsMessageSent:
+            // A single message sent acknowledgement; append to conversation if present
+            if let dict = message.data.value as? [String: Any],
+               let convId = dict["conversationId"] as? String,
+               let msgDict = dict["message"] as? [String: Any] {
+                if let d = try? JSONSerialization.data(withJSONObject: msgDict, options: []),
+                   let msg = try? JSONDecoder().decode(SmsMessage.self, from: d) {
+                    DispatchQueue.main.async {
+                        if let idx = AppState.shared.smsConversations.firstIndex(where: { $0.id == convId }) {
+                            AppState.shared.smsConversations[idx].messages.append(msg)
+                        } else {
+                            let conv = SmsConversation(id: convId, address: msg.to.isEmpty ? msg.from : msg.to, messages: [msg])
+                            AppState.shared.smsConversations.append(conv)
+                        }
+                    }
+                }
+            }
         case .stopMirrorRequest:
             print("[websocket] Received stop mirror request")
             MirroringManager.shared.stopMirroring()
             sendStopMirrorResponse(success: true)
+        default:
+            // Handle ad-hoc/unknown types we haven't modeled yet
+            if message.type.rawValue == "wallpaperResponse" {
+                if let dict = message.data.value as? [String: Any] {
+                    // Prefer explicit base64 payload under common keys
+                    if var base64 = (dict["wallpaper"] as? String) ?? (dict["base64"] as? String) ?? (dict["data"] as? String) {
+                        // Clean data URL prefix and whitespace/newlines
+                        base64 = base64.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if let range = base64.range(of: "base64,") { base64 = String(base64[range.upperBound...]) }
+                        base64 = base64.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+
+                        print("[websocket] Received wallpaperResponse base64 (len=\(base64.count))")
+
+                        // Update in-memory base64 on main thread
+                        DispatchQueue.main.async {
+                            AppState.shared.currentDeviceWallpaperBase64 = base64
+                        }
+
+                        // Persist to cache if decodable
+                        if let data = Data(base64Encoded: base64) {
+                            let dir = AppState.shared.wallpaperCacheDirectory()
+                            let deviceName = AppState.shared.device?.name ?? AppState.shared.myDevice?.name ?? "Device"
+                            let deviceIP = AppState.shared.device?.ipAddress ?? AppState.shared.myDevice?.ipAddress ?? "ip"
+                            let safeName = deviceName.replacingOccurrences(of: "/", with: "_")
+                            let key = "\(safeName)-\(deviceIP)"
+                            let fileURL = dir.appendingPathComponent("\(key).png")
+                            do {
+                                try data.write(to: fileURL, options: .atomic)
+                                DispatchQueue.main.async {
+                                    AppState.shared.deviceWallpapers[key] = fileURL.path
+                                }
+                                print("[websocket] Saved wallpaper to cache: \(fileURL.path)")
+                            } catch {
+                                print("[websocket] Failed to write wallpaper: \(error)")
+                            }
+                        } else {
+                            print("[websocket] Wallpaper base64 could not be decoded")
+                        }
+                    } else if let success = dict["success"] as? Bool {
+                        // Backward-compat: simple success/message response without payload
+                        let msg = dict["message"] as? String ?? ""
+                        print("[websocket] Wallpaper response: success=\(success) message=\(msg)")
+                        if !success {
+                            AppState.shared.postNativeNotification(
+                                id: "wallpaper_permission",
+                                appName: "AirSync",
+                                title: "Wallpaper not available",
+                                body: msg
+                            )
+                        }
+                    } else {
+                        print("[websocket] Wallpaper response received but payload malformed")
+                    }
+                } else {
+                    print("[websocket] Wallpaper response received but data is not a dictionary")
+                }
+            } else {
+                print("[websocket] Received unhandled message type: \(message.type.rawValue)")
+            }
         }
 
 
@@ -1262,3 +1407,4 @@ class WebSocketServer: ObservableObject {
         QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
 }
+

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+internal import Combine
 
 struct HelpWebSheet: View {
     @Binding var isPresented: Bool

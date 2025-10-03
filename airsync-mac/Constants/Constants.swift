@@ -6,6 +6,7 @@
 //
 
 import Foundation
+internal import Combine
 
 // Constants.swift
 enum Defaults {
