@@ -18,7 +18,7 @@ struct NotificationView: View {
                 // stacked view on top when notificationStacks == true
                 stackedList
                     .opacity(notificationStacks ? 1 : 0)
-                    .allowsHitTesting(notificationStacks)     // only interact when visible
+                    .allowsHitTesting(notificationStacks)      // only interact when visible
                     .accessibilityHidden(!notificationStacks)
                     .animation(.easeInOut(duration: 0.5), value: notificationStacks)
 
@@ -40,16 +40,11 @@ struct NotificationView: View {
         List(appState.notifications.prefix(20), id: \.id) { notif in
             notificationRow(for: notif)
                 .onTapGesture {
-                    if appState.device != nil && appState.adbConnected &&
+                    if appState.device != nil &&
                         notif.package != "" &&
                         notif.package != "com.sameerasw.airsync" &&
                         appState.mirroringPlus {
-                        ADBConnector.startScrcpy(
-                            ip: appState.device?.ipAddress ?? "",
-                            port: appState.adbPort,
-                            deviceName: appState.device?.name ?? "My Phone",
-                            package: notif.package
-                        )
+                        AppState.shared.requestStartMirroring(appPackage: notif.package)
                     }
                 }
         }
@@ -63,56 +58,9 @@ struct NotificationView: View {
     private var stackedList: some View {
         List {
             ForEach(groupedNotifications.keys.sorted(), id: \.self) { package in
-                let packageNotifs = groupedNotifications[package] ?? []
-                let isExpanded = expandedPackages.contains(package)
-
-                Section {
-                    let visibleNotifs: [Notification] = {
-                        if isExpanded {
-                            return packageNotifs
-                        } else {
-                            return packageNotifs.first.map { [$0] } ?? []
-                        }
-                    }()
-
-                    ForEach(visibleNotifs) { notif in
-                        notificationRow(for: notif)
-                            .onTapGesture {
-                                if appState.device != nil && appState.adbConnected &&
-                                    notif.package != "" &&
-                                    notif.package != "com.sameerasw.airsync" &&
-                                    appState.mirroringPlus {
-                                    ADBConnector.startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone",
-                                        package: notif.package
-                                    )
-                                }
-                            }
-                    }
-
-                    if packageNotifs.count > 1 {
-                        Button {
-                            withAnimation(.spring) {
-                                if isExpanded {
-                                    expandedPackages.remove(package)
-                                } else {
-                                    expandedPackages.insert(package)
-                                }
-                            }
-                        } label: {
-                            Label(
-                                isExpanded ? "Show Less" : "Show \(packageNotifs.count - 1) More",
-                                systemImage: isExpanded ? "chevron.up" : "chevron.down"
-                            )
-                            .font(.caption)
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                } header: {
-                    Text(appState.androidApps[package]?.name ?? "AirSync")
-                }
+                // FIXED: The complex section content is now in its own helper function
+                // to prevent the compiler from timing out.
+                stackedSection(for: package)
             }
         }
         .scrollContentBackground(.hidden)
@@ -122,6 +70,59 @@ struct NotificationView: View {
     }
 
     // MARK: - Helpers
+
+    // FIXED: This new function breaks up the complex view logic for the compiler.
+    @ViewBuilder
+    private func stackedSection(for package: String) -> some View {
+        let packageNotifs = groupedNotifications[package] ?? []
+        let isExpanded = expandedPackages.contains(package)
+
+        Section {
+            let visibleNotifs: [Notification] = {
+                if isExpanded {
+                    return packageNotifs
+                } else {
+                    return packageNotifs.first.map { [$0] } ?? []
+                }
+            }()
+
+            ForEach(visibleNotifs) { notif in
+                notificationRow(for: notif)
+                    .onTapGesture {
+                        // FIXED: Replaced the direct ADBConnector call with the AppState method
+                        // to match the flatList's behavior and remove the dependency.
+                        if appState.device != nil &&
+                            notif.package != "" &&
+                            notif.package != "com.sameerasw.airsync" &&
+                            appState.mirroringPlus {
+                            AppState.shared.requestStartMirroring(appPackage: notif.package)
+                        }
+                    }
+            }
+
+            if packageNotifs.count > 1 {
+                Button {
+                    withAnimation(.spring) {
+                        if isExpanded {
+                            expandedPackages.remove(package)
+                        } else {
+                            expandedPackages.insert(package)
+                        }
+                    }
+                } label: {
+                    Label(
+                        isExpanded ? "Show Less" : "Show \(packageNotifs.count - 1) More",
+                        systemImage: isExpanded ? "chevron.up" : "chevron.down"
+                    )
+                    .font(.caption)
+                }
+                .buttonStyle(.borderless)
+            }
+        } header: {
+            Text(appState.androidApps[package]?.name ?? "AirSync")
+        }
+    }
+
     private var groupedNotifications: [String: [Notification]] {
         Dictionary(grouping: appState.notifications.prefix(20)) { notif in
             notif.package

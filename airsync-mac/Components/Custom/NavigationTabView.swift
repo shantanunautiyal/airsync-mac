@@ -3,14 +3,17 @@ import SwiftUI
 struct NavigationTabView: View {
     let tab: AppState.Tab
     let isSelected: Bool
-    
+    var action: (() -> Void)? = nil
+
     var body: some View {
-        // Icon-only rounded tab (Apple glass-like). Text hidden, shown as tooltip via help().
-        Image(systemName: tab.icon)
-            .imageScale(.large)
-            .frame(width: 22, height: 22)
+        Button(action: { action?() }) {
+            HStack(spacing: 6) {
+                Image(systemName: tab.icon)
+                    .imageScale(.large)
+                    .frame(width: 22, height: 22)
+            }
             .padding(.horizontal, 12)
-            .padding(.vertical, 2)
+            .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 1000, style: .continuous)
                     .fill(isSelected ? Color.accentColor.opacity(0.18) : Color.clear)
@@ -19,10 +22,13 @@ struct NavigationTabView: View {
                 RoundedRectangle(cornerRadius: 1000, style: .continuous)
                     .stroke(isSelected ? Color.accentColor.opacity(0.25) : Color.clear, lineWidth: isSelected ? 1 : 0)
             )
-            .help(tab.rawValue.replacingOccurrences(of: ".tab", with: "").capitalized)
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 1000, style: .continuous))
+        .help(tab.rawValue.replacingOccurrences(of: ".tab", with: "").capitalized)
     }
 }
 
 #Preview {
-    NavigationTabView(tab: .notifications, isSelected: true)
+    NavigationTabView(tab: .notifications, isSelected: true, action: {})
 }

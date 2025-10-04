@@ -35,18 +35,10 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
         } else if response.actionIdentifier == "VIEW_ACTION" {
             let userInfo = response.notification.request.content.userInfo
-            if let package = userInfo["package"] as? String,
-               let ip = AppState.shared.device?.ipAddress,
-               let name = AppState.shared.device?.name {
-
-                ADBConnector.startScrcpy(
-                    ip: ip,
-                    port: AppState.shared.adbPort,
-                    deviceName: name,
-                    package: package
-                )
+            if let package = userInfo["package"] as? String {
+                AppState.shared.requestStartMirroring(appPackage: package)
             } else {
-                print("[notification-delegate] Missing device details or package for scrcpy.")
+                print("[notification-delegate] Missing package for mirroring.")
             }
         } else if response.actionIdentifier.hasPrefix("ACT_") {
             let actionName = String(response.actionIdentifier.dropFirst(4))

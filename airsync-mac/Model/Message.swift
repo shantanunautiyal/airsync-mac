@@ -16,6 +16,7 @@ enum MessageType: String, Codable {
     case status
     case dismissalResponse
     case mediaControlResponse
+    case mediaControl // ✅ Add this line
     case macMediaControl
     case macMediaControlResponse
     case appIcons

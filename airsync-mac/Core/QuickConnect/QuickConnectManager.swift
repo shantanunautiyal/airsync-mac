@@ -226,3 +226,4 @@ class QuickConnectManager: ObservableObject {
         }
     }
 }
+

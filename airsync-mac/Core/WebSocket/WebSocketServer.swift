@@ -36,6 +36,8 @@ class WebSocketServer: ObservableObject {
     @Published var notifications: [Notification] = []
     @Published var deviceStatus: DeviceStatus?
 
+    private let mediaController = MacMediaController()
+
     private var lastKnownIP: String?
     private var networkMonitorTimer: Timer?
     private let networkCheckInterval: TimeInterval = 10.0 // seconds
@@ -73,7 +75,7 @@ class WebSocketServer: ObservableObject {
         }
     }
 
-    func start(port: UInt16 = Defaults.serverPort) {
+    func start(port: UInt16 = UInt16(Defaults.serverPort)) {
         DispatchQueue.main.async {
             AppState.shared.webSocketStatus = .starting
         }
@@ -102,10 +104,6 @@ class WebSocketServer: ObservableObject {
         }
     }
 
-
-
-
-
     func stop() {
         server.stop()
         activeSessions.removeAll()
@@ -114,8 +112,6 @@ class WebSocketServer: ObservableObject {
         }
         stopNetworkMonitoring()
     }
-
-
 
     func sendDisconnectRequest() {
         let message = """
@@ -126,7 +122,6 @@ class WebSocketServer: ObservableObject {
     """
         AppState.shared.sendMessage(message)
     }
-
 
     private func setupWebSocket() {
         server["/socket"] = websocket(
@@ -182,11 +177,15 @@ class WebSocketServer: ObservableObject {
         server["/video"] = websocket(
             binary: { [weak self] session, data in
                 self?.handleVideoData(data)
+            },
+            connected: { session in
+                print("[Mirroring] Video stream client connected")
             }
         )
     }
 
     private func handleVideoData(_ data: [UInt8]) {
+        print("[Mirroring] Received video frame data. Size: \(data.count) bytes")
         MirroringManager.shared.handleVideoFrame(data: Data(data))
     }
 
@@ -273,12 +272,12 @@ class WebSocketServer: ObservableObject {
                     var addr = interface.ifa_addr.pointee
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     let result = getnameinfo(&addr,
-                                             socklen_t(interface.ifa_addr.pointee.sa_len),
-                                             &hostname,
-                                             socklen_t(hostname.count),
-                                             nil,
-                                             socklen_t(0),
-                                             NI_NUMERICHOST)
+                                           socklen_t(interface.ifa_addr.pointee.sa_len),
+                                           &hostname,
+                                           socklen_t(hostname.count),
+                                           nil,
+                                           socklen_t(0),
+                                           NI_NUMERICHOST)
                     if result == 0 {
                         let address = String(cString: hostname)
                         if address != "127.0.0.1" {
@@ -304,8 +303,6 @@ class WebSocketServer: ObservableObject {
         }
         return false
     }
-
-
 
     // MARK: - Message Handling
 
@@ -339,17 +336,14 @@ class WebSocketServer: ObservableObject {
                     print("[websocket] No wallpaper provided in device hello; Android may send it later via status or a separate message")
                 }
 
-                if (!AppState.shared.adbConnected && AppState.shared.adbEnabled && AppState.shared.isPlus) {
-                    ADBConnector.connectToADB(ip: ip)
-                }
 
-				// mark first-time pairing
-				if UserDefaults.standard.hasPairedDeviceOnce == false {
-					UserDefaults.standard.hasPairedDeviceOnce = true
-				}
-				
-				// Send Mac info response to Android
-				sendMacInfoResponse()
+                // mark first-time pairing
+                if UserDefaults.standard.hasPairedDeviceOnce == false {
+                    UserDefaults.standard.hasPairedDeviceOnce = true
+                }
+                
+                // Send Mac info response to Android
+                sendMacInfoResponse()
 
                 // Ask Android for wallpaper explicitly (helps devices that don't include it in hello)
                 let request = """
@@ -366,7 +360,15 @@ class WebSocketServer: ObservableObject {
                     AppState.shared.requestHealthData()
                 }
             }
-
+            
+        case .mediaControl:
+            if let dict = message.data.value as? [String: Any],
+               let actionString = dict["action"] as? String,
+               let action = MediaAction(rawValue: actionString) {
+                mediaController.perform(action)
+            } else {
+                print("[websocket] Failed to decode media control action from data")
+            }
 
         case .notification:
             if let dict = message.data.value as? [String: Any],
@@ -489,8 +491,8 @@ class WebSocketServer: ObservableObject {
 
         case .volumeControlResponse:
             if let dict = message.data.value as? [String: Any],
-                let action = dict["action"] as? String,
-                let success = dict["success"] as? Bool {
+               let action = dict["action"] as? String,
+               let success = dict["success"] as? Bool {
                 let msg = dict["message"] as? String ?? ""
                 print("[websocket] Volume control response: \(action) \(success ? "succeeded" : "failed"), message: \(msg)")
             }
@@ -715,16 +717,19 @@ class WebSocketServer: ObservableObject {
             // Currently not expected as Mac sends wake-up requests to Android, not vice versa
             print("[websocket] Received wakeUpRequest from Android (not typically expected)")
         case .startMirrorRequest:
-            if let dict = message.data.value as? [String: Any],
-               let mode = dict["mode"] as? String,
-               let res = dict["res"] as? String,
-               let bitrate = dict["bitrate"] as? Int {
+            if let dict = message.data.value as? [String: Any] {
+                // Use nil-coalescing to provide default values if keys are missing
+                let mode = dict["mode"] as? String ?? "device" // default to "device" mode
+                let res = dict["res"] as? String ?? "1280x720"  // a reasonable default resolution
+                let bitrate = dict["bitrate"] as? Int ?? 4     // a reasonable default bitrate
                 let package = dict["package"] as? String
                 
+                print("[websocket] Starting mirror request with mode=\(mode), res=\(res), bitrate=\(bitrate)")
                 MirroringManager.shared.startMirroring(mode: mode, resolution: res, bitrate: bitrate, package: package)
                 sendStartMirrorResponse(success: true)
             } else {
-                print("[websocket] Received invalid start mirror request")
+                // This part should now be less likely to be hit, but it's good for safety.
+                print("[websocket] Received invalid or non-dictionary data for start mirror request")
                 sendStartMirrorResponse(success: false)
             }
         case .smsConversations:
@@ -1388,7 +1393,7 @@ class WebSocketServer: ObservableObject {
                 AppState.shared.shouldRefreshQR = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     self.stop()
-                    self.start(port: Defaults.serverPort)
+                    self.start(port: UInt16(Defaults.serverPort))
                 }
             } else if lastKnownIP == nil {
                 // First run
@@ -1407,4 +1412,3 @@ class WebSocketServer: ObservableObject {
         QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
 }
-

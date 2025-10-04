@@ -19,7 +19,6 @@ struct SettingsFeaturesView: View {
     @AppStorage("continueApp") private var continueApp = false
     @AppStorage("directKeyInput") private var directKeyInput = true
 
-    @State private var adbPortString: String = ""
     @State private var showingPlusPopover = false
     @State private var tempBitrate: Double = 4.00
     @State private var tempResolution: Double = 1200.00
@@ -35,85 +34,8 @@ struct SettingsFeaturesView: View {
 
     var body: some View {
         VStack{
-            ZStack{
-                HStack {
-                    Label(L("settings.features.autoConnectADB"), systemImage: "bolt.horizontal.circle")
-                    Spacer()
-
-                    if appState.adbConnected {
-                        GlassButtonView(
-                            label: "Disconnect ADB",
-                            systemImage: "stop.circle",
-                            action: {
-                                ADBConnector.disconnectADB()
-                                appState.adbConnected = false
-                            }
-                        )
-
-                    } else {
-                        GlassButtonView(
-                            label: appState.adbConnecting ? "Connecting..." : "Connect ADB",
-                            systemImage: appState.adbConnecting ? "hourglass" : "play.circle",
-                            action: {
-                                if !appState.adbConnecting {
-                                    let ip = appState.device?.ipAddress ?? ""
-                                    ADBConnector.connectToADB(ip: ip)
-                                }
-                            }
-                        )
-                        .disabled(
-                            adbPortString.isEmpty || appState.device == nil || appState.adbConnecting || (!AppState.shared.isPlus && AppState.shared.licenseCheck)
-                        )
-                    }
-
-
-                    ZStack {
-                        Toggle(
-                            "",
-                            isOn: $appState.adbEnabled
-                        )
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .disabled(!AppState.shared.isPlus && AppState.shared.licenseCheck)
-
-                    }
-                    .frame(width: 55)
-
-                }
-                
-                // Transparent tap area on top to show popover even if disabled
-                if !AppState.shared.isPlus && AppState.shared.licenseCheck {
-                    HStack{
-                        Spacer()
-                        Rectangle()
-                            .fill(Color.clear)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                showingPlusPopover = true
-                            }
-                            .frame(width: 500)
-                    }
-                }
-            }
-            .popover(isPresented: $showingPlusPopover, arrowEdge: .bottom) {
-                PlusFeaturePopover(message: "Wireless ADB features are available in AirSync+")
-                    .onTapGesture {
-                        showingPlusPopover = false
-                    }
-            }
-
-
-            if let result = appState.adbConnectionResult {
-                VStack(alignment: .leading, spacing: 6) {
-                    ExpandableLicenseSection(title: "ADB Console", content: "[" + (UserDefaults.standard.lastADBCommand ?? "[]") + "] " + result)
-                }
-                .transition(.opacity)
-            }
-
             // Show port field if ADB toggle is on
-            if (appState.isPlus || !AppState.shared.licenseCheck), (appState.adbEnabled || appState.adbConnected){
-
-                Spacer()
+            if (appState.isPlus || !AppState.shared.licenseCheck){
 
                 HStack{
                     Label(L("settings.features.appMirroring"), systemImage: "apps.iphone.badge.plus")
@@ -265,12 +187,6 @@ struct SettingsFeaturesView: View {
 
         }
         .padding()
-        .onAppear{
-
-            adbPortString = String(appState.adbPort)
-            xCoords = UserDefaults.standard.manualPositionCoords[0]
-            yCoords = UserDefaults.standard.manualPositionCoords[1]
-        }
 
 
         VStack{
@@ -328,7 +244,6 @@ struct SettingsFeaturesView: View {
         }
         .padding()
         .onAppear{
-            adbPortString = String(appState.adbPort)
             checkNotificationPermissions()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

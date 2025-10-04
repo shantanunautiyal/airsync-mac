@@ -18,10 +18,17 @@ struct DeviceStatusView: View {
     var body: some View {
 
         VStack {
-            if let music = appState.status?.music,
-               let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-               !title.isEmpty,
-               !appState.isMusicCardHidden, showMediaToggle {
+            if !appState.isMusicCardHidden, showMediaToggle {
+                // Use live music if available, otherwise a safe placeholder
+                let music = appState.status?.music ?? DeviceStatus.Music(
+                    isPlaying: false,
+                    title: "Not Playing",
+                    artist: "",
+                    volume: appState.status?.music.volume ?? 100,
+                    isMuted: appState.status?.music.isMuted ?? false,
+                    albumArt: "",
+                    likeStatus: "none"
+                )
 
                 MediaPlayerView(music: music)
                     .transition(.opacity.combined(with: .scale))
@@ -38,15 +45,22 @@ struct DeviceStatusView: View {
                         .foregroundColor(device.ipAddress == "BLE" ? .blue : .accentColor)
                 }
                 
-                HStack{
+                HStack(spacing: 4) {
                     Image(systemName: batteryIcon(for: batteryLevel, isCharging: batteryIsCharging))
                         .help("\(batteryLevel)%")
                         .contentTransition(.symbolEffect)
-                    
+
                     Text("\(batteryLevel)%")
                         .font(.caption2)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
                 .padding(.leading, 4)
+                .layoutPriority(1)
+                .fixedSize(horizontal: true, vertical: false)
+                
+                Spacer()
 
                 let volume = appState.status?.music.volume ?? 100
                 let isMuted = appState.status?.music.isMuted ?? false
@@ -67,6 +81,7 @@ struct DeviceStatusView: View {
                         }
                     }
                 )
+                .fixedSize(horizontal: true, vertical: true)
                 .help(isMuted ? "Muted" : "\(volume)%")
                 .contentTransition(.symbolEffect)
                     .popover(isPresented: $showingVolumePopover, arrowEdge: .bottom) {
@@ -96,8 +111,7 @@ struct DeviceStatusView: View {
                         PlusFeaturePopover(message: "Control volume with AirSync+")
                     }
 
-                if let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !title.isEmpty && showMediaToggle {
+                if showMediaToggle {
                     
                     GlassButtonView(
                         label: "Music Player",
@@ -110,6 +124,7 @@ struct DeviceStatusView: View {
                             }
                         }
                     )
+                    .fixedSize(horizontal: true, vertical: true)
                     .help(appState.isMusicCardHidden ? "Show player" : "Hide player")
                     .transition(.opacity.combined(with: .scale))
                 }
@@ -125,14 +140,6 @@ struct DeviceStatusView: View {
         )
         .onAppear {
             // Ensure media card is collapsed at startup if no media is present
-            checkAndCollapseIfNoMedia()
-        }
-        .onChange(of: appState.status?.music.title) { _, newTitle in
-            // Auto-collapse music card when there's no media playing
-            checkAndCollapseIfNoMedia()
-        }
-        .onChange(of: appState.status?.music.artist) { _, newArtist in
-            // Also check when artist changes (could become empty)
             checkAndCollapseIfNoMedia()
         }
     }
@@ -191,3 +198,4 @@ struct DeviceStatusView: View {
 #Preview {
     DeviceStatusView()
 }
+

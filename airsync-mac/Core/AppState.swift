@@ -29,12 +29,9 @@ class AppState: ObservableObject {
         let name = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
         let portString = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
         let port = Int(portString) ?? Int(Defaults.serverPort)
-        let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
 
-        self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
         self.mirroringPlus = UserDefaults.standard.bool(forKey: "mirroringPlus")
-        self.adbEnabled = UserDefaults.standard.bool(forKey: "adbEnabled")
         self.showMenubarText = UserDefaults.standard.bool(forKey: "showMenubarText")
 
         // Default to true if not previously set
@@ -138,7 +135,7 @@ class AppState: ObservableObject {
     // Tracks if a low battery notification has been sent for the current device session
     @Published var lowBatteryNotifSent: Bool = false
 
-    @Published var port: UInt16 = Defaults.serverPort
+    @Published var port: UInt16 = UInt16(Defaults.serverPort)
     @Published var androidApps: [String: AndroidApp] = [:]
 
     // SMS conversations received from the connected device
@@ -160,8 +157,6 @@ class AppState: ObservableObject {
     @Published var shouldRefreshQR: Bool = false
     @Published var webSocketStatus: WebSocketStatus = .stopped
 
-    @Published var adbConnected: Bool = false
-    @Published var adbConnecting: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
     @Published var selectedNetworkAdapterName: String? { // e.g., "en0"
         didSet {
@@ -204,22 +199,9 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var adbPort: UInt16 {
-        didSet {
-            UserDefaults.standard.set(adbPort, forKey: "adbPort")
-        }
-    }
-    @Published var adbConnectionResult: String? = nil
-
     @Published var mirroringPlus: Bool {
         didSet {
             UserDefaults.standard.set(mirroringPlus, forKey: "mirroringPlus")
-        }
-    }
-
-    @Published var adbEnabled: Bool {
-        didSet {
-            UserDefaults.standard.set(adbEnabled, forKey: "adbEnabled")
         }
     }
 
@@ -465,7 +447,7 @@ class AppState: ObservableObject {
         // Build action list (Android actions + optional View action if mirroring conditions)
         let actionDefinitions: [NotificationAction] = actions
         var includeView = false
-        if let pkg = package, pkg != "com.sameerasw.airsync", adbConnected, mirroringPlus {
+        if let pkg = package, pkg != "com.sameerasw.airsync", mirroringPlus {
             includeView = true
         }
 
@@ -579,9 +561,6 @@ class AppState: ObservableObject {
             self.transfers = [:]
             self.lowBatteryNotifSent = false
 
-            if self.adbConnected {
-                ADBConnector.disconnectADB()
-            }
             print("[app-state] Device disconnected; state reset")
         }
     }
@@ -632,8 +611,9 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Requests Android to stop any ongoing mirroring session started via WebSocket.
-    func requestStopMirroring() {
+    // ✅ RENAMED FOR CLARITY AND TO AVOID DUPLICATION
+    /// Sends a request to the connected Android device to stop the current screen mirroring session.
+    func sendStopMirrorRequest() {
         let payload: [String: Any] = [
             "type": "stopMirrorRequest",
             "data": [:]
@@ -644,6 +624,7 @@ class AppState: ObservableObject {
             print("[app-state] Sent stopMirrorRequest")
         }
     }
+
 
     /// Sends a file to the connected device, regardless of connection type.
     func sendFile(url: URL) {
@@ -686,14 +667,15 @@ class AppState: ObservableObject {
     }
 
     func sendClipboardToAndroid(text: String) {
+        let jsonString = text.replacingOccurrences(of: "\\\\", with: "\\\\\\\\").replacingOccurrences(of: "\"", with: "\\\\\"")
         let message = """
-    {
-        "type": "clipboardUpdate",
-        "data": {
-            "text": "\(text.replacingOccurrences(of: "\"", with: "\\\""))"
+        {
+            "type": "clipboardUpdate",
+            "data": {
+                "text": "\(jsonString)"
+            }
         }
-    }
-    """
+        """
         sendMessage(message)
     }
 
@@ -951,4 +933,3 @@ struct CallLogEntry: Codable, Identifiable {
     let timestamp: Int64      // Epoch milliseconds
     let durationSeconds: Int  // Call duration in seconds
 }
-

@@ -22,7 +22,7 @@ struct SaveAndRestartButton: View {
     var body: some View {
         HStack {
             Button(title, systemImage: systemImage) {
-                let portNumber = UInt16(port) ?? Defaults.serverPort
+                let portNumber = UInt16(port) ?? UInt16(Defaults.serverPort)
                 let ipAddress = WebSocketServer.shared.getLocalIPAddress(
                     adapterName: appState.selectedNetworkAdapterName
                 ) ?? "N/A"

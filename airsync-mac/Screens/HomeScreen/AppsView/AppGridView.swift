@@ -58,13 +58,8 @@ struct AppGridView: View {
                             .padding(8)
                             .glassBoxIfAvailable(radius: 15)
                             .onTapGesture {
-                                if let device = appState.device, appState.adbConnected {
-                                    ADBConnector.startScrcpy(
-                                        ip: device.ipAddress,
-                                        port: appState.adbPort,
-                                        deviceName: device.name,
-                                        package: app.packageName
-                                    )
+                                if appState.device != nil {
+                                    AppState.shared.requestStartMirroring(appPackage: app.packageName)
                                 }
                             }
                             .contextMenu {

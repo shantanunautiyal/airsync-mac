@@ -68,8 +68,6 @@ struct SidebarView: View {
                 message: Text("Do you want to disconnect \"\(appState.device?.name ?? "device")\"?"),
                 primaryButton: .destructive(Text("Disconnect")) {
                     appState.disconnectDevice()
-                    ADBConnector.disconnectADB()
-                    appState.adbConnected = false
                 },
                 secondaryButton: .cancel()
             )

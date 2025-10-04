@@ -8,6 +8,7 @@
 import SwiftUI
 import AVFoundation
 import AppKit
+internal import Combine
 
 struct AppContentView: View {
     @ObservedObject var appState = AppState.shared
@@ -16,6 +17,7 @@ struct AppContentView: View {
     @AppStorage("notificationStacks") private var notificationStacks = true
     @State private var showDisconnectAlert = false
     @State private var screenCaptureAllowed: Bool = true
+    @State private var awaitingServerStart: Bool = false
 
     private func checkScreenRecordingPermission() {
         // Preflight check for Screen Recording permission
@@ -151,10 +153,8 @@ struct AppContentView: View {
                                 Button("Refresh", systemImage: "repeat"){
                                     WebSocketServer.shared.stop()
                                     WebSocketServer.shared.start()
-                                    // Delay QR refresh to ensure server has started
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        appState.shouldRefreshQR = true
-                                    }
+                                    // Wait until the server reports .started before refreshing QR
+                                    awaitingServerStart = true
                                 }
                                 .help("Refresh server")
                             }
@@ -219,16 +219,28 @@ struct AppContentView: View {
                 }
             }
         }
+        .onReceive(appState.$webSocketStatus) { status in
+            guard awaitingServerStart else { return }
+            switch status {
+            case .started:
+                AppState.shared.shouldRefreshQR = true
+                awaitingServerStart = false
+            case .failed(let error):
+                print("[ui] WebSocket failed to start: \(error)")
+                awaitingServerStart = false
+            default:
+                break
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 HStack(spacing: 2) {
                     ForEach(AppState.availableTabs) { tab in
-                        NavigationTabView(tab: tab, isSelected: appState.selectedTab == tab)
-                            .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    appState.selectedTab = tab
-                                }
+                        NavigationTabView(tab: tab, isSelected: appState.selectedTab == tab, action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                appState.selectedTab = tab
                             }
+                        })
                     }
                 }
                 .padding(.horizontal, 8)
@@ -252,8 +264,6 @@ struct AppContentView: View {
                 message: Text("Do you want to disconnect \(appState.device?.name ?? "device")?"),
                 primaryButton: .destructive(Text("Disconnect")) {
                     appState.disconnectDevice()
-                    ADBConnector.disconnectADB()
-                    appState.adbConnected = false
                 },
                 secondaryButton: .cancel()
             )
@@ -265,4 +275,3 @@ struct AppContentView: View {
 #Preview {
     AppContentView()
 }
-

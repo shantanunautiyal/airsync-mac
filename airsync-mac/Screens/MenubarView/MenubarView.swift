@@ -92,42 +92,6 @@ struct MenubarView: View {
                     }
 
 
-                    if appState.adbConnected{
-                        GlassButtonView(
-                            label: "Mirror",
-                            systemImage: "apps.iphone",
-                            iconOnly: true,
-                            circleSize: toolButtonSize,
-                            action: {
-                                ADBConnector
-                                    .startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone"
-                                    )
-                            }
-                        )
-                        .transition(.identity)
-                        .keyboardShortcut(
-                            "p",
-                            modifiers: .command
-                        )
-                        .contextMenu {
-                            Button("Desktop Mode") {
-                                ADBConnector.startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? "My Phone",
-                                    desktop: true
-                                )
-                            }
-                        }
-                        .keyboardShortcut(
-                            "p",
-                            modifiers: [.command, .shift]
-                        )
-                    }
-
                     GlassButtonView(
                         label: "Quit",
                         systemImage: "power",

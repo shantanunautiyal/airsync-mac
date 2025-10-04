@@ -105,39 +105,7 @@ struct airsync_macApp: App {
                 })
                 .keyboardShortcut("/")
             }
-            // Mirror menu: launch full device mirror or specific apps via scrcpy
-            CommandMenu("Mirror") {
-                // Primary full-device mirror option
-                Button("Android Mirror") {
-                    if let device = appState.device, appState.adbConnected {
-                        ADBConnector.startScrcpy(
-                            ip: device.ipAddress,
-                            port: appState.adbPort,
-                            deviceName: device.name,
-                            package: nil
-                        )
-                    }
-                }
-                .disabled(!(appState.device != nil && appState.adbConnected))
 
-                // Only show app list if ADB is connected
-                if appState.adbConnected, let _ = appState.device {
-                    Divider()
-                    // Sorted list of apps by display name
-                    ForEach(Array(appState.androidApps.values).sorted { $0.name.lowercased() < $1.name.lowercased() }, id: \.packageName) { app in
-                        Button(app.name) {
-                            if let device = appState.device {
-                                ADBConnector.startScrcpy(
-                                    ip: device.ipAddress,
-                                    port: appState.adbPort,
-                                    deviceName: device.name,
-                                    package: app.packageName
-                                )
-                            }
-                        }
-                    }
-                }
-            }
         }
 
     }

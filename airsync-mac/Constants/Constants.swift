@@ -10,6 +10,6 @@ internal import Combine
 
 // Constants.swift
 enum Defaults {
-    static let serverPort: UInt16 = 6996
+    static let serverPort: UInt32 = 6996
 }
 
