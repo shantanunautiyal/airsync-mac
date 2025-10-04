@@ -17,6 +17,8 @@ struct ScannerView: View {
     @State private var copyStatus: String?
     @State private var hasValidIP: Bool = true
     @State private var showConfirmReset = false
+    @State private var revealKey: Bool = false
+    @State private var pairAsSecond: Bool = false
 
     private func statusInfo(for status: WebSocketStatus) -> (text: String, icon: String, color: Color) {
         switch status {
@@ -80,7 +82,38 @@ struct ScannerView: View {
                         .background(.thinMaterial, in: .rect(cornerRadius: 20))
                     }
                 }
-                .padding(.bottom, 8)
+                HStack(spacing: 12) {
+                    Button {
+                        // Restart server and regenerate QR
+                        let port = UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort))
+                        WebSocketServer.shared.stop()
+                        WebSocketServer.shared.start(port: port)
+                        generateQRAsync()
+                    } label: {
+                        Label("Rescan", systemImage: "qrcode.viewfinder")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(role: .destructive) {
+                        // Rotate key, restart server, and regenerate QR
+                        WebSocketServer.shared.resetSymmetricKey()
+                        let port = UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort))
+                        WebSocketServer.shared.stop()
+                        WebSocketServer.shared.start(port: port)
+                        generateQRAsync()
+                    } label: {
+                        Label("Reset key & QR", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.bottom, 6)
+
+                Toggle("Pair as second device", isOn: $pairAsSecond)
+                    .toggleStyle(.switch)
+                    .onChange(of: pairAsSecond) { _, _ in
+                        generateQRAsync()
+                    }
+                    .padding(.bottom, 4)
 
                 Image(decorative: qrImage, scale: 1.0)
                     .resizable()
@@ -139,7 +172,117 @@ struct ScannerView: View {
                 }
             }
 
-            Spacer()
+            // --- Manual Setup (Advanced) ---
+            if hasValidIP {
+                VStack(alignment: .leading, spacing: 8) {
+                    DisclosureGroup {
+                        let ip = WebSocketServer.shared.getLocalIPAddress(
+                            adapterName: appState.selectedNetworkAdapterName
+                        ) ?? "N/A"
+                        let port: UInt16 = UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort))
+                        let name = appState.myDevice?.name ?? "My Mac"
+                        let key = WebSocketServer.shared.getSymmetricKeyBase64() ?? ""
+                        let encodedName = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
+                        let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+                        let plus = AppState.shared.isPlus
+                        let slotParam = pairAsSecond ? "&slot=2" : ""
+                        let connectionString = "airsync://\(ip):\(port)?name=\(encodedName)&plus=\(plus)&key=\(encodedKey)\(slotParam)"
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            // IP & Port
+                            HStack {
+                                Text("IP:")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(ip)
+                                    .font(.caption)
+                                Spacer()
+                                Button("Copy") { copyToClipboard(ip) }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                            }
+                            HStack {
+                                Text("Port:")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(String(port))
+                                    .font(.caption)
+                                Spacer()
+                                Button("Copy") { copyToClipboard(String(port)) }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                            }
+
+                            // Name
+                            HStack {
+                                Text("Device name:")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(name)
+                                    .font(.caption)
+                                Spacer()
+                                Button("Copy") { copyToClipboard(name) }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                            }
+
+                            // Encryption key (masked with Reveal)
+                            HStack {
+                                Text("Encryption key:")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                if revealKey {
+                                    Text(key.isEmpty ? "—" : key)
+                                        .font(.caption)
+                                        .textSelection(.enabled)
+                                } else {
+                                    Text(key.isEmpty ? "—" : String(repeating: "•", count: max(4, min(24, key.count))))
+                                        .font(.caption)
+                                }
+                                Spacer()
+                                Button(revealKey ? "Hide" : "Reveal") { revealKey.toggle() }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                                Button("Copy") { copyToClipboard(key) }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                                    .disabled(key.isEmpty)
+                            }
+
+                            // Full connection string
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Connection string:")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(connectionString)
+                                    .font(.caption2)
+                                    .textSelection(.enabled)
+                                    .lineLimit(3)
+                                    .multilineTextAlignment(.leading)
+                                HStack {
+                                    Spacer()
+                                    Button("Copy Connection") { copyToClipboard(connectionString) }
+                                        .buttonStyle(.bordered)
+                                        .font(.caption)
+                                }
+                            }
+
+                            Text("If scanning the QR fails on your second device, open AirSync on Android and choose manual add/pair, then paste the connection string or enter IP, Port and Encryption key above.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(10)
+                        .background(.thinMaterial, in: .rect(cornerRadius: 12))
+                    } label: {
+                        Label("Manual setup (advanced)", systemImage: "wrench.and.screwdriver")
+                            .font(.subheadline)
+                            .bold()
+                    }
+                }
+                .frame(maxWidth: 720)
+                .padding(.top, 8)
+            }
 
             // --- Quick Connect Button ---
             if let lastDevice = quickConnectManager.getLastConnectedDevice() {
@@ -184,6 +327,7 @@ struct ScannerView: View {
 
             Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .onAppear {
             generateQRAsync()
         }
@@ -214,6 +358,16 @@ struct ScannerView: View {
     }
 
      func generateQRAsync() {
+        // Ensure server is running before generating QR
+        switch appState.webSocketStatus {
+        case .started:
+            break
+        default:
+            let port = UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort))
+            WebSocketServer.shared.stop()
+            WebSocketServer.shared.start(port: port)
+        }
+
         let ip = WebSocketServer.shared
             .getLocalIPAddress(
                 adapterName: appState.selectedNetworkAdapterName
@@ -238,7 +392,8 @@ struct ScannerView: View {
             ip: validIP,
             port: UInt16(appState.myDevice?.port ?? Int(Defaults.serverPort)),
             name: appState.myDevice?.name,
-            key: WebSocketServer.shared.getSymmetricKeyBase64() ?? ""
+            key: WebSocketServer.shared.getSymmetricKeyBase64() ?? "",
+            slot: pairAsSecond ? 2 : nil
         ) ?? "That doesn't look right, QR Generation failed"
 
         Task {
@@ -267,13 +422,16 @@ struct ScannerView: View {
     }
 }
 
-func generateQRText(ip: String?, port: UInt16?, name: String?, key: String) -> String? {
-    guard let ip = ip, let port = port else {
-        return nil
-    }
+func generateQRText(ip: String?, port: UInt16?, name: String?, key: String, slot: Int? = nil) -> String? {
+    guard let ip = ip, let port = port else { return nil }
 
-    let encodedName = name?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "My Mac"
-    return "airsync://\(ip):\(port)?name=\(encodedName)?plus=\(AppState.shared.isPlus)?key=\(key)"
+    let encodedName = (name ?? "My Mac").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "My Mac"
+    let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+    let plus = AppState.shared.isPlus
+    let slotQuery = slot != nil ? "&slot=\(slot!)" : ""
+
+    // Use '&' between query parameters; keep custom scheme
+    return "airsync://\(ip):\(port)?name=\(encodedName)&plus=\(plus)&key=\(encodedKey)\(slotQuery)"
 }
 
 
@@ -281,3 +439,4 @@ func generateQRText(ip: String?, port: UInt16?, name: String?, key: String) -> S
 #Preview {
     ScannerView()
 }
+

@@ -238,19 +238,25 @@ extension BluetoothManager: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         DispatchQueue.main.async {
-            // If we were connected via WebSocket, disconnect it now that we have a BLE connection.
+            // Do NOT disconnect existing WebSocket session — allow multiple simultaneous connections
             if AppState.shared.device != nil {
-                print("[ble-manager] BLE connected, disconnecting existing WebSocket session.")
-                AppState.shared.disconnectDevice()
+                print("[ble-manager] BLE connected while a primary device exists — keeping existing WebSocket session and attaching BLE as a secondary transport.")
             }
             
-            // Create a new device session for the BLE connection
-            if let name = peripheral.name {
-                let bleDevice = Device(name: name, ipAddress: "BLE", port: 0, version: "BLE")
-                AppState.shared.device = bleDevice
-                print("[ble-manager] Established new device session for \(name) via BLE.")
+            // Only set the global device if none exists; otherwise, keep the current primary device
+            if AppState.shared.device == nil {
+                if let name = peripheral.name {
+                    let bleDevice = Device(name: name, ipAddress: "BLE", port: 0, version: "BLE")
+                    AppState.shared.device = bleDevice
+                    print("[ble-manager] Established new primary device session for \(name) via BLE.")
+                } else {
+                    print("[ble-manager] Warning: Connected to a peripheral with no name.")
+                }
             } else {
-                print("[ble-manager] Warning: Connected to a peripheral with no name.")
+                // Secondary connection present; future work: assign to AppState.secondaryDevice when available
+                if let name = peripheral.name {
+                    print("[ble-manager] Established secondary BLE connection: \(name)")
+                }
             }
             self.isConnected = true
             self.connectedDeviceName = peripheral.name
@@ -417,3 +423,4 @@ extension BluetoothManager: CBPeripheralDelegate {
         }
     }
 }
+

@@ -83,6 +83,28 @@ class AppState: ObservableObject {
         self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
         if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
 
+        // Load mirroring preferences
+        if UserDefaults.standard.object(forKey: "mirrorForcePortrait916") != nil {
+            self.mirrorForcePortrait916 = UserDefaults.standard.bool(forKey: "mirrorForcePortrait916")
+        } else {
+            self.mirrorForcePortrait916 = true
+        }
+        self.mirrorDesktopMode = UserDefaults.standard.bool(forKey: "mirrorDesktopMode")
+
+        if let savedRes = UserDefaults.standard.string(forKey: "mirrorResolution"), !savedRes.isEmpty {
+            self.mirrorResolution = savedRes
+        } else {
+            self.mirrorResolution = "1080x1920"
+        }
+        let savedBitrate = UserDefaults.standard.integer(forKey: "mirrorBitrateMbps")
+        self.mirrorBitrateMbps = savedBitrate > 0 ? savedBitrate : 8
+        
+        if UserDefaults.standard.object(forKey: "mirrorScaleFill") != nil {
+            self.mirrorScaleFill = UserDefaults.standard.bool(forKey: "mirrorScaleFill")
+        } else {
+            self.mirrorScaleFill = false
+        }
+
     // Initialize persisted UI toggles
     self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
 
@@ -126,6 +148,10 @@ class AppState: ObservableObject {
             // Store the last connected device when a new device connects
             if let newDevice = device {
                 QuickConnectManager.shared.saveLastConnectedDevice(newDevice)
+                // Proactively request initial datasets from device upon connection
+                self.requestCallLogs(limit: 100)
+                self.requestSmsConversations()
+                self.requestHealthData()
             }
         }
     }
@@ -190,6 +216,42 @@ class AppState: ObservableObject {
     @Published var scrcpyResolution: Int = 1200 {
         didSet {
             UserDefaults.standard.set(scrcpyResolution, forKey: "scrcpyResolution")
+        }
+    }
+
+    // Mirroring preferences
+    @Published var mirrorForcePortrait916: Bool = true {
+        didSet {
+            UserDefaults.standard.set(mirrorForcePortrait916, forKey: "mirrorForcePortrait916")
+        }
+    }
+
+    /// When true, mirroring uses the device/stream aspect ratio and behaves like desktop mode.
+    /// When false (default), we enforce a 9:16 portrait aspect for the window.
+    @Published var mirrorDesktopMode: Bool = false {
+        didSet {
+            UserDefaults.standard.set(mirrorDesktopMode, forKey: "mirrorDesktopMode")
+        }
+    }
+
+    /// Preferred streaming resolution hint sent to Android (e.g., "1080x1920" for portrait).
+    @Published var mirrorResolution: String = "1080x1920" {
+        didSet {
+            UserDefaults.standard.set(mirrorResolution, forKey: "mirrorResolution")
+        }
+    }
+
+    /// Target bitrate in Mbps for mirroring.
+    @Published var mirrorBitrateMbps: Int = 8 {
+        didSet {
+            UserDefaults.standard.set(mirrorBitrateMbps, forKey: "mirrorBitrateMbps")
+        }
+    }
+    
+    /// When true, the mirroring view fills the window (cropping if needed) to remove black bars.
+    @Published var mirrorScaleFill: Bool = false {
+        didSet {
+            UserDefaults.standard.set(mirrorScaleFill, forKey: "mirrorScaleFill")
         }
     }
 
@@ -611,6 +673,23 @@ class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Remote Connect (Relay / Direct)
+    /// Requests the Android app to initiate a remote connection handshake (e.g., via relay/WebRTC).
+    /// The Android app should show a confirmation and respond with connection details.
+    func requestRemoteConnect(hint: String? = nil) {
+        var data: [String: Any] = [:]
+        if let hint, !hint.isEmpty { data["hint"] = hint }
+        let payload: [String: Any] = [
+            "type": "requestRemoteConnect",
+            "data": data
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent requestRemoteConnect(hint: \(hint ?? "-"))")
+        }
+    }
+
     // ✅ RENAMED FOR CLARITY AND TO AVOID DUPLICATION
     /// Sends a request to the connected Android device to stop the current screen mirroring session.
     func sendStopMirrorRequest() {
@@ -882,6 +961,20 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Requests Android to launch/open a specific application by package name.
+    func requestLaunchApp(package: String) {
+        guard !package.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let payload: [String: Any] = [
+            "type": "launchApp",
+            "data": ["package": package]
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload, options: []),
+           let str = String(data: json, encoding: .utf8) {
+            sendMessage(str)
+            print("[app-state] Sent launchApp for package: \(package)")
+        }
+    }
+
     /// Replaces current call logs with the provided array (to be called by network layer upon response).
     func setCallLogs(_ logs: [CallLogEntry]) {
         DispatchQueue.main.async {
@@ -933,3 +1026,5 @@ struct CallLogEntry: Codable, Identifiable {
     let timestamp: Int64      // Epoch milliseconds
     let durationSeconds: Int  // Call duration in seconds
 }
+
+

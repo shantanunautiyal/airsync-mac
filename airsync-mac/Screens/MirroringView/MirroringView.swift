@@ -16,8 +16,12 @@ class MirroringView: NSView {
 
     private func setupLayer() {
         wantsLayer = true
-        layer = displayLayer
-        displayLayer.videoGravity = .resizeAspect
+        if layer == nil { layer = CALayer() }
+        layer?.backgroundColor = NSColor.clear.cgColor
+        displayLayer.backgroundColor = NSColor.clear.cgColor
+        displayLayer.isOpaque = false
+        layer?.addSublayer(displayLayer)
+        updateVideoGravity()
         
         do {
             let timebase = try CMTimebase(sourceClock: CMClockGetHostTimeClock())
@@ -28,12 +32,26 @@ class MirroringView: NSView {
         }
     }
 
+    private func updateVideoGravity() {
+        // Enforce aspect-fit to avoid any cropping regardless of mode or flags
+        displayLayer.videoGravity = .resizeAspect
+    }
+    
+    func applyCurrentVideoGravity() {
+        updateVideoGravity()
+    }
+
     func enqueue(_ sampleBuffer: CMSampleBuffer) {
         displayLayer.enqueue(sampleBuffer)
     }
     
     func flush() {
         displayLayer.flush()
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        displayLayer.frame = CGRect(origin: .zero, size: newSize)
     }
 
     // MARK: - Input Events

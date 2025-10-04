@@ -36,6 +36,7 @@ enum MessageType: String, Codable {
     case startMirrorRequest
     case startMirrorResponse
     case stopMirrorRequest
+    case stopMirrorResponse
     // SMS
     case requestSmsConversations
     case smsConversations
@@ -49,3 +50,4 @@ struct Message: Codable {
     let type: MessageType
     let data: CodableValue
 }
+

@@ -11,6 +11,7 @@ import SwiftUI
 struct SidebarView: View {
 
     @ObservedObject var appState = AppState.shared
+    @ObservedObject var mirroring = MirroringManager.shared
     @State private var isExpandedAllSeas: Bool = false
     @State private var showDisconnectAlert = false
 
@@ -47,6 +48,33 @@ struct SidebarView: View {
             .safeAreaInset(edge: .bottom) {
                 HStack{
                     if appState.device != nil {
+                        if !mirroring.isMirroring {
+                            GlassButtonView(
+                                label: "Start Mirroring",
+                                systemImage: "rectangle.stack.badge.play",
+                                action: {
+                                    let resHint = appState.mirrorDesktopMode ? nil : (appState.mirrorResolution.isEmpty ? nil : appState.mirrorResolution)
+                                    AppState.shared.requestStartMirroring(
+                                        mode: appState.mirrorDesktopMode ? "desktop" : "device",
+                                        resolution: resHint,
+                                        bitrateMbps: appState.mirrorBitrateMbps
+                                    )
+                                }
+                            )
+                            .transition(.identity)
+                        } else {
+                            GlassButtonView(
+                                label: "Stop Mirroring",
+                                systemImage: "rectangle.stack.badge.minus",
+                                action: {
+                                    // Closing the window also stops mirroring, but provide explicit stop as well
+                                    MirroringManager.shared.stopMirroring()
+                                    AppState.shared.sendStopMirrorRequest()
+                                }
+                            )
+                            .transition(.identity)
+                        }
+
                         GlassButtonView(
                             label: "Disconnect",
                             systemImage: "xmark",

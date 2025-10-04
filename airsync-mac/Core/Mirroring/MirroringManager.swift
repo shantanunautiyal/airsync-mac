@@ -10,8 +10,9 @@ import AppKit
 import VideoToolbox
 internal import Combine
 
-class MirroringManager: NSObject, NSWindowDelegate {
+class MirroringManager: NSObject, NSWindowDelegate, ObservableObject {
     static let shared = MirroringManager()
+    @Published var isMirroring: Bool = false
 
     private var mirroringWindow: NSWindow?
     private var mirroringView: MirroringView?
@@ -23,36 +24,19 @@ class MirroringManager: NSObject, NSWindowDelegate {
     private var ppsData: Data?
     private var frameCount: CMTimeValue = 0
 
+    private var pendingWindowStart: (mode: String, resolution: String, bitrate: Int, package: String?)?
+    private var firstFrameReceived: Bool = false
+
     private override init() {
         super.init()
     }
 
     func startMirroring(mode: String, resolution: String, bitrate: Int, package: String?) {
-        print("[MirroringManager] Starting mirroring with mode=\(mode), resolution=\(resolution), bitrate=\(bitrate)")
-
+        print("[MirroringManager] Starting mirroring request with mode=\(mode), resolution=\(resolution), bitrate=\(bitrate)")
+        // Defer window creation until first frame arrives to avoid blank popup
         DispatchQueue.main.async {
-            if let window = self.mirroringWindow {
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-                return
-            }
-            
-            let windowRect = NSRect(x: 0, y: 0, width: 800, height: 450)
-            self.mirroringView = MirroringView(frame: windowRect)
-            
-            self.mirroringWindow = NSWindow(
-                contentRect: windowRect,
-                styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            self.mirroringWindow?.delegate = self
-            self.mirroringWindow?.contentView = self.mirroringView
-            self.mirroringWindow?.title = "Screen Mirroring"
-            self.mirroringWindow?.center()
-            self.mirroringWindow?.isReleasedWhenClosed = false
-            self.mirroringWindow?.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            self.pendingWindowStart = (mode, resolution, bitrate, package)
+            self.firstFrameReceived = false
         }
     }
 
@@ -61,7 +45,12 @@ class MirroringManager: NSObject, NSWindowDelegate {
         
         DispatchQueue.main.async {
             self.mirroringWindow?.close()
+            self.mirroringWindow?.level = .normal
+            self.isMirroring = false
         }
+        
+        self.pendingWindowStart = nil
+        self.firstFrameReceived = false
         
         if let session = decompressionSession {
             VTDecompressionSessionInvalidate(session)
@@ -81,11 +70,48 @@ class MirroringManager: NSObject, NSWindowDelegate {
         DispatchQueue.main.async {
             self.mirroringWindow = nil
             self.mirroringView = nil
+            self.isMirroring = false
+            AppState.shared.sendStopMirrorRequest()
         }
-        AppState.shared.sendStopMirrorRequest()
     }
 
     func handleVideoFrame(data: Data) {
+        if !firstFrameReceived {
+            firstFrameReceived = true
+            DispatchQueue.main.async {
+                if self.mirroringWindow == nil {
+                    let windowRect = NSRect(x: 0, y: 0, width: 360, height: 640) // default portrait-ish
+                    self.mirroringView = MirroringView(frame: windowRect)
+                    self.mirroringWindow = NSWindow(
+                        contentRect: windowRect,
+                        styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                        backing: .buffered,
+                        defer: false
+                    )
+                    self.mirroringWindow?.delegate = self
+                    self.mirroringWindow?.contentView = self.mirroringView
+                    self.mirroringView?.setFillMode(AppState.shared.mirrorScaleFill)
+                    self.mirroringWindow?.title = "Screen Mirroring"
+                    self.mirroringWindow?.center()
+                    self.mirroringWindow?.isReleasedWhenClosed = false
+                    // Keep the window visible and above normal level while mirroring
+                    self.mirroringWindow?.level = .floating
+                    self.mirroringWindow?.isMovableByWindowBackground = true
+
+                    // Apply portrait 9:16 if desktop mode is disabled
+                    if !AppState.shared.mirrorDesktopMode && AppState.shared.mirrorForcePortrait916 {
+                        let portraitSize = NSSize(width: 360, height: 640)
+                        self.mirroringWindow?.setContentSize(portraitSize)
+                        self.mirroringWindow?.contentAspectRatio = NSSize(width: 9, height: 16)
+                    }
+
+                    self.mirroringWindow?.makeKeyAndOrderFront(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                    self.isMirroring = true
+                }
+            }
+        }
+        
         let startCode: [UInt8] = [0, 0, 0, 1]
         var searchIndex = data.startIndex
         
@@ -171,12 +197,43 @@ class MirroringManager: NSObject, NSWindowDelegate {
             let aspectRatio = CGFloat(dimensions.width) / CGFloat(dimensions.height)
             print("[MirroringManager] Video aspect ratio: \(aspectRatio)")
             DispatchQueue.main.async {
-                if let window = self.mirroringWindow {
+                guard let window = self.mirroringWindow else { return }
+                if !AppState.shared.mirrorDesktopMode && AppState.shared.mirrorForcePortrait916 {
+                    // Force portrait 9:16 window
+                    var newWidth: CGFloat = max(360, window.frame.width)
+                    var newHeight: CGFloat = newWidth * (16.0/9.0)
+                    if newHeight < 640 { newHeight = 640; newWidth = newHeight * (9.0/16.0) }
+                    let newFrameSize = NSSize(width: newWidth, height: newHeight)
+                    print("[MirroringManager] Forcing portrait 9:16 size: \(newFrameSize)")
+                    window.setContentSize(newFrameSize)
+                    window.contentAspectRatio = NSSize(width: 9, height: 16)
+                } else if AppState.shared.mirrorScaleFill {
+                    // Fill the window to remove black bars; MirroringView will crop as needed
                     let contentRect = window.contentRect(forFrameRect: window.frame)
-                    let newHeight = contentRect.width / aspectRatio
-                    let newFrameSize = NSSize(width: contentRect.width, height: newHeight)
+                    var newWidth = contentRect.width
+                    var newHeight = contentRect.height
+                    if newWidth / newHeight < CGFloat(aspectRatio) {
+                        // Window is taller than stream; expand width to match aspect
+                        newWidth = newHeight * CGFloat(aspectRatio)
+                    } else {
+                        // Window is wider; expand height
+                        newHeight = newWidth / CGFloat(aspectRatio)
+                    }
+                    window.setContentSize(NSSize(width: newWidth, height: newHeight))
+                    window.contentAspectRatio = NSSize(width: CGFloat(aspectRatio), height: 1.0)
+                    self.mirroringView?.setFillMode(true)
+                } else {
+                    // Follow stream aspect
+                    let contentRect = window.contentRect(forFrameRect: window.frame)
+                    var newWidth = contentRect.width
+                    var newHeight = newWidth / aspectRatio
+                    if newWidth < 320 { newWidth = 320; newHeight = newWidth / aspectRatio }
+                    if newHeight < 240 { newHeight = 240; newWidth = newHeight * aspectRatio }
+                    let newFrameSize = NSSize(width: newWidth, height: newHeight)
                     print("[MirroringManager] Resizing window to: \(newFrameSize)")
                     window.setContentSize(newFrameSize)
+                    window.contentAspectRatio = NSSize(width: aspectRatio, height: 1.0)
+                    self.mirroringView?.setFillMode(false)
                 }
             }
         }
@@ -319,4 +376,8 @@ class MirroringManager: NSObject, NSWindowDelegate {
             print("[MirroringManager] ERROR: DecodeFrame failed with status: \(decodeStatus)")
         }
     }
+}
+
+extension MirroringView {
+    @objc func setFillMode(_ fill: Bool) { /* no-op if not implemented */ }
 }

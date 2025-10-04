@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 import SwiftUI
@@ -92,6 +91,92 @@ struct SettingsView: View {
 
                 Spacer(minLength: 32)
 
+                // Mirroring Settings
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Label("Mirroring", systemImage: "rectangle.on.rectangle")
+                        Spacer()
+                        Toggle("Desktop mode", isOn: $appState.mirrorDesktopMode)
+                            .toggleStyle(.switch)
+                            .help("When on, follow the stream aspect ratio (desktop). When off, force 9:16 portrait window.")
+                    }
+
+                    HStack {
+                        Label("Force 9:16 portrait", systemImage: "rectangle.portrait")
+                        Spacer()
+                        Toggle("", isOn: $appState.mirrorForcePortrait916)
+                            .toggleStyle(.switch)
+                            .disabled(appState.mirrorDesktopMode)
+                            .help("When Desktop mode is off, keep the mirroring window locked to 9:16.")
+                    }
+
+                    HStack {
+                        Label("Resolution", systemImage: "rectangle.compress.vertical")
+                        Spacer()
+                        Picker("", selection: $appState.mirrorResolution) {
+                            Text("720x1280").tag("720x1280")
+                            Text("1080x1920").tag("1080x1920")
+                            Text("1440x2560").tag("1440x2560")
+                            Text("2160x3840").tag("2160x3840")
+                            Text("Auto").tag("")
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .frame(maxWidth: 160)
+                        .disabled(appState.mirrorDesktopMode)
+                        .help("Preferred portrait resolution hint sent to Android. Use Auto to let device decide.")
+                    }
+
+                    HStack {
+                        Label("Bitrate (Mbps)", systemImage: "speedometer")
+                        Spacer()
+                        Stepper(value: $appState.mirrorBitrateMbps, in: 2...30) {
+                            Text("\(appState.mirrorBitrateMbps)")
+                        }
+                        .frame(maxWidth: 160)
+                        .help("Target streaming bitrate. Actual value may be adjusted by the device.")
+                    }
+                    
+                    HStack {
+                        Label("Fill window (no black bars)", systemImage: "rectangle.expand.vertical")
+                        Spacer()
+                        Toggle("", isOn: $appState.mirrorScaleFill)
+                            .toggleStyle(.switch)
+                            .help("When on, the mirroring view fills the window and may crop the stream slightly to remove black bars.")
+                    }
+
+                    HStack {
+                        Button {
+                            let resHint = appState.mirrorDesktopMode ? nil : (appState.mirrorResolution.isEmpty ? nil : appState.mirrorResolution)
+                            AppState.shared.requestStartMirroring(
+                                mode: appState.mirrorDesktopMode ? "desktop" : "device",
+                                resolution: resHint,
+                                bitrateMbps: appState.mirrorBitrateMbps
+                            )
+                        } label: {
+                            Label("Start Mirroring", systemImage: "play.rectangle")
+                        }
+
+                        Button(role: .cancel) {
+                            AppState.shared.sendStopMirrorRequest()
+                        } label: {
+                            Label("Stop", systemImage: "stop")
+                        }
+
+                        Spacer()
+
+                        Button {
+                            AppState.shared.requestRemoteConnect(hint: "webrtc")
+                        } label: {
+                            Label("Remote Connect", systemImage: "antenna.radiowaves.left.and.right")
+                        }
+                        .help("Start remote connect handshake (Android will prompt).")
+                    }
+                }
+                .padding()
+                .background(.background.opacity(0.3))
+                .cornerRadius(12.0)
+
+                Spacer(minLength: 32)
 
                 SettingsFeaturesView()
                     .background(.background.opacity(0.3))
@@ -168,3 +253,4 @@ struct SettingsView: View {
         }
     }
 }
+

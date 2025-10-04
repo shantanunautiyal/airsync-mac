@@ -151,6 +151,21 @@ class WebSocketServer: ObservableObject {
                         }
                     } catch {
                         print("[websocket] WebSocket JSON decode failed: \(error)")
+                        // Fallback: handle minimal messages that omit the `data` field
+                        if let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                           let type = dict["type"] as? String {
+                            switch type {
+                            case "stopMirrorRequest":
+                                print("[websocket] Fallback handler: stopMirrorRequest (no data)")
+                                DispatchQueue.main.async {
+                                    MirroringManager.shared.stopMirroring()
+                                    self.sendStopMirrorResponse(success: true)
+                                }
+                                return
+                            default:
+                                break
+                            }
+                        }
                     }
                 }
             },
@@ -162,6 +177,10 @@ class WebSocketServer: ObservableObject {
             disconnected: { [weak self] session in
                 guard let self = self else { return }
                 print("[websocket] Device disconnected")
+
+                DispatchQueue.main.async {
+                    MirroringManager.shared.stopMirroring()
+                }
 
                 self.activeSessions.removeAll(where: { $0 === session })
 
@@ -1412,3 +1431,4 @@ class WebSocketServer: ObservableObject {
         QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
 }
+

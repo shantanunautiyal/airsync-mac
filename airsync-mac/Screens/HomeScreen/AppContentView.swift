@@ -108,6 +108,13 @@ struct AppContentView: View {
                 case .health:
                     HealthView()
                         .transition(.opacity)
+                
+                case .calls:
+                    CallsView()
+                        .transition(.opacity)
+                        .task {
+                            AppState.shared.requestCallLogs(limit: 100)
+                        }
 
                 case .settings:
                     SettingsView()
@@ -214,8 +221,10 @@ struct AppContentView: View {
             withTransaction(t) {
                 if newValue == nil {
                     appState.selectedTab = .qr
-                } else if appState.selectedTab == .qr {
-                    appState.selectedTab = .notifications
+                } else {
+                    if appState.selectedTab == .qr || !AppState.availableTabs.contains(appState.selectedTab) {
+                        appState.selectedTab = .notifications
+                    }
                 }
             }
         }
@@ -245,8 +254,29 @@ struct AppContentView: View {
                 }
                 .padding(.horizontal, 8)
             }
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    AppState.shared.selectedTab = .qr
+                    AppState.shared.shouldRefreshQR = true
+                } label: {
+                    Label("Add Device", systemImage: "plus")
+                }
+                .help("Add a new device")
 
-
+                if appState.device != nil {
+                    Button {
+                        let resHint = AppState.shared.mirrorDesktopMode ? nil : (AppState.shared.mirrorResolution.isEmpty ? nil : AppState.shared.mirrorResolution)
+                        AppState.shared.requestStartMirroring(
+                            mode: AppState.shared.mirrorDesktopMode ? "desktop" : "device",
+                            resolution: resHint,
+                            bitrateMbps: AppState.shared.mirrorBitrateMbps
+                        )
+                    } label: {
+                        Label("Mirror", systemImage: "rectangle.on.rectangle")
+                    }
+                    .help("Start screen mirroring")
+                }
+            }
         }
         .sheet(isPresented: $showAboutSheet) {
             AboutView(
@@ -275,3 +305,4 @@ struct AppContentView: View {
 #Preview {
     AppContentView()
 }
+
