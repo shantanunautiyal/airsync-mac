@@ -3,7 +3,22 @@
 <plist version="1.0">
 <dict>
 	<key>AndroidVersion</key>
-	<string>2.2.0</string>
+	<string>2.5.2</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>All Files</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.item</string>
+				<string>public.content</string>
+				<string>public.data</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>
@@ -25,13 +40,41 @@
 		</dict>
 	</dict>
 	<key>ForceUpdateKey</key>
-	<string>003</string>
+	<string>004</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>AirSync needs permission to control Music playback from your Android device.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>AirSync needs permission to control Music playback from your Android device.</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSKeyEquivalent</key>
+			<dict>
+				<key>default</key>
+				<string>A</string>
+			</dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Send via AirSync</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>handleServices</string>
+			<key>NSPortName</key>
+			<string>AirSync</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.item</string>
+			</array>
+		</dict>
+	</array>
 	<key>OSAScriptingDefinition</key>
 	<string>AirSync.sdef</string>
 	<key>SUEnableDownloaderService</key>

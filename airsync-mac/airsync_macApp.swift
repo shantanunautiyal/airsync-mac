@@ -63,23 +63,14 @@ struct airsync_macApp: App {
         loadCachedIcons()
         loadCachedWallpapers()
 
-        // Load saved app icon preference and revert if needed based on license status
-        let appIconManager = AppIconManager()
-        appIconManager.loadCurrentIcon()
 
-        // Set up listener for license changes to revert icon if needed
-        // This will be called when license status changes
-        NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("LicenseStatusChanged"),
-            object: nil,
-            queue: .main
-        ) { _ in
-            appIconManager.revertToDefaultIfNeeded()
-        }
 
         // Initialize trial manager early so entitlement state is up-to-date on launch.
         _ = TrialManager.shared
-
+        
+        // Start UDP Discovery (Active Burst + Passive Listen)
+        UDPDiscoveryManager.shared.start()
+        
     }
 
     var body: some Scene {
@@ -111,28 +102,17 @@ struct airsync_macApp: App {
                 dismissWindow(id: "callWindow")
             }
         }
-
-        // Secondary Tool Window for Calls
-        Window("Call", id: "callWindow") {
-            if let activeCall = appState.activeCall {
-                if #available(macOS 15.0, *) {
-                    CallWindowView(callEvent: activeCall)
-                        .environmentObject(appState)
-                        .containerBackground(.ultraThinMaterial, for: .window)
-                } else {
-                    CallWindowView(callEvent: activeCall)
-                        .environmentObject(appState)
-                }
+        .onChange(of: appState.activeTransferId) { oldValue, newValue in
+            if newValue != nil {
+                openWindow(id: "fileTransferWindow")
+            } else {
+                dismissWindow(id: "fileTransferWindow")
             }
         }
-        .defaultPosition(.topTrailing)
-        .defaultSize(width: 320, height: 480)
-        .windowStyle(.hiddenTitleBar)
-
-    .commands {
-        CommandGroup(after: .appInfo) {
-            CheckForUpdatesView(updater: updaterController.updater)
-        }
+        .commands {
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .help) {
                 Button(action: {
@@ -179,8 +159,40 @@ struct airsync_macApp: App {
             }
         }
 
-    }
+        // Secondary Tool Window for Calls
+        Window("Call", id: "callWindow") {
+            if let activeCall = appState.activeCall {
+                if #available(macOS 15.0, *) {
+                    CallWindowView(callEvent: activeCall)
+                        .environmentObject(appState)
+                        .containerBackground(.ultraThinMaterial, for: .window)
+                } else {
+                    CallWindowView(callEvent: activeCall)
+                        .environmentObject(appState)
+                }
+            }
+        }
+        .defaultPosition(.topTrailing)
+        .defaultSize(width: 320, height: 480)
+        .windowStyle(.hiddenTitleBar)
 
+        // File Transfer Utility Window
+        Window("File Transfer", id: "fileTransferWindow") {
+            if #available(macOS 15.0, *) {
+                FileTransferWindowView()
+                    .environmentObject(appState)
+                    .frame(minWidth: 320, maxWidth: 320, minHeight: 300, maxHeight: 300)
+                    .containerBackground(.ultraThinMaterial, for: .window)
+            } else {
+                FileTransferWindowView()
+                    .environmentObject(appState)
+                    .frame(minWidth: 320, maxWidth: 320, minHeight: 300, maxHeight: 300)
+            }
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+    }
 }
 
 extension View {
@@ -188,7 +200,6 @@ extension View {
         self.background(WindowAccessor(callback: { window in
             window.identifier = NSUserInterfaceItemIdentifier("main")
             appDelegate.mainWindow = window
-            window.collectionBehavior.insert(.moveToActiveSpace)
             // Make window transparent during onboarding
             if appState.isOnboardingActive {
                 window.alphaValue = 0.0

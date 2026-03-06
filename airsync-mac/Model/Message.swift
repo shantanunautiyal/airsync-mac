@@ -32,6 +32,7 @@ enum MessageType: String, Codable {
     case fileTransferComplete
     case fileChunkAck
     case transferVerified
+    case fileTransferCancel
     // wake up / quick connect
     case wakeUpRequest
     case wallpaperResponse
@@ -78,6 +79,14 @@ enum MessageType: String, Codable {
     case audioFrame
     case callMicAudio
     case callAudioControl
+    // remote control (Mac)
+    case remoteControl
+    case volumeControl // outgoing from Mac (legacy/other direction)
+    case macVolume     // outgoing from Mac
+    case toggleAppNotif // outgoing from Mac
+    // file browser
+    case browseLs
+    case browseData
 }
 
 struct Message: Codable {

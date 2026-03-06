@@ -159,6 +159,8 @@ struct ADBConnector {
         
         runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
             let trimmedMDNSOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"], completion: { output in
+            let lines = output.components(separatedBy: .newlines)
             var ports: [UInt16] = []
             
             let lines = trimmedMDNSOutput.components(separatedBy: .newlines)
@@ -188,33 +190,33 @@ struct ADBConnector {
             }
             
             completion(ports)
-        }
+        })
     }
 
     private static func proceedWithConnection(adbPath: String, ip: String, portsToTry: [UInt16]) {
         // Kill adb server first
         logBinaryDetection("Killing adb server: \(adbPath) kill-server")
-        runADBCommand(adbPath: adbPath, arguments: ["kill-server"]) { _ in
+        runADBCommand(adbPath: adbPath, arguments: ["kill-server"], completion: { _ in
             // Give the adb daemon time to fully terminate
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1.0) {
                 // Explicitly start the server and wait for it
                 logBinaryDetection("Starting adb server...")
-                ADBConnector.runADBCommand(adbPath: adbPath, arguments: ["start-server"]) { _ in
+                ADBConnector.runADBCommand(adbPath: adbPath, arguments: ["start-server"], completion: { _ in
                     // Give server time to fully initialize
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1.5) {
                         // Try each port until one succeeds
                         attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: 0, reportedIP: ip)
                     }
-                }
+                })
             }
-        }
+        })
     }
 
     // Attempt connection using custom port directly without mDNS discovery
     private static func attemptDirectConnection(adbPath: String, fullAddress: String) {
         logBinaryDetection("Attempting direct connection to custom port: \(adbPath) connect \(fullAddress)")
 
-        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
+        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress], completion: { output in
             let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
             DispatchQueue.main.async {
@@ -281,7 +283,7 @@ Please see the ADB console for more details.
                     }
                 }
             }
-        }
+        })
     }
 
     // Recursive function to try each port until one succeeds
@@ -353,7 +355,7 @@ Please see the ADB console for more details.
 
         logBinaryDetection("Attempting connection to port \(currentPort) (attempt \(portNumber)/\(totalPorts)): \(adbPath) connect \(fullAddress)")
 
-        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress]) { output in
+        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress], completion: { output in
             let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
             DispatchQueue.main.async {
@@ -397,7 +399,7 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
                     }
                 }
             }
-        }
+        })
     }
 
     static func disconnectADB() {
@@ -414,7 +416,12 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
         AppState.shared.adbConnecting = false
     }
 
-    private static func runADBCommand(adbPath: String, arguments: [String], completion: ((String) -> Void)? = nil) {
+    private static func runADBCommand(
+        adbPath: String,
+        arguments: [String],
+        onOutput: ((String) -> Void)? = nil,
+        completion: ((String) -> Void)? = nil
+    ) {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: adbPath)
         task.arguments = arguments
@@ -423,10 +430,28 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
         task.standardOutput = pipe
         task.standardError = pipe
 
+        var fullOutput = ""
+        
+        pipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if data.isEmpty {
+                handle.readabilityHandler = nil
+                return
+            }
+            if let str = String(data: data, encoding: .utf8) {
+                fullOutput += str
+                onOutput?(str)
+                
+                if !arguments.contains("mdns") && !arguments.contains("kill-server") {
+                    DispatchQueue.main.async {
+                        AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + str
+                    }
+                }
+            }
+        }
+
         task.terminationHandler = { _ in
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? "No output"
-            completion?(output)
+            completion?(fullOutput)
         }
 
         do {
@@ -590,6 +615,98 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
     
     // MARK: - Alert Helper
     private static func presentScrcpyAlert(title: String, informative: String) {
+    static func pull(remotePath: String, completion: ((Bool) -> Void)? = nil) {
+        guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
+            completion?(false)
+            return
+        }
+
+        DispatchQueue.main.async {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.canCreateDirectories = true
+            panel.message = "Select destination for download"
+            panel.prompt = "Download"
+
+            panel.begin { response in
+                if response == .OK, let destinationURL = panel.url {
+                    let adbIP = AppState.shared.adbConnectedIP
+                    let adbPort = AppState.shared.adbPort
+                    let fullAddress = "\(adbIP):\(adbPort)"
+
+                    DispatchQueue.main.async {
+                        AppState.shared.isADBTransferring = true
+                        AppState.shared.adbTransferringFilePath = remotePath
+                    }
+
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let args = ["-s", fullAddress, "pull", remotePath, destinationURL.path]
+                        logBinaryDetection("Pulling: \(adbPath) \(args.joined(separator: " "))")
+                        
+                        runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
+                            logBinaryDetection("ADB Pull Output: \(output)")
+                            let success = !output.lowercased().contains("error") && !output.lowercased().contains("failed")
+                            
+                            DispatchQueue.main.async {
+                                AppState.shared.isADBTransferring = false
+                                AppState.shared.adbTransferringFilePath = nil
+                                
+                                if success {
+                                    // Open the destination folder in Finder
+                                    NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: destinationURL.path)
+                                }
+                                completion?(success)
+                            }
+                        })
+                    }
+                } else {
+                    completion?(false)
+                }
+            }
+        }
+    }
+
+    static func push(localPath: String, remotePath: String, completion: ((Bool) -> Void)? = nil) {
+        guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
+            completion?(false)
+            return
+        }
+
+        let adbIP = AppState.shared.adbConnectedIP
+        let adbPort = AppState.shared.adbPort
+        let fullAddress = "\(adbIP):\(adbPort)"
+
+        DispatchQueue.main.async {
+            AppState.shared.isADBTransferring = true
+            
+            let fileName = URL(fileURLWithPath: localPath).lastPathComponent
+            let targetRemotePath = remotePath.hasSuffix("/") ? remotePath + fileName : remotePath + "/" + fileName
+            AppState.shared.adbTransferringFilePath = targetRemotePath
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let args = ["-s", fullAddress, "push", localPath, remotePath]
+            logBinaryDetection("Pushing: \(adbPath) \(args.joined(separator: " "))")
+            
+            runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
+                logBinaryDetection("ADB Push Output: \(output)")
+                let success = !output.lowercased().contains("error") && !output.lowercased().contains("failed")
+                
+                DispatchQueue.main.async {
+                    AppState.shared.isADBTransferring = false
+                    AppState.shared.adbTransferringFilePath = nil
+                    completion?(success)
+                }
+            })
+        }
+    }
+}
+
+// MARK: - Alert Helper
+private extension ADBConnector {
+    static func presentScrcpyAlert(title: String, informative: String) {
         // Present immediately on main thread (caller ensures main queue)
         let alert = NSAlert()
         alert.alertStyle = .warning

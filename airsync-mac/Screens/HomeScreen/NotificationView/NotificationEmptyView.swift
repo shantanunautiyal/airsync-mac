@@ -19,6 +19,10 @@ struct NotificationEmptyView: View {
 //                .loopMode(.loop)
 //                .frame(width: 100, height: 100)
 //                .modifier(InvertIfLightMode(colorScheme: colorScheme))
+            LottieView("empty-notification-v1-clear")
+                .loopMode(.playOnce)
+                .frame(width: 100, height: 100)
+                .modifier(InvertIfLightMode(colorScheme: colorScheme))
 
             Text(L("notifications.empty.emoji"))
                 .font(.title)

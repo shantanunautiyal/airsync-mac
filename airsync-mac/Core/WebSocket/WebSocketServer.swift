@@ -6,13 +6,7 @@
 //
 
 import Foundation
-import UniformTypeIdentifiers
-#if canImport(MobileCoreServices)
-import MobileCoreServices
-#endif
-import UserNotifications
 import Swifter
-internal import Combine
 import CryptoKit
 import AppKit
 import CoreGraphics
@@ -75,11 +69,23 @@ class WebSocketServer: ObservableObject {
         sessionBoxes = sessionBoxes.filter { $0.session != nil }
         return sessionBoxes.compactMap { $0.session }
     }
-    @Published var symmetricKey: SymmetricKey?
+import UserNotifications
+internal import Combine
 
+class WebSocketServer: ObservableObject {
+    static let shared = WebSocketServer()
+    
+    internal var server = HttpServer()
+    internal var activeSessions: [WebSocketSession] = []
+    internal var primarySessionID: ObjectIdentifier?
+    internal var pingTimer: Timer?
+    internal let pingInterval: TimeInterval = 5.0
+    internal var lastActivity: [ObjectIdentifier: Date] = [:]
+    internal let activityTimeout: TimeInterval = 11.0
+    
+    @Published var symmetricKey: SymmetricKey?
     @Published var localPort: UInt16?
     @Published var localIPAddress: String?
-
     @Published var connectedDevice: Device?
     @Published var notifications: [Notification] = []
     @Published var deviceStatus: DeviceStatus?
@@ -106,10 +112,24 @@ class WebSocketServer: ObservableObject {
 
     private let maxChunkRetries = 10  // Increased from 3 for better reliability
     private let ackWaitMs: UInt16 = 3000 // 3s (increased from 2s)
+    internal var lastKnownIP: String?
+    internal var networkMonitorTimer: Timer?
+    internal let networkCheckInterval: TimeInterval = 10.0
+    internal let lock = NSRecursiveLock()
+    internal let fileQueue = DispatchQueue(label: "com.airsync.fileio")
+    
+    internal var servers: [String: HttpServer] = [:]
+    internal var isListeningOnAll = false
 
-    private var lastKnownAdapters: [(name: String, address: String)] = []
-    // Track last adapter selection we logged to avoid repetitive logs
-    private var lastLoggedSelectedAdapter: (name: String, address: String)? = nil
+    internal var incomingFiles: [String: IncomingFileIO] = [:]
+    internal var incomingFilesChecksum: [String: String] = [:]
+    internal var outgoingAcks: [String: Set<Int>] = [:]
+
+    internal let maxChunkRetries = 3
+    internal let ackWaitMs: UInt16 = 2000
+
+    internal var lastKnownAdapters: [(name: String, address: String)] = []
+    internal var lastLoggedSelectedAdapter: (name: String, address: String)? = nil
 
     private var unifiedDecoder = UnifiedFrameDecoder.shared
 
@@ -120,8 +140,7 @@ class WebSocketServer: ObservableObject {
 
     init() {
         loadOrGenerateSymmetricKey()
-        setupWebSocket()
-        // Request notification permission so we can show incoming file alerts
+        setupWebSocket(for: server)
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let err = error {
                 print("[websocket] Notification auth error: \(err)")
@@ -159,6 +178,8 @@ class WebSocketServer: ObservableObject {
         }
     }
 
+    /// Starts the WebSocket server on the specified port.
+    /// Handles binding to a specific network adapter or all available interfaces if "auto" is selected.
     func start(port: UInt16 = Defaults.serverPort) {
         // Prevent concurrent starts
         if case .starting = AppState.shared.webSocketStatus {
@@ -174,14 +195,16 @@ class WebSocketServer: ObservableObject {
             AppState.shared.webSocketStatus = .starting
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        let adapterName = AppState.shared.selectedNetworkAdapterName
+        let adapters = getAvailableNetworkAdapters()
+        
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
             do {
                 guard port > 0 && port <= 65_535 else {
-                    let msg = "[websocket] Invalid port \(port). Must be in 1...65535."
-                    DispatchQueue.main.async {
-                        AppState.shared.webSocketStatus = .failed(error: msg)
-                    }
-                    print(msg)
+                    let msg = "[websocket] Invalid port \(port)."
+                    DispatchQueue.main.async { AppState.shared.webSocketStatus = .failed(error: msg) }
                     return
                 }
 
@@ -194,25 +217,71 @@ class WebSocketServer: ObservableObject {
                     AppState.shared.webSocketStatus = .started(port: port, ip: ip)
 
                     self.lastKnownIP = ip
+                self.lock.lock()
+                self.stopAllServers()
+                
+                if let specificAdapter = adapterName {
+                    self.isListeningOnAll = false
+                    let server = HttpServer()
+                    self.setupWebSocket(for: server)
+                    try server.start(in_port_t(port))
+                    self.servers[specificAdapter] = server
+                    
+                    let ip = self.getLocalIPAddress(adapterName: specificAdapter)
+                    DispatchQueue.main.async {
+                        self.localPort = port
+                        self.localIPAddress = ip
+                        AppState.shared.webSocketStatus = .started(port: port, ip: ip)
+                        self.lastKnownIP = ip
+                    }
+                    print("[websocket] WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket on \(specificAdapter)")
+                } else {
+                    self.isListeningOnAll = true
+                    var startedAny = false
+                    for adapter in adapters {
+                        do {
+                            let server = HttpServer()
+                            self.setupWebSocket(for: server)
+                            if !startedAny {
+                                try server.start(in_port_t(port))
+                                self.servers["any"] = server
+                                startedAny = true
+                            }
+                        } catch {
+                            print("[websocket] Failed to start on \(adapter.name): \(error)")
+                        }
+                    }
+                    
+                    if startedAny {
+                        let ipList = self.getLocalIPAddress(adapterName: nil)
+                        DispatchQueue.main.async {
+                            self.localPort = port
+                            self.localIPAddress = "Multiple"
+                            AppState.shared.webSocketStatus = .started(port: port, ip: "Multiple")
+                            self.lastKnownIP = ipList
+                        }
+                        print("[websocket] WebSocket server started on all available adapters at port \(port)")
+                    }
                 }
-                print("[websocket] WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
+                self.lock.unlock()
 
                 // Ensure decoder callback is set up when server starts
                 self.setupSimpleDecoderCallback()
                 
                 self.startNetworkMonitoring()
             } catch {
-                DispatchQueue.main.async {
-                    AppState.shared.webSocketStatus = .failed(error: "\(error)")
-                }
-                print("[websocket] Failed to start WebSocket server: \(error)")
+                self.lock.unlock()
+                DispatchQueue.main.async { AppState.shared.webSocketStatus = .failed(error: "\(error)") }
             }
         }
     }
 
-
-
-
+    internal func stopAllServers() {
+        for (_, server) in servers {
+            server.stop()
+        }
+        servers.removeAll()
+    }
 
     func stop() {
         // Clear sessions first to avoid accessing deallocated objects
@@ -332,10 +401,58 @@ class WebSocketServer: ObservableObject {
                             let snippet = String(decryptedText.prefix(200))
                             print("[websocket] WebSocket JSON decode failed: \(error) | snippet=\(snippet)")
                         }
+        lock.lock()
+        stopAllServers()
+        activeSessions.removeAll()
+        primarySessionID = nil
+        stopPing()
+        lock.unlock()
+        DispatchQueue.main.async { AppState.shared.webSocketStatus = .stopped }
+        stopNetworkMonitoring()
+    }
+
+    /// Configures WebSocket routes and event callbacks.
+    /// Handles message decryption before passing payload to the message router.
+    private func setupWebSocket(for server: HttpServer) {
+        server["/socket"] = websocket(
+            text: { [weak self] session, text in
+                guard let self = self else { return }
+                let decryptedText: String
+                if let key = self.symmetricKey {
+                    decryptedText = decryptMessage(text, using: key) ?? ""
+                } else {
+                    decryptedText = text
+                }
+
+                if decryptedText.contains("\"type\":\"pong\"") {
+                    self.lock.lock()
+                    self.lastActivity[ObjectIdentifier(session)] = Date()
+                    self.lock.unlock()
+                    return
+                }
+
+                if let data = decryptedText.data(using: .utf8) {
+                    do {
+                        let message = try JSONDecoder().decode(Message.self, from: data)
+                        self.lock.lock()
+                        self.lastActivity[ObjectIdentifier(session)] = Date()
+                        self.lock.unlock()
+                        
+                        if message.type == .fileChunk || message.type == .fileChunkAck || message.type == .fileTransferComplete || message.type == .fileTransferInit {
+                             self.handleMessage(message, session: session)
+                        } else {
+                            DispatchQueue.main.async { self.handleMessage(message, session: session) }
+                        }
+                    } catch {
+                        print("[websocket] JSON decode failed: \(error)")
                     }
                 }
             },
-
+            binary: { [weak self] session, _ in
+                self?.lock.lock()
+                self?.lastActivity[ObjectIdentifier(session)] = Date()
+                self?.lock.unlock()
+            },
             connected: { [weak self] session in
                 guard let self = self else { return }
                 print("[websocket] ✅ Device connected successfully!")
@@ -366,6 +483,17 @@ class WebSocketServer: ObservableObject {
                 // Send message on a background queue to avoid blocking
                 DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                     self?.sendToFirstAvailable(message: welcomeMessage)
+                self.lock.lock()
+                let sessionId = ObjectIdentifier(session)
+                self.lastActivity[sessionId] = Date()
+                self.activeSessions.append(session)
+                let sessionCount = self.activeSessions.count
+                self.lock.unlock()
+                print("[websocket] Session \(sessionId) connected.")
+                
+                if sessionCount == 1 {
+                    MacRemoteManager.shared.startVolumeMonitoring()
+                    self.startPing()
                 }
             },
             disconnected: { [weak self] session in
@@ -387,6 +515,25 @@ class WebSocketServer: ObservableObject {
                         // Close mirror window if open
                         self.mirrorWindow?.close()
                         self.mirrorWindow = nil
+                self.lock.lock()
+                self.activeSessions.removeAll(where: { $0 === session })
+                let sessionCount = self.activeSessions.count
+                let wasPrimary = (ObjectIdentifier(session) == self.primarySessionID)
+                if wasPrimary { self.primarySessionID = nil }
+                self.lock.unlock()
+                
+                if sessionCount == 0 {
+                    MacRemoteManager.shared.stopVolumeMonitoring()
+                    self.stopPing()
+                }
+                
+                if wasPrimary {
+                    DispatchQueue.main.async {
+                        AppState.shared.disconnectDevice()
+                        ADBConnector.disconnectADB()
+                        AppState.shared.adbConnected = false
+                        self.stop()
+                        self.start(port: self.localPort ?? Defaults.serverPort)
                     }
                 }
                 print("[websocket] Active sessions: \(self.activeSessions.count)")
@@ -3217,22 +3364,18 @@ class WebSocketServer: ObservableObject {
         sendToFirstAvailable(message: message)
     }
 
+    // MARK: - Crypto Helpers
+    
     func loadOrGenerateSymmetricKey() {
         let defaults = UserDefaults.standard
-
         if let savedKey = defaults.string(forKey: "encryptionKey"),
            let keyData = Data(base64Encoded: savedKey) {
             symmetricKey = SymmetricKey(data: keyData)
-            print("[websocket] (auth) Loaded existing symmetric key")
         } else {
             let base64Key = generateSymmetricKey()
             defaults.set(base64Key, forKey: "encryptionKey")
-
             if let keyData = Data(base64Encoded: base64Key) {
                 symmetricKey = SymmetricKey(data: keyData)
-                print("[websocket] (auth) Generated and stored new symmetric key")
-            } else {
-                print("[websocket] (auth) Failed to generate symmetric key")
             }
         }
     }
@@ -3247,92 +3390,12 @@ class WebSocketServer: ObservableObject {
         return key.withUnsafeBytes { Data($0).base64EncodedString() }
     }
 
-
     func setEncryptionKey(base64Key: String) {
         if let data = Data(base64Encoded: base64Key) {
             symmetricKey = SymmetricKey(data: data)
-            print("[websocket] (auth) Encryption key set")
-        }
-    }
-
-    // Helper: determine mime type for a file URL
-    func mimeType(for url: URL) -> String? {
-        let ext = url.pathExtension
-        if ext.isEmpty { return nil }
-
-        if #available(macOS 11.0, *) {
-            if let ut = UTType(filenameExtension: ext) {
-                return ut.preferredMIMEType
-            }
-        } else {
-#if canImport(MobileCoreServices)
-            // Fallback to MobileCoreServices APIs
-            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, ext as CFString, nil)?.takeRetainedValue() {
-                if let mime = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() as String? {
-                    return mime
-                }
-            }
-#else
-            // No fallback available on this SDK
-#endif
-        }
-        return nil
-    }
-    func startNetworkMonitoring() {
-        networkMonitorTimer = Timer.scheduledTimer(withTimeInterval: networkCheckInterval, repeats: true) { [weak self] _ in
-            self?.checkNetworkChange()
-        }
-        networkMonitorTimer?.tolerance = 1.0
-        networkMonitorTimer?.fire()
-    }
-
-    func stopNetworkMonitoring() {
-        networkMonitorTimer?.invalidate()
-        networkMonitorTimer = nil
-        lastKnownAdapters = []
-    }
-
-    private func checkNetworkChange() {
-        let adapters = getAvailableNetworkAdapters()
-        let chosenIP = getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
-
-        // Compare by addresses to detect any change
-        let adapterAddresses = adapters.map { $0.address }
-        let lastAddresses = lastKnownAdapters.map { $0.address }
-
-        if adapterAddresses != lastAddresses {
-            lastKnownAdapters = adapters
-
-            // Revalidate the current network adapter selection
-            AppState.shared.revalidateNetworkAdapter()
-
-            for adapter in adapters {
-                let activeMark = (adapter.address == chosenIP) ? " [ACTIVE]" : ""
-                print("[websocket] (network) \(adapter.name) -> \(adapter.address)\(activeMark)")
-            }
-
-            // Restart if the IP changed
-            if let lastIP = lastKnownIP, lastIP != chosenIP {
-                print("[websocket] (network) IP changed from \(lastIP) to \(chosenIP ?? "N/A"), restarting WebSocket in 5 seconds")
-                lastKnownIP = chosenIP
-                AppState.shared.shouldRefreshQR = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                    self.stop()
-                    self.start(port: Defaults.serverPort)
-                }
-            } else if lastKnownIP == nil {
-                // First run
-                lastKnownIP = chosenIP
-            }
-        } else {
-            // [quiet] No change is the common case; keep log line for debugging
-            // print("[websocket] (network) No change detected")
         }
     }
     
-    // MARK: - Quick Connect Delegate
-    
-    /// Delegates wake-up functionality to QuickConnectManager
     func wakeUpLastConnectedDevice() {
         QuickConnectManager.shared.wakeUpLastConnectedDevice()
     }
