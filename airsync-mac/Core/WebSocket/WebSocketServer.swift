@@ -576,8 +576,9 @@ class WebSocketServer: ObservableObject {
                         }
                     }
                 }
-                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package, actions: actions)
-                print("[websocket] notification: id=\(nid) title=\(title) app=\(app)")
+                let priority = dict["priority"] as? String
+                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package, priority: priority, actions: actions)
+                print("[websocket] notification: id=\(nid) title=\(title) app=\(app) priority=\(priority ?? "nil")")
                 DispatchQueue.main.async {
                     AppState.shared.addNotification(notif)
                 }
@@ -1751,7 +1752,7 @@ class WebSocketServer: ObservableObject {
         case .callAudioControl:
             print("[websocket] Received callAudioControl from Android (ignored on Mac)")
             
-        @unknown default:
+        default:
             print("[websocket] Warning: unhandled message type: \(message.type)")
             return
         }
@@ -1815,8 +1816,9 @@ class WebSocketServer: ObservableObject {
                         }
                     }
                 }
-                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package, actions: actions)
-                print("[websocket] notification: id=\(nid) title=\(title) app=\(app)")
+                let priority = message.data["priority"] as? String
+                let notif = Notification(title: title, body: body, app: app, nid: nid, package: package, priority: priority, actions: actions)
+                print("[websocket] notification: id=\(nid) title=\(title) app=\(app) priority=\(priority ?? "nil")")
                 DispatchQueue.main.async {
                     AppState.shared.addNotification(notif)
                 }
@@ -2109,6 +2111,7 @@ class WebSocketServer: ObservableObject {
             categoryType: categoryType,
             exactDeviceName: exactDeviceName,
             isPlusSubscription: isPlusSubscription,
+            version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0",
             savedAppPackages: savedAppPackages
         )
 
@@ -3065,7 +3068,7 @@ class WebSocketServer: ObservableObject {
         AppState.shared.startOutgoingTransfer(id: transferId, name: fileName, size: totalSize, mime: mime, chunkSize: chunkSize)
 
         // Send init message
-        let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: totalSize, mime: mime, checksum: checksum)
+        let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: Int64(totalSize), mime: mime, chunkSize: chunkSize, checksum: checksum)
         sendToFirstAvailable(message: initMessage)
 
         // Send chunks using a simple sliding window to allow multiple in-flight chunks
@@ -3212,7 +3215,7 @@ class WebSocketServer: ObservableObject {
         print("[websocket] (file-transfer) Completed sending \(totalSize) bytes in \(elapsed) s")
 
         // Send complete
-        let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: totalSize, checksum: checksum)
+        let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: Int64(totalSize), checksum: checksum)
         sendToFirstAvailable(message: completeMessage)
     }
     
