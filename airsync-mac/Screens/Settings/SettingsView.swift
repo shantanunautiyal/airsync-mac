@@ -143,10 +143,6 @@ struct SettingsView: View {
 
                     Spacer(minLength: 32)
 
-                    // App icons
-                    AppIconView()
-
-
                     VStack {
                         HStack {
                             Label("Remote Control Permission", systemImage: "accessibility")
