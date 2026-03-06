@@ -112,47 +112,6 @@ struct SettingsFeaturesView: View {
                     .transition(.opacity)
                 }
 
-                // Quick actions: Start mirroring from Settings
-                HStack(spacing: 12) {
-                    GlassButtonView(
-                        label: "Start Mirroring",
-                        systemImage: "rectangle.on.rectangle",
-                        primary: true,
-                        action: {
-                            guard let device = appState.device else { return }
-                            ADBConnector.startScrcpy(
-                                ip: device.ipAddress,
-                                port: appState.adbPort,
-                                deviceName: device.name
-                            )
-                        }
-                    )
-                    .disabled(!(appState.isPlus && appState.adbConnected && appState.device != nil))
-                    .help(appState.adbConnected ? "Launch scrcpy mirroring" : "Requires ADB connection")
-
-                    GlassButtonView(
-                        label: "Desktop Mode",
-                        systemImage: "display",
-                        action: {
-                            guard let device = appState.device else { return }
-                            ADBConnector.startScrcpy(
-                                ip: device.ipAddress,
-                                port: appState.adbPort,
-                                deviceName: device.name,
-                                desktop: true
-                            )
-                        }
-                    )
-                    .disabled(!(appState.isPlus && appState.adbConnected && appState.device != nil))
-                    .help("Mirror in desktop mode (Android 15+)")
-
-                    Spacer()
-                }
-
-                Spacer()
-
-                HStack{
-                    Label("App Mirroring", systemImage: "apps.iphone.badge.plus")
                 HStack {
                     Label("Suppress failed messages", systemImage: "bell.slash")
                     Spacer()
@@ -391,48 +350,6 @@ struct SettingsFeaturesView: View {
                     Label("Call Alert", systemImage: "phone")
                     Spacer()
 
-
-        VStack{
-
-            HStack {
-                Label("Disable verification check", systemImage: "checkmark.shield")
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { !appState.licenseCheck },
-                    set: { appState.licenseCheck = !$0 }
-                ))
-                .toggleStyle(.switch)
-                .help("Turn off license verification checks. This will treat the app as Plus without verifying.")
-            }
-
-            SettingsToggleView(name: "Sync clipboard", icon: "clipboard", isOn: $appState.isClipboardSyncEnabled)
-
-            HStack {
-                Label("Auto-open shared links", systemImage: "link")
-                Spacer()
-                Toggle("", isOn: $appState.autoOpenLinks)
-                    .toggleStyle(.switch)
-                    .disabled(!appState.isClipboardSyncEnabled)
-            }
-            .opacity(appState.isClipboardSyncEnabled ? 1.0 : 0.5)
-        }
-        .padding()
-
-        VStack{
-
-            SettingsToggleView(name: "Sync notification dismissals", icon: "bell.badge", isOn: $appState.dismissNotif)
-
-            HStack {
-                Label("System Notifications", systemImage: "bell.badge")
-
-                Spacer()
-
-                if notificationsGranted {
-                    // Show sound picker when notifications are enabled
-                    Picker("", selection: $appState.notificationSound) {
-                        Text("Default").tag("default")
-                        ForEach(SystemSounds.availableSounds, id: \.self) { sound in
-                            Text(sound).tag(sound)
                     Picker("", selection: $appState.callNotificationMode) {
                         ForEach(CallNotificationMode.allCases, id: \.self) { mode in
                             Text(mode.displayName).tag(mode)
@@ -466,4 +383,3 @@ struct SettingsFeaturesView: View {
         }
     }
 }
-

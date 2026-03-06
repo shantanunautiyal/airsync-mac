@@ -157,13 +157,9 @@ struct ADBConnector {
     private static func discoverADBPorts(adbPath: String, ip: String, completion: @escaping ([UInt16]) -> Void) {
         logBinaryDetection("Running mDNS discovery: \(adbPath) mdns services")
         
-        runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"]) { output in
-            let trimmedMDNSOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
         runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"], completion: { output in
-            let lines = output.components(separatedBy: .newlines)
+            let lines = output.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: .newlines)
             var ports: [UInt16] = []
-            
-            let lines = trimmedMDNSOutput.components(separatedBy: .newlines)
             var tlsPort: UInt16?
             var normalPort: UInt16?
 
@@ -613,8 +609,7 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
         }
     }
     
-    // MARK: - Alert Helper
-    private static func presentScrcpyAlert(title: String, informative: String) {
+    // MARK: - ADB File Transfer
     static func pull(remotePath: String, completion: ((Bool) -> Void)? = nil) {
         guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
             completion?(false)

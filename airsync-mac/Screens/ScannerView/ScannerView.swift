@@ -135,10 +135,6 @@ struct ScannerView: View {
                 } else {
                      Spacer()
                 }
-                .padding(.top, 12)
-            }
-
-            Spacer(minLength: 100)
 
                 Spacer()
 

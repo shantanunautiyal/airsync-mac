@@ -50,13 +50,6 @@ struct ScreenView: View {
                         modifiers: .command
                     )
 
-                    // Mirror button - uses scrcpy when ADB connected, WebSocket mirror otherwise
-                    GlassButtonView(
-                        label: "Mirror",
-                        systemImage: "apps.iphone",
-                        action: {
-                            if appState.adbConnected {
-                                // Use scrcpy when ADB is connected
                     GlassButtonView(
                         label: "Browse",
                         systemImage: "folder",
@@ -90,19 +83,14 @@ struct ScreenView: View {
                                         port: appState.adbPort,
                                         deviceName: appState.device?.name ?? "My Phone"
                                     )
-                            } else {
-                                // Use WebSocket mirror when ADB is not connected
-                                WebSocketServer.shared.startMirrorAndPresentUI()
                             }
-                        }
-                    )
-                    .transition(.identity)
-                    .keyboardShortcut(
-                        "p",
-                        modifiers: .command
-                    )
-                    .contextMenu {
-                        if appState.adbConnected {
+                        )
+                        .transition(.identity)
+                        .keyboardShortcut(
+                            "p",
+                            modifiers: .command
+                        )
+                        .contextMenu {
                             Button("Desktop Mode") {
                                 ADBConnector.startScrcpy(
                                     ip: appState.device?.ipAddress ?? "",
@@ -112,6 +100,10 @@ struct ScreenView: View {
                                 )
                             }
                         }
+                        .keyboardShortcut(
+                            "p",
+                            modifiers: [.command, .shift]
+                        )
                     }
                 }
             }
