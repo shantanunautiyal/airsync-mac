@@ -54,6 +54,7 @@
 		B933ED362E3BEC21007393CB /* Exceptions for "airsync-mac" folder in "AirSync" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Configs/SelfCompiled.xcconfig,
 				Core/RemoteViewerClient.swift,
 				Info.plist,
 			);
@@ -160,7 +161,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					B9673B562E35A2A1006D284A = {
 						CreatedOnToolsVersion = 26.0;

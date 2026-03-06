@@ -2166,6 +2166,49 @@ class WebSocketServer: ObservableObject {
         }
     }
     
+    // MARK: - Upstream Message Helpers
+    
+    private func sendMessage(type: String, data: [String: Any]) {
+        let messageDict: [String: Any] = [
+            "type": type,
+            "data": data
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                sendToFirstAvailable(message: jsonString)
+            }
+        } catch {
+            print("[websocket] Error creating \(type) message: \(error)")
+        }
+    }
+    
+    func sendTransferCancel(id: String) {
+        sendMessage(type: "fileTransferCancel", data: ["id": id])
+    }
+    
+    func sendBrowseRequest(path: String, showHidden: Bool = false) {
+        sendMessage(type: "browseLs", data: ["path": path, "showHidden": showHidden])
+    }
+    
+    func sendPullRequest(path: String) {
+        let message = FileTransferProtocol.buildFilePull(path: path)
+        sendToFirstAvailable(message: message)
+    }
+    
+    func sendRefreshAdbPortsRequest() {
+        sendMessage(type: "refreshAdbPorts", data: [:])
+    }
+    
+    func sendMacVolumeUpdate(level: Int) {
+        sendMessage(type: "macVolume", data: ["volume": level])
+    }
+    
+    func sendModifierStatus(data: [String: Any]) {
+        sendMessage(type: "modifierStatus", data: data)
+    }
+
     // New Sending Helpers per instructions
     
     func sendRemoteConnectRequest(features: [String]) {

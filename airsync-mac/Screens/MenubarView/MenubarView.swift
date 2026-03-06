@@ -84,7 +84,7 @@ struct MenubarView: View {
                                 let pasteboard = NSPasteboard.general
                                 if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], let firstUrl = urls.first {
                                     DispatchQueue.global(qos: .userInitiated).async {
-                                        WebSocketServer.shared.sendFile(url: firstUrl, isClipboard: true)
+                                        WebSocketServer.shared.sendFile(url: firstUrl)
                                     }
                                 } else if let image = NSImage(pasteboard: pasteboard) {
                                     // Handle copied image data
@@ -96,7 +96,7 @@ struct MenubarView: View {
                                         do {
                                             try pngData.write(to: tempUrl)
                                             DispatchQueue.global(qos: .userInitiated).async {
-                                                WebSocketServer.shared.sendFile(url: tempUrl, isClipboard: true)
+                                                WebSocketServer.shared.sendFile(url: tempUrl)
                                             }
                                         } catch {
                                             print("[MenubarView] Failed to save clipboard image: \(error)")

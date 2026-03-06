@@ -149,26 +149,6 @@ class AppState: ObservableObject {
         self.mirrorBitrate = UserDefaults.standard.integer(forKey: "mirrorBitrate")
         if self.mirrorBitrate == 0 { self.mirrorBitrate = 8000000 }
 
-    // Initialize persisted UI toggles
-    self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
-
-
-        // Load and validate saved network adapter
-        let savedAdapterName = UserDefaults.standard.string(forKey: "selectedNetworkAdapterName")
-        self.selectedNetworkAdapterName = validateAndGetNetworkAdapter(savedName: savedAdapterName)
-
-        self.myDevice = Device(
-            name: name,
-            ipAddress: WebSocketServer.shared
-                .getLocalIPAddress(
-                    adapterName: selectedNetworkAdapterName
-                ) ?? "N/A",
-            port: port,
-            version:appVersion,
-            adbPorts: []
-        )
-        self.licenseDetails = loadLicenseDetailsFromUserDefaults()
-
         loadAppsFromDisk()
         loadPinnedApps()
         
@@ -205,7 +185,7 @@ class AppState: ObservableObject {
             saveNotificationsToDisk()
         }
     }
-    @Published var notifications: [Notification] = []
+
     @Published var activeMacIp: String? = nil
     @Published var callEvents: [CallEvent] = []
     @Published var activeCall: CallEvent? = nil
@@ -239,10 +219,6 @@ class AppState: ObservableObject {
     @Published var adbConnecting: Bool = false
     @Published var manualAdbConnectionPending: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
-
-    // Call events tracking
-    @Published var callEvents: [CallEvent] = []
-    @Published var activeCall: CallEvent? = nil
 
     // Audio player for ringtone
     private var ringtonePlayer: AVAudioPlayer?
