@@ -146,6 +146,7 @@ class Gumroad {
         AppState.shared.licenseDetails = nil
         UserDefaults.standard.removeObject(forKey: "licenseDetailsKey")
         UserDefaults.standard.consecutiveLicenseFailCount = 0
+        UserDefaults.standard.lastLicenseSuccessfulCheckDate = nil
     }
 
     func incrementInvalidLicenseFailCount() {
@@ -165,14 +166,20 @@ class Gumroad {
         UserDefaults.standard.consecutiveNetworkFailureDays = 0
         UserDefaults.standard.set(nil, forKey: "lastNetworkFailureDay")
 
-        // Inform user with a blocking popup
+        // Inform user without blocking main thread
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
             alert.messageText = "AirSync+ Unregistered"
             alert.informativeText = reason
-            alert.runModal()
+            
+            if let window = NSApp.windows.first(where: { $0.isKeyWindow && $0.isVisible }) ?? NSApp.windows.first(where: { $0.isVisible }) {
+                alert.beginSheetModal(for: window, completionHandler: nil)
+            } else {
+                NSApp.activate(ignoringOtherApps: true)
+                alert.runModal()
+            }
         }
     }
 
@@ -287,7 +294,8 @@ class Gumroad {
 
     func checkLicenseIfNeeded() async {
         // If we already had a successful check today, skip to enforce "max one successful check per day"
-        if let lastSuccess = UserDefaults.standard.lastLicenseSuccessfulCheckDate,
+        if appState.licenseDetails != nil,
+           let lastSuccess = UserDefaults.standard.lastLicenseSuccessfulCheckDate,
            Calendar.current.isDateInToday(lastSuccess) {
             print("[gumroad] License already successfully validated today — skipping network call.")
             appState.isPlus = true

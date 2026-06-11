@@ -22,9 +22,12 @@ struct airsync_macApp: App {
     private let updaterController: SPUStandardUpdaterController
 
     // Initialize NowPlayingViewModel to start sending media info to Android
-    @StateObject private var macInfoSyncManager = MacInfoSyncManager()
+    @StateObject private var macInfoSyncManager = MacInfoSyncManager.shared
 
     init() {
+
+        // Initialize NowPlayingPublisher for MPNowPlayingInfoCenter integration
+        NowPlayingPublisher.shared.start()
 
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
@@ -57,6 +60,7 @@ struct airsync_macApp: App {
         WebSocketServer.shared.start(port: UInt16(chosenPort))
 
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+            guard AppState.shared.device != nil else { return }
             AppState.shared.syncWithSystemNotifications()
         }
 
@@ -68,21 +72,12 @@ struct airsync_macApp: App {
         // Initialize trial manager early so entitlement state is up-to-date on launch.
         _ = TrialManager.shared
         
-        // Start UDP Discovery (Active Burst + Passive Listen)
-        UDPDiscoveryManager.shared.start()
+        // Start Discovery Manager (mDNS + UDP fallback)
+        DiscoveryManager.shared.start()
         
     }
 
     var body: some Scene {
-        MenuBarExtra {
-            MenubarView()
-                .environmentObject(appState)
-        } label: {
-            MenuBarLabelView()
-                .environmentObject(appState)
-        }
-        .menuBarExtraStyle(.window)
-
         Window("AirSync", id: "main") {
             if #available(macOS 15.0, *) {
                 HomeView()
@@ -93,20 +88,57 @@ struct airsync_macApp: App {
                 HomeView()
                     .applyMainWindowSetup(appDelegate: appDelegate, appState: appState)
                     .dropTarget(appState: appState)
+                    .onAppear {
+                        if !appState.isNativeMirroring {
+                            dismissWindow(id: "nativeMirror")
+                        }
+                        if !appState.isNativeDesktopMirroring {
+                            dismissWindow(id: "nativeDesktopMirror")
+                        }
+                        if appState.activeCall == nil || appState.callNotificationMode != .popup {
+                            dismissWindow(id: "callWindow")
+                        }
+                        if !appState.showingQuickShareTransfer {
+                            dismissWindow(id: "quickShareWindow")
+                        }
+                    }
             }
         }
         .onChange(of: appState.activeCall) { oldValue, newValue in
-            if newValue != nil {
+            if newValue != nil && appState.callNotificationMode == .popup {
                 openWindow(id: "callWindow")
             } else {
                 dismissWindow(id: "callWindow")
             }
         }
-        .onChange(of: appState.activeTransferId) { oldValue, newValue in
-            if newValue != nil {
-                openWindow(id: "fileTransferWindow")
+        .onChange(of: appState.callNotificationMode) { oldValue, newValue in
+            if appState.activeCall != nil {
+                if newValue == .popup {
+                    openWindow(id: "callWindow")
+                } else {
+                    dismissWindow(id: "callWindow")
+                }
+            }
+        }
+        .onChange(of: appState.showingQuickShareTransfer) { oldValue, newValue in
+            if newValue {
+                openWindow(id: "quickShareWindow")
             } else {
-                dismissWindow(id: "fileTransferWindow")
+                dismissWindow(id: "quickShareWindow")
+            }
+        }
+        .onChange(of: appState.isNativeMirroring) { oldValue, newValue in
+            if newValue {
+                openWindow(id: "nativeMirror")
+            } else {
+                dismissWindow(id: "nativeMirror")
+            }
+        }
+        .onChange(of: appState.isNativeDesktopMirroring) { oldValue, newValue in
+            if newValue {
+                openWindow(id: "nativeDesktopMirror")
+            } else {
+                dismissWindow(id: "nativeDesktopMirror")
             }
         }
         .commands {
@@ -114,6 +146,12 @@ struct airsync_macApp: App {
                 CheckForUpdatesView(updater: updaterController.updater)
             }
             CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    AppState.shared.selectedTab = .settings
+                }
+                .keyboardShortcut(",")
+            }
             CommandGroup(replacing: .help) {
                 Button(action: {
                     if let url = URL(string: "https://airsync.notion.site") {
@@ -123,20 +161,107 @@ struct airsync_macApp: App {
                     Text("Help")
                 })
                 .keyboardShortcut("/")
+
+                Button("Simulate crash") {
+                    fatalError("Sentry Test Crash")
+                }
             }
             // Mirror menu: launch full device mirror or specific apps via scrcpy
             CommandMenu("Mirror") {
-                // Primary full-device mirror option
-                Button("Android Mirror") {
-                    if let device = appState.device, appState.adbConnected {
-                        ADBConnector.startScrcpy(
-                            ip: device.ipAddress,
-                            port: UInt16(appState.adbPort),
-                            deviceName: device.name,
-                            package: nil
-                        )
+                // 1. Default Mirror Option
+                if appState.useNativeMirroringByDefault {
+                    Button("Android Mirror") {
+                        appState.isNativeMirroring = true
                     }
+                    .keyboardShortcut("p", modifiers: [.command])
+                    .disabled(!(appState.device != nil && appState.adbConnected))
+                } else {
+                    Button("scrcpy Mirror") {
+                        if let device = appState.device {
+                            ADBConnector.startScrcpy(
+                                ip: device.ipAddress,
+                                port: UInt16(appState.adbPort),
+                                deviceName: device.name
+                            )
+                        }
+                    }
+                    .keyboardShortcut("p", modifiers: [.command])
+                    .disabled(!(appState.device != nil && appState.adbConnected))
                 }
+
+                // 2. Alternative Mirror Option
+                if appState.useNativeMirroringByDefault {
+                    Button("scrcpy Mirror") {
+                        if let device = appState.device {
+                            ADBConnector.startScrcpy(
+                                ip: device.ipAddress,
+                                port: UInt16(appState.adbPort),
+                                deviceName: device.name
+                            )
+                        }
+                    }
+                    .keyboardShortcut("p", modifiers: [.command, .shift])
+                    .disabled(!(appState.device != nil && appState.adbConnected))
+                } else {
+                    Button("Android Mirror") {
+                        appState.isNativeMirroring = true
+                    }
+                    .keyboardShortcut("p", modifiers: [.command, .shift])
+                    .disabled(!(appState.device != nil && appState.adbConnected))
+                }
+
+                Divider()
+
+                // 3. Desktop Mirroring Options (Plus only)
+                if appState.useNativeDesktopMirroringByDefault {
+                    Button("Native Desktop") {
+                        if appState.isPlus && appState.licenseCheck {
+                            appState.isNativeDesktopMirroring = true
+                        }
+                    }
+                    .keyboardShortcut("d", modifiers: [.command])
+                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+
+                    Button("scrcpy Desktop") {
+                        if appState.isPlus && appState.licenseCheck, let device = appState.device {
+                            ADBConnector.startScrcpy(
+                                ip: device.ipAddress,
+                                port: UInt16(appState.adbPort),
+                                deviceName: device.name,
+                                desktop: true
+                            )
+                        }
+                    }
+                    .keyboardShortcut("d", modifiers: [.command, .shift])
+                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                } else {
+                    Button("scrcpy Desktop") {
+                        if appState.isPlus && appState.licenseCheck, let device = appState.device {
+                            ADBConnector.startScrcpy(
+                                ip: device.ipAddress,
+                                port: UInt16(appState.adbPort),
+                                deviceName: device.name,
+                                desktop: true
+                            )
+                        }
+                    }
+                    .keyboardShortcut("d", modifiers: [.command])
+                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+
+                    Button("Native Desktop") {
+                        if appState.isPlus && appState.licenseCheck {
+                            appState.isNativeDesktopMirroring = true
+                        }
+                    }
+                    .keyboardShortcut("d", modifiers: [.command, .shift])
+                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                }
+
+                // 4. Sidebar Mirroring
+                Button(appState.isSidebarMirroring ? "Stop Mirroring Here" : "Mirror Here") {
+                    appState.isSidebarMirroring.toggle()
+                }
+                .keyboardShortcut("s", modifiers: [.command, .shift])
                 .disabled(!(appState.device != nil && appState.adbConnected))
 
                 // Only show app list if ADB is connected
@@ -161,37 +286,85 @@ struct airsync_macApp: App {
 
         // Secondary Tool Window for Calls
         Window("Call", id: "callWindow") {
-            if let activeCall = appState.activeCall {
-                if #available(macOS 15.0, *) {
-                    CallWindowView(callEvent: activeCall)
-                        .environmentObject(appState)
-                        .containerBackground(.ultraThinMaterial, for: .window)
-                } else {
-                    CallWindowView(callEvent: activeCall)
-                        .environmentObject(appState)
+            Group {
+                if let activeCall = appState.activeCall {
+                    if #available(macOS 15.0, *) {
+                        CallWindowView(callEvent: activeCall)
+                            .environmentObject(appState)
+                            .containerBackground(.ultraThinMaterial, for: .window)
+                    } else {
+                        CallWindowView(callEvent: activeCall)
+                            .environmentObject(appState)
+                    }
                 }
             }
+            .background(WindowAccessor(callback: { window in
+                window.isRestorable = false
+            }))
         }
         .defaultPosition(.topTrailing)
         .defaultSize(width: 320, height: 480)
         .windowStyle(.hiddenTitleBar)
 
-        // File Transfer Utility Window
-        Window("File Transfer", id: "fileTransferWindow") {
-            if #available(macOS 15.0, *) {
-                FileTransferWindowView()
-                    .environmentObject(appState)
-                    .frame(minWidth: 320, maxWidth: 320, minHeight: 300, maxHeight: 300)
-                    .containerBackground(.ultraThinMaterial, for: .window)
-            } else {
-                FileTransferWindowView()
-                    .environmentObject(appState)
-                    .frame(minWidth: 320, maxWidth: 320, minHeight: 300, maxHeight: 300)
-            }
+        // Standalone Tool Window for Quick Share
+        Window("Quick Share", id: "quickShareWindow") {
+            QuickShareTransferSheet()
+                .fixedSize()
+                .background(WindowAccessor(callback: { window in
+                    window.level = .floating
+                    window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+                    window.titleVisibility = .visible
+                    window.title = Localizer.shared.text("quickshare.title")
+                    window.titlebarAppearsTransparent = true
+                    window.isMovableByWindowBackground = true
+                    window.isRestorable = false
+                    window.styleMask.remove(.resizable)
+                    window.standardWindowButton(.closeButton)?.isHidden = false
+                    window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+                    window.standardWindowButton(.zoomButton)?.isHidden = true
+                    window.backgroundColor = .clear
+                    window.isOpaque = false
+                    
+                    NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
+                        AppState.shared.showingQuickShareTransfer = false
+                        QuickShareManager.shared.stopDiscovery()
+                    }
+                }))
         }
+        .defaultPosition(.topTrailing)
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
+
+        Window("Mirror", id: "nativeMirror") {
+            if #available(macOS 15.0, *) {
+                ScrcpyMirrorView()
+                    .environmentObject(appState)
+                    .containerBackground(.ultraThinMaterial, for: .window)
+            } else {
+                ScrcpyMirrorView()
+                    .environmentObject(appState)
+            }
+        }
+        .windowResizability(.contentSize)
+        .defaultSize(width: 320, height: 680)
+        .windowStyle(.hiddenTitleBar)
         .defaultPosition(.center)
+
+        Window("Desktop Mirror", id: "nativeDesktopMirror") {
+            if #available(macOS 15.0, *) {
+                NativeDesktopMirrorView()
+                    .environmentObject(appState)
+                    .containerBackground(.ultraThinMaterial, for: .window)
+            } else {
+                NativeDesktopMirrorView()
+                    .environmentObject(appState)
+            }
+        }
+        .windowResizability(.contentSize)
+        .defaultSize(width: 900, height: 560)
+        .windowStyle(.hiddenTitleBar)
+        .defaultPosition(.center)
+
     }
 }
 

@@ -14,6 +14,7 @@ struct SettingsPlusView: View {
     @State private var licenseKey: String = ""
     @State private var isCheckingLicense = false
     @State private var licenseValid: Bool? = nil
+    @State private var isCheckingValidity = false
 
     @State private var isExpanded: Bool = false
     @State private var isLicenseVisible = false
@@ -210,6 +211,31 @@ struct SettingsPlusView: View {
                                 isLicenseVisible.toggle()
                             }
                         }
+                    }
+
+                    Divider()
+
+                    HStack {
+                        Spacer()
+                        
+                        if isCheckingValidity {
+                            ProgressView()
+                                .controlSize(.small)
+                                .scaleEffect(0.8)
+                        }
+
+                        GlassButtonView(
+                            label: isCheckingValidity ? "Checking..." : "Check Validity",
+                            systemImage: "arrow.clockwise",
+                            action: {
+                                isCheckingValidity = true
+                                Task {
+                                    await Gumroad().checkLicense()
+                                    isCheckingValidity = false
+                                }
+                            }
+                        )
+                        .disabled(isCheckingValidity)
                     }
                 }
                 .padding()

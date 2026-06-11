@@ -15,35 +15,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Access the single shared AppDelegate instance
     static var shared: AppDelegate? { NSApp.delegate as? AppDelegate }
 
+    private var menuBarManager: MenuBarManager?
+
     func applicationWillTerminate() {
         AppState.shared.disconnectDevice()
-        ADBConnector.disconnectADB()
+        if AppState.shared.adbConnected {
+            ADBConnector.disconnectADB()
+        }
         WebSocketServer.shared.stop()
     }
 
     func applicationDidFinishLaunching(_ notification: Foundation.Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        // Initialize Sentry 
+        setupSentry()
+        
         // Dock icon visibility is now controlled by AppState.hideDockIcon
         AppState.shared.updateDockIconVisibility()
+        
+        // Initialize Menu Bar Manager
+        menuBarManager = MenuBarManager.shared
+
+        // Initialize Quick Share
+        _ = QuickShareManager.shared
         
         // Register Services Provider
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
     }
 
+    private func setupSentry() {
+        SentryInitializer.start()
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            print("[AppDelegate] Opening file: \(url.path)")
-            WebSocketServer.shared.sendFile(url: url)
+        if !urls.isEmpty {
+            QuickShareManager.shared.transferURLs = urls
+            QuickShareManager.shared.startDiscovery(autoTargetName: nil)
+            AppState.shared.showingQuickShareTransfer = true
         }
     }
 
     @objc func handleServices(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString>) {
-        if let urls = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
-            for url in urls {
-                print("[AppDelegate] Services menu received file: \(url.path)")
-                WebSocketServer.shared.sendFile(url: url)
-            }
+        if let urls = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
+            QuickShareManager.shared.transferURLs = urls
+            QuickShareManager.shared.startDiscovery(autoTargetName: nil)
+            AppState.shared.showingQuickShareTransfer = true
         }
     }
 
@@ -107,38 +124,3 @@ extension AppDelegate: NSWindowDelegate {
 }
 
 
-// Helper to grab NSWindow from SwiftUI:
-struct WindowAccessor: NSViewRepresentable {
-    let callback: (NSWindow) -> Void
-    let onOnboardingChange: ((Bool) -> Void)?
-
-    init(callback: @escaping (NSWindow) -> Void, onOnboardingChange: ((Bool) -> Void)? = nil) {
-        self.callback = callback
-        self.onOnboardingChange = onOnboardingChange
-    }
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            if let window = view.window {
-                AppDelegate.shared?.configureMainWindowIfNeeded(window)
-                self.callback(window)
-
-                // Observe onboarding state changes
-                if let onOnboardingChange = self.onOnboardingChange {
-                    NotificationCenter.default.addObserver(
-                        forName: NSNotification.Name("OnboardingStateChanged"),
-                        object: nil,
-                        queue: .main
-                    ) { notification in
-                        if let isActive = notification.userInfo?["isActive"] as? Bool {
-                            onOnboardingChange(isActive)
-                        }
-                    }
-                }
-            }
-        }
-        return view
-    }
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}

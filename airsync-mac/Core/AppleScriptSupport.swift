@@ -86,7 +86,7 @@ class AirSyncGetNotificationsCommand: NSScriptCommand {
                     "title": notif.title,
                     "body": notif.body,
                     "app": notif.app,
-                    "id": notif.id.uuidString,
+                    "id": notif.id,
                     "package": notif.package,
                     "nid": notif.nid
                 ]
@@ -773,8 +773,7 @@ class AirSyncNotificationActionCommand: NSScriptCommand {
             return "No device connected"
         }
         
-        // Find the notification by ID
-        guard let notification = appState.notifications.first(where: { $0.id.uuidString == notificationId }) else {
+        guard let notification = appState.notifications.first(where: { $0.id == notificationId }) else {
             let errorInfo: [String: Any] = [
                 "status": "error",
                 "message": "Notification not found with ID: \(notificationId)"
@@ -854,8 +853,7 @@ class AirSyncDismissNotificationCommand: NSScriptCommand {
             return "No device connected"
         }
         
-        // Find the notification by ID
-        guard let notification = appState.notifications.first(where: { $0.id.uuidString == notificationId }) else {
+        guard let notification = appState.notifications.first(where: { $0.id == notificationId }) else {
             let errorInfo: [String: Any] = [
                 "status": "error",
                 "message": "Notification not found with ID: \(notificationId)"

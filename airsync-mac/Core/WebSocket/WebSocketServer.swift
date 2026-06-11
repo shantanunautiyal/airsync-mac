@@ -75,6 +75,20 @@ class WebSocketServer: ObservableObject {
         sessionBoxes = sessionBoxes.filter { $0.session != nil }
         return sessionBoxes.compactMap { $0.session }
     }
+import Combine
+import Network
+
+class WebSocketServer: ObservableObject {
+    static let shared = WebSocketServer()
+    
+    internal var server = HttpServer()
+    internal var activeSessions: [WebSocketSession] = []
+    internal var primarySessionID: ObjectIdentifier?
+    internal var pingTimer: Timer?
+    internal let pingInterval: TimeInterval = 12.5
+    internal var lastActivity: [ObjectIdentifier: Date] = [:]
+    internal let activityTimeout: TimeInterval = 45.0
+    
     @Published var symmetricKey: SymmetricKey?
 
     @Published var localPort: UInt16?
@@ -87,6 +101,15 @@ class WebSocketServer: ObservableObject {
     private var lastKnownIP: String?
     private var networkMonitorTimer: Timer?
     private let networkCheckInterval: TimeInterval = 10.0 // seconds
+    internal var lastKnownIP: String?
+    internal var isRestarting: Bool = false
+    internal var networkMonitorTimer: Timer?
+    internal var networkPathMonitor: NWPathMonitor?
+    internal let networkMonitorQueue = DispatchQueue(label: "com.airsync.networkmonitor", qos: .utility)
+    internal let networkCheckInterval: TimeInterval = 10.0
+    internal let lock = NSRecursiveLock()
+    internal let fileQueue = DispatchQueue(label: "com.airsync.fileio")
+    private let jsonDecoder = JSONDecoder()
     
     // Guard flag to prevent double teardown during mirror stop
     private var isStoppingMirror = false
@@ -331,11 +354,49 @@ class WebSocketServer: ObservableObject {
                         } catch {
                             let snippet = String(decryptedText.prefix(200))
                             print("[websocket] WebSocket JSON decode failed: \(error) | snippet=\(snippet)")
+                if decryptedText.contains("\"type\":\"pong\"") {
+                    self.lock.lock()
+                    self.lastActivity[ObjectIdentifier(session)] = Date()
+                    self.lock.unlock()
+                    DispatchQueue.main.async {
+                        if AppState.shared.isConnectionWeak {
+                            AppState.shared.isConnectionWeak = false
+                        }
+                    }
+                    return
+                }
+
+                if let data = decryptedText.data(using: .utf8) {
+                    do {
+                        let message = try self.jsonDecoder.decode(Message.self, from: data)
+                        self.lock.lock()
+                        self.lastActivity[ObjectIdentifier(session)] = Date()
+                        self.lock.unlock()
+                        DispatchQueue.main.async {
+                            if AppState.shared.isConnectionWeak {
+                                AppState.shared.isConnectionWeak = false
+                            }
+                        }
+                        
+                        if message.type == .fileChunk || message.type == .fileChunkAck || message.type == .fileTransferComplete || message.type == .fileTransferInit {
+                             self.handleMessage(message, session: session)
+                        } else {
+                            DispatchQueue.main.async { self.handleMessage(message, session: session) }
                         }
                     }
                 }
             },
 
+            binary: { [weak self] session, _ in
+                self?.lock.lock()
+                self?.lastActivity[ObjectIdentifier(session)] = Date()
+                self?.lock.unlock()
+                DispatchQueue.main.async {
+                    if AppState.shared.isConnectionWeak {
+                        AppState.shared.isConnectionWeak = false
+                    }
+                }
+            },
             connected: { [weak self] session in
                 guard let self = self else { return }
                 print("[websocket] ✅ Device connected successfully!")
@@ -366,6 +427,13 @@ class WebSocketServer: ObservableObject {
                 // Send message on a background queue to avoid blocking
                 DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                     self?.sendToFirstAvailable(message: welcomeMessage)
+                if self.primarySessionID == nil {
+                    self.primarySessionID = sessionId
+                }
+                
+                if sessionCount == 1 {
+                    MacRemoteManager.shared.startVolumeMonitoring()
+                    self.startPing()
                 }
             },
             disconnected: { [weak self] session in
@@ -387,6 +455,10 @@ class WebSocketServer: ObservableObject {
                         // Close mirror window if open
                         self.mirrorWindow?.close()
                         self.mirrorWindow = nil
+                        ADBConnector.disconnectADB()
+                        AppState.shared.adbConnected = false
+                        // Guard against cascading restarts from multiple disconnected callbacks
+                        self.restartServer()
                     }
                 }
                 print("[websocket] Active sessions: \(self.activeSessions.count)")
@@ -3622,6 +3694,39 @@ class WebSocketServer: ObservableObject {
         #endif
     }
     
+    // MARK: - Restart Helper
+
+    /// Single entry-point for all server restart logic.
+    /// Guarded by `isRestarting` to prevent cascading calls from multiple
+    /// simultaneous `disconnected` callbacks or stale-ping handlers.
+    /// Waits 1.5 s before restarting so any remaining callbacks finish first,
+    /// then re-broadcasts presence so Android can rediscover the Mac.
+    func restartServer() {
+        self.lock.lock()
+        guard !isRestarting else {
+            self.lock.unlock()
+            print("[websocket] Restart already in progress – skipping duplicate request")
+            return
+        }
+        isRestarting = true
+        let port = self.localPort ?? Defaults.serverPort
+        self.lock.unlock()
+
+        print("[websocket] Scheduling server restart in 1.5 s…")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            self.stop()
+            self.start(port: port)
+
+            // Re-announce presence immediately after restart so Android can find us
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DiscoveryManager.shared.broadcastBurst()
+                self.lock.lock()
+                self.isRestarting = false
+                self.lock.unlock()
+                print("[websocket] Server restart complete. Presence re-broadcast sent.")
+            }
+        }
+    }
 }
 
 

@@ -1,0 +1,2461 @@
+=== AirSync.xcodeproj/project.pbxproj ===
+Conflict 1:
+HEAD:
+		9AF199F92EAD0C7200599860 /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199F72EAD0C6E00599860 /* CoreMediaIO.framework */; };
+		9AF199FA2EAD0C7200599860 /* CoreMediaIO.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199F72EAD0C6E00599860 /* CoreMediaIO.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9AF199FF2EAD0D1200599860 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FB2EAD0D0700599860 /* VideoToolbox.framework */; };
+		9AF19A002EAD0D1200599860 /* VideoToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FB2EAD0D0700599860 /* VideoToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9AF19A012EAD0D1400599860 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FD2EAD0D0F00599860 /* AVFoundation.framework */; };
+		9AF19A022EAD0D1400599860 /* AVFoundation.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FD2EAD0D0F00599860 /* AVFoundation.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9AF19A042EAD0D1E00599860 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF19A032EAD0D1E00599860 /* AppKit.framework */; };
+		9AFC81BC2EAD0BDB005FAE5B /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AFC81BA2EAD0B91005FAE5B /* CoreMedia.framework */; };
+		9AFC81BD2EAD0BDB005FAE5B /* CoreMedia.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AFC81BA2EAD0B91005FAE5B /* CoreMedia.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+INCOMING:
+		B94971602F62509A00F59BC9 /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = B949715F2F62509A00F59BC9 /* BigInt */; };
+		B94971632F6250DE00F59BC9 /* ASN1 in Frameworks */ = {isa = PBXBuildFile; productRef = B94971622F6250DE00F59BC9 /* ASN1 */; };
+		B94971662F62514500F59BC9 /* SwiftECC in Frameworks */ = {isa = PBXBuildFile; productRef = B94971652F62514500F59BC9 /* SwiftECC */; };
+		B94971692F62525800F59BC9 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = B94971682F62525800F59BC9 /* SwiftProtobuf */; };
+		B949716B2F62525800F59BC9 /* SwiftProtobufPluginLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = B949716A2F62525800F59BC9 /* SwiftProtobufPluginLibrary */; };
+----------------------------------------
+Conflict 2:
+HEAD:
+				9AF19A012EAD0D1400599860 /* AVFoundation.framework in Frameworks */,
+				9AF199FF2EAD0D1200599860 /* VideoToolbox.framework in Frameworks */,
+INCOMING:
+				B9D2631B2F60D97900628704 /* Sentry in Frameworks */,
+				B94971602F62509A00F59BC9 /* BigInt in Frameworks */,
+				B9D263292F60D9CF00628704 /* SentrySwiftUI in Frameworks */,
+				B94971692F62525800F59BC9 /* SwiftProtobuf in Frameworks */,
+----------------------------------------
+Conflict 3:
+HEAD:
+				9AF19A042EAD0D1E00599860 /* AppKit.framework in Frameworks */,
+				9AF199F92EAD0C7200599860 /* CoreMediaIO.framework in Frameworks */,
+				9AFC81BC2EAD0BDB005FAE5B /* CoreMedia.framework in Frameworks */,
+INCOMING:
+				B949716B2F62525800F59BC9 /* SwiftProtobufPluginLibrary in Frameworks */,
+				B94971632F6250DE00F59BC9 /* ASN1 in Frameworks */,
+----------------------------------------
+Conflict 4:
+HEAD:
+				9AFC81B92EAD0B91005FAE5B /* Frameworks */,
+INCOMING:
+				B9D263192F60D97900628704 /* Frameworks */,
+----------------------------------------
+Conflict 5:
+HEAD:
+				MARKETING_VERSION = 2.5.2;
+				OTHER_LDFLAGS = "";
+INCOMING:
+				MARKETING_VERSION = 4.0.0;
+----------------------------------------
+Conflict 6:
+HEAD:
+				MARKETING_VERSION = 2.5.2;
+				OTHER_LDFLAGS = "";
+INCOMING:
+				MARKETING_VERSION = 4.0.0;
+----------------------------------------
+Conflict 7:
+HEAD:
+				MARKETING_VERSION = 2.5.2;
+				OTHER_LDFLAGS = "";
+INCOMING:
+				MARKETING_VERSION = 4.0.0;
+----------------------------------------
+=== airsync-mac/Core/AppState.swift ===
+Conflict 1:
+HEAD:
+        self.isPlus = UserDefaults.standard.bool(forKey: "isPlus")
+        self.licenseCheck = UserDefaults.standard.object(forKey: "licenseCheck") as? Bool ?? true
+        self.isPlus = false
+INCOMING:
+        self.deviceAdbSerials = UserDefaults.standard.dictionary(forKey: "deviceAdbSerials") as? [String: String] ?? [:]
+        self.selectedWiredSerial = UserDefaults.standard.string(forKey: "selectedWiredSerial")
+
+        let isPlusLoaded = UserDefaults.standard.bool(forKey: "isPlus")
+        self.isPlus = isPlusLoaded
+----------------------------------------
+Conflict 2:
+HEAD:
+        if licenseCheck {
+            Task {
+                await Gumroad().checkLicenseIfNeeded()
+            }
+        } else {
+            // When licenseCheck is disabled, grant Plus temporarily (without persisting)
+            setPlusTemporarily(true)
+        }
+        #endif
+
+        self.scrcpyBitrate = UserDefaults.standard.integer(forKey: "scrcpyBitrate")
+        if self.scrcpyBitrate == 0 { self.scrcpyBitrate = 4 }
+
+        self.scrcpyResolution = UserDefaults.standard.integer(forKey: "scrcpyResolution")
+        if self.scrcpyResolution == 0 { self.scrcpyResolution = 1200 }
+
+        // Load mirror quality settings
+        self.mirrorFPS = UserDefaults.standard.integer(forKey: "mirrorFPS")
+        if self.mirrorFPS == 0 { self.mirrorFPS = 60 }
+        
+        self.mirrorMaxWidth = UserDefaults.standard.integer(forKey: "mirrorMaxWidth")
+        if self.mirrorMaxWidth == 0 { self.mirrorMaxWidth = 1920 }
+        
+        self.mirrorQuality = UserDefaults.standard.integer(forKey: "mirrorQuality")
+        if self.mirrorQuality == 0 { self.mirrorQuality = 85 }
+        
+        self.mirrorBitrate = UserDefaults.standard.integer(forKey: "mirrorBitrate")
+        if self.mirrorBitrate == 0 { self.mirrorBitrate = 8000000 }
+INCOMING:
+        Task {
+            // Delay startup check by 5 minutes (300 seconds) to ensure network connection is fully established
+            try? await Task.sleep(nanoseconds: 300_000_000_000)
+            await Gumroad().checkLicenseIfNeeded()
+        }
+        #endif
+
+        if !self.isPlus && licenseCheck {
+            self.showMenubarAlbumArt = false
+            self.menubarNotificationStyle = "count"
+        }
+----------------------------------------
+Conflict 3:
+HEAD:
+            
+            // When a device reconnects, restore last saved notifications if none in memory
+            if device != nil && self.notifications.isEmpty {
+                self.loadNotificationsFromDisk()
+INCOMING:
+
+            // BLE connection management: Wi-Fi priority over BLE
+            let isRegularConnection = device?.ipAddress != nil && device?.ipAddress != "BLE"
+            let wasRegularConnection = oldValue?.ipAddress != nil && oldValue?.ipAddress != "BLE"
+
+            if isRegularConnection {
+                // Regular connection established — immediately put BLE to idle (disconnect & stop scan)
+                if isBLEEnabled {
+                    print("[state] Regular connection active — disconnecting BLE and putting to idle")
+                    BLECentralManager.shared.stopScanning()
+                    BLECentralManager.shared.disconnect()
+                }
+                // Cancel any pending delayed BLE wake-up tasks
+                self.bleWakeUpWorkItem?.cancel()
+                self.bleWakeUpWorkItem = nil
+            } else if !isRegularConnection && wasRegularConnection {
+                // Regular connection lost — schedule BLE scanning after 5 seconds to give Wi-Fi a chance to reconnect
+                self.bleWakeUpWorkItem?.cancel()
+                let workItem = DispatchWorkItem { [weak self] in
+                    guard let self = self else { return }
+                    let stillDisconnected = self.device?.ipAddress == nil || self.device?.ipAddress == "BLE"
+                    if stillDisconnected && self.isBLEEnabled && !BLECentralManager.shared.isAuthenticated {
+                        print("[state] Regular connection stayed lost for 5s — resuming BLE scan")
+                        BLECentralManager.shared.isManuallyDisconnected = false
+                        BLECentralManager.shared.startScanning()
+                    }
+                }
+                self.bleWakeUpWorkItem = workItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: workItem)
+----------------------------------------
+Conflict 4:
+HEAD:
+    
+INCOMING:
+    @Published var notificationLaunchPreferences: [String: MacAppLaunchPreference] = [:]
+    /// Set to trigger the "configure notification click action" sheet for a specific package
+    @Published var configuringLaunchPreferenceFor: String? = nil
+
+----------------------------------------
+Conflict 5:
+HEAD:
+    // MARK: - ADB-less Mirroring State
+    @Published var isMirrorActive: Bool = false
+    @Published var latestMirrorFrame: NSImage? = nil
+    @Published var isMirroring: Bool = false
+    @Published var isMirrorRequestPending: Bool = false
+    @Published var mirrorError: String? = nil
+
+    @Published var dockSize: CGFloat {
+        didSet {
+            UserDefaults.standard.set(dockSize, forKey: "dockSize")
+INCOMING:
+    @Published var useNativeMirroringByDefault: Bool {
+        didSet {
+            UserDefaults.standard.set(useNativeMirroringByDefault, forKey: "useNativeMirroringByDefault")
+        }
+    }
+
+    @Published var useNativeDesktopMirroringByDefault: Bool {
+        didSet {
+            UserDefaults.standard.set(useNativeDesktopMirroringByDefault, forKey: "useNativeDesktopMirroringByDefault")
+        }
+    }
+
+    @Published var isFileAccessEnabled: Bool {
+        didSet {
+            if !isPlus && licenseCheck {
+                if isFileAccessEnabled {
+                    isFileAccessEnabled = false
+                }
+                UserDefaults.standard.set(false, forKey: "isFileAccessEnabled")
+                WebDAVManager.shared.unmount()
+            } else {
+                UserDefaults.standard.set(isFileAccessEnabled, forKey: "isFileAccessEnabled")
+                if isFileAccessEnabled {
+                    if let newDevice = device, newDevice.ipAddress != "BLE" {
+                        WebDAVManager.shared.mount(ipAddress: newDevice.ipAddress, port: 9081, volumeName: newDevice.name)
+                    }
+                } else {
+                    WebDAVManager.shared.unmount()
+                }
+            }
+        }
+    }
+
+    @Published var isCrashReportingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isCrashReportingEnabled, forKey: "isCrashReportingEnabled")
+        }
+    }
+
+    @Published var disableAllAIFeatures: Bool {
+        didSet {
+            UserDefaults.standard.set(disableAllAIFeatures, forKey: "disableAllAIFeatures")
+        }
+    }
+
+    @Published var showAIToolbarButton: Bool {
+        didSet {
+            UserDefaults.standard.set(showAIToolbarButton, forKey: "showAIToolbarButton")
+        }
+    }
+
+    @Published var includeSilentInAIOption: Bool {
+        didSet {
+            UserDefaults.standard.set(includeSilentInAIOption, forKey: "includeSilentInAIOption")
+        }
+    }
+
+    @Published var enableMenubarAISummary: Bool {
+        didSet {
+            UserDefaults.standard.set(enableMenubarAISummary, forKey: "enableMenubarAISummary")
+----------------------------------------
+Conflict 6:
+HEAD:
+            self.transfers = [:]
+            
+            // Reset mirror state
+            self.isMirrorActive = false
+            self.latestMirrorFrame = nil
+            self.isMirroring = false
+            self.isMirrorRequestPending = false
+            self.mirrorError = nil
+INCOMING:
+            
+            // Disconnect BLE
+            BLECentralManager.shared.disconnect()
+            
+            // Clean up Quick Share state
+            if QuickShareManager.shared.transferState != .idle {
+                QuickShareManager.shared.transferState = .idle
+            }
+            
+            // Clear all shared image popups on disconnect
+            SharedImagePopupManager.shared.dismissAll()
+----------------------------------------
+=== airsync-mac/Core/QuickConnect/QuickConnectManager.swift ===
+Conflict 1:
+HEAD:
+import Darwin
+internal import Combine
+INCOMING:
+import Combine
+----------------------------------------
+Conflict 2:
+HEAD:
+        let networkKey = getNetworkKey(from: currentMacIP)
+        
+        DispatchQueue.main.async {
+            self.lastConnectedDevices[networkKey] = device
+INCOMING:
+        let isBLE = device.ipAddress == "Bluetooth LE" || device.ipAddress == "BLE"
+        
+        DispatchQueue.main.async {
+            if isBLE {
+                if let existing = self.lastConnectedDevices[currentMacIP] {
+                    let existingIsBLE = existing.ipAddress == "Bluetooth LE" || existing.ipAddress == "BLE"
+                    if !existingIsBLE {
+                        print("[quick-connect] Not overwriting existing Wi-Fi device (\(existing.name): \(existing.ipAddress)) with BLE device")
+                        return
+                    }
+                }
+            }
+            
+            self.lastConnectedDevices[currentMacIP] = device
+----------------------------------------
+Conflict 3:
+HEAD:
+        print("[quick-connect] Saved last connected device for network \(networkKey): \(device.name) (\(device.ipAddress))")
+INCOMING:
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
+    }
+    
+    /// Clears the last connected device for the current network
+    func clearLastConnectedDevice() {
+        guard let currentMacIP = getCurrentMacIP() else { return }
+        let networkKey = getNetworkKey(from: currentMacIP)
+        
+        DispatchQueue.main.async {
+            self.lastConnectedDevices.removeValue(forKey: networkKey)
+            self.saveDeviceHistoryToDisk()
+        }
+        print("[quick-connect] Cleared last connected device for network \(networkKey)")
+    }
+    
+    /// Attempts to wake up and reconnect to a specific discovered device
+    func connect(to discoveredDevice: DiscoveredDevice) {
+        let hasWifiIPs = discoveredDevice.ips.contains { $0 != "Bluetooth LE" && !$0.isEmpty }
+        if (discoveredDevice.type == "ble" || discoveredDevice.ips.contains("Bluetooth LE")) && !hasWifiIPs {
+            print("[quick-connect] Discovered device is Bluetooth LE, connecting directly via BLE...")
+            // Show progress in UI
+            DispatchQueue.main.async {
+                self.connectingDeviceID = discoveredDevice.id
+            }
+            
+            // Save as last connected device (so we can auto-reconnect later)
+            let device = Device(
+                name: discoveredDevice.name,
+                ipAddress: "Bluetooth LE",
+                port: discoveredDevice.port,
+                version: "Unknown",
+                adbPorts: [],
+                deviceId: discoveredDevice.deviceId
+            )
+            saveLastConnectedDevice(device)
+            
+            BLECentralManager.shared.connectManually(toUuid: discoveredDevice.deviceId)
+            
+            // Clear progress after short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                self.connectingDeviceID = nil
+            }
+            return
+        }
+        
+        // Pick best IP: prefer local (non-100.x) over VPN
+        let bestIP = discoveredDevice.ips.first(where: { !$0.hasPrefix("100.") && $0 != "Bluetooth LE" }) ?? discoveredDevice.ips.first(where: { $0 != "Bluetooth LE" }) ?? ""
+        
+        // Convert DiscoveredDevice to Device model
+        let device = Device(
+            name: discoveredDevice.name,
+            ipAddress: bestIP,
+            port: discoveredDevice.port,
+            version: "Unknown",
+            adbPorts: [],
+            deviceId: discoveredDevice.deviceId
+        )
+        
+        saveLastConnectedDevice(device)
+        
+        print("[quick-connect] Initiating connection to discovered device: \(device.name) at \(device.ipAddress)")
+        
+        // Show progress in UI
+        DispatchQueue.main.async {
+            self.connectingDeviceID = discoveredDevice.id
+        }
+        
+        Task {
+            await sendWakeUpRequest(to: device)
+        }
+    }
+
+    /// Attempts to wake up and reconnect to the last connected device
+    func wakeUpLastConnectedDevice() {
+        guard let lastDevice = getLastConnectedDevice() else {
+            print("[quick-connect] No last connected device to wake up for current network")
+            return
+        }
+        
+        // Check if device IP is on the same network as Mac
+        guard let currentMacIP = getCurrentMacIP() else {
+            print("[quick-connect] Cannot determine current Mac IP")
+            return
+        }
+        
+        let macNetwork = getNetworkKey(from: currentMacIP)
+        let deviceNetwork = getNetworkKey(from: lastDevice.ipAddress)
+        
+        if macNetwork != deviceNetwork {
+            print("[quick-connect] ⚠️ Device IP \(lastDevice.ipAddress) is on different network than Mac \(currentMacIP)")
+            print("[quick-connect] Skipping wake-up - device may have changed networks or IP")
+            return
+        }
+        
+        if lastDevice.ipAddress == "Bluetooth LE" {
+            print("[quick-connect] Last connected device is BLE. Initiating BLE reconnection...")
+            BLECentralManager.shared.connectManually(toUuid: lastDevice.deviceId)
+            return
+        }
+        
+        print("[quick-connect] Attempting to wake up device: \(lastDevice.name) at \(lastDevice.ipAddress)")
+        print("[quick-connect] Will try HTTP port \(Self.ANDROID_HTTP_WAKEUP_PORT), then UDP port \(Self.ANDROID_UDP_WAKEUP_PORT) if needed")
+        
+        Task {
+            await sendWakeUpRequest(to: lastDevice)
+        }
+    }
+    
+    /// Refreshes device info for current network (triggers UI updates)
+    func refreshDeviceForCurrentNetwork() {
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+            print("[quick-connect] Refreshed device info for current network")
+        }
+    }
+    
+    // MARK: - Private Implementation
+    
+    private func getCurrentMacIP() -> String? {
+        return WebSocketServer.shared.getLocalIPAddress(
+            adapterName: AppState.shared.selectedNetworkAdapterName
+        )
+    }
+    
+    private func getCurrentMacPort() -> UInt16? {
+        return WebSocketServer.shared.localPort
+    }
+    
+    /// Extracts network prefix from IP address (e.g., "192.168.1.34" -> "192.168.1")
+    /// This allows matching devices on the same subnet even if exact IPs change due to DHCP
+    private func getNetworkKey(from ipAddress: String) -> String {
+        let components = ipAddress.split(separator: ".")
+        if components.count >= 3 {
+            // Use first 3 octets as network identifier (Class C subnet)
+            return "\(components[0]).\(components[1]).\(components[2])"
+        }
+        // Fallback to full IP if parsing fails
+        return ipAddress
+    }
+    
+    private func saveDeviceHistoryToDisk() {
+        if let encoded = try? JSONEncoder().encode(lastConnectedDevices) {
+            UserDefaults.standard.set(encoded, forKey: Self.DEVICE_HISTORY_KEY)
+        }
+    }
+    
+    private func loadDeviceHistoryFromDisk() {
+        guard let data = UserDefaults.standard.data(forKey: Self.DEVICE_HISTORY_KEY),
+              let history = try? JSONDecoder().decode([String: Device].self, from: data) else {
+            return
+        }
+        
+        self.lastConnectedDevices = history
+        print("[quick-connect] Loaded device history for \(history.count) networks")
+    }
+    
+    // MARK: - Wake-up Implementation
+    
+    private func sendWakeUpRequest(to device: Device) async {
+        // Get current connection info to send in wake-up request
+        var currentIP = getBestLocalIP(for: device.ipAddress)
+        var currentPort = getCurrentMacPort()
+        
+        if currentIP == nil || currentPort == nil {
+            print("[quick-connect] Network info not ready, waiting for WebSocket server...")
+            for i in 1...10 {
+                try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                currentIP = getBestLocalIP(for: device.ipAddress)
+                currentPort = getCurrentMacPort()
+                
+                if currentIP != nil && currentPort != nil {
+                    print("[quick-connect] Network info obtained after \(i * 200)ms")
+                    break
+                }
+            }
+        }
+        
+        guard let finalIP = currentIP, let finalPort = currentPort else {
+            print("[quick-connect] Cannot wake up device - no current connection info available after waiting")
+            DispatchQueue.main.async {
+                self.connectingDeviceID = nil
+            }
+            return
+        }
+        
+        let macName = AppState.shared.myDevice?.name ?? "My Mac"
+        
+        // Create wake-up message with current connection details (no auth key needed)
+        let wakeUpMessage = """
+        {
+            "type": "wakeUpRequest",
+            "data": {
+                "macIP": "\(finalIP)",
+                "macPort": \(finalPort),
+                "macName": "\(macName)",
+                "isPlus": \(AppState.shared.isPlus)
+            }
+        }
+        """
+        
+        // Try to send HTTP POST request to the Android device
+        await sendHTTPWakeUpRequest(to: device, message: wakeUpMessage)
+        
+        // Clear progress after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.connectingDeviceID = nil
+        }
+    }
+    
+    /// Selects the best local IP to present to the target device
+    /// Prioritizes IPs that match the target's subnet/prefix (e.g. Tailscale 100.x)
+    private func getBestLocalIP(for targetIP: String) -> String? {
+        let adapters = WebSocketServer.shared.getAvailableNetworkAdapters()
+        let allIPs = adapters.map { $0.address }
+        
+        // 1. If user manually selected an adapter, MUST use that
+        if let selected = AppState.shared.selectedNetworkAdapterName {
+            if let match = adapters.first(where: { $0.name == selected }) {
+                return match.address
+            }
+        }
+        
+        // 2. If valid target IP, try to match prefix
+        if !targetIP.isEmpty {
+            // Check for Tailscale (100.x)
+            if targetIP.hasPrefix("100.") {
+                if let tailscaleIP = allIPs.first(where: { $0.hasPrefix("100.") }) {
+                    return tailscaleIP
+                }
+            }
+            
+            // Check for other common prefixes (subnet match)
+            let parts = targetIP.split(separator: ".")
+            if let firstOctet = parts.first {
+                let prefix = "\(firstOctet)."
+                if let match = allIPs.first(where: { $0.hasPrefix(prefix) }) {
+                    return match
+                }
+            }
+        }
+        
+        // 3. Fallback: Use the first available IP 
+        return allIPs.first
+    }
+    
+    private func sendHTTPWakeUpRequest(to device: Device, message: String) async {
+        print("[quick-connect] Trying HTTP wake-up to \(device.ipAddress):\(Self.ANDROID_HTTP_WAKEUP_PORT)")
+        
+        // Construct URL for Android device's HTTP endpoint
+        guard let url = URL(string: "http://\(device.ipAddress):\(Self.ANDROID_HTTP_WAKEUP_PORT)/wakeup") else {
+            print("[quick-connect] Invalid wake-up URL for device")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = message.data(using: .utf8)
+        request.timeoutInterval = 3.0 // Reduced timeout
+        
+        var success = false
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode == 200 {
+<<<<<<< HEAD
+                    print("[quick-connect] ✅ Wake-up request successful - device should reconnect soon")
+=======
+                    print("[quick-connect] Wake-up request successful - device should reconnect soon")
+                    success = true
+                } else if httpResponse.statusCode == 502 {
+                    print("[quick-connect] Wake-up request failed with 502 (Bad Gateway). Retrying once...")
+                    
+                    // Small delay before retry
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    
+                    if let (_, secondResponse) = try? await URLSession.shared.data(for: request),
+                       let secondHttpResponse = secondResponse as? HTTPURLResponse,
+                       secondHttpResponse.statusCode == 200 {
+                        print("[quick-connect] Wake-up retry successful")
+                        success = true
+                    } else {
+                        print("[quick-connect] Wake-up retry failed")
+                    }
+----------------------------------------
+Conflict 4:
+HEAD:
+            // Only log if it's not a connection refused error (which is expected if service isn't running)
+            let nsError = error as NSError
+            if nsError.code != -1004 { // -1004 is "Could not connect to server"
+                print("[quick-connect] ⚠️ Wake-up error: \(error.localizedDescription)")
+            } else {
+                print("[quick-connect] ℹ️ Android wake-up service not available (this is normal if not implemented)")
+            }
+            
+            // Don't fallback to UDP if HTTP fails - it's likely the service isn't running
+            // await sendUDPWakeUpRequest(to: device, message: message)
+INCOMING:
+            print("[quick-connect] Failed to send wake-up request: \(error)")
+        }
+        
+        if !success {
+            // Fallback: Try UDP broadcast
+            await sendUDPWakeUpRequest(to: device, message: message)
+----------------------------------------
+=== airsync-mac/Core/Util/CLI/ADBConnector.swift ===
+Conflict 1:
+HEAD:
+                guard let range = line.range(of: "\(ip):") else { continue }
+
+                let remaining = line[range.upperBound...]
+                if let portStr = remaining.split(separator: " ").first,
+                   let port = UInt16(portStr) {
+                    if line.contains("_adb-tls-connect._tcp"), tlsPort == nil {
+                        tlsPort = port
+                    } else if line.contains("_adb._tcp"), normalPort == nil {
+                        normalPort = port
+INCOMING:
+                if line.contains(ip) {
+                    let parts = line.split(separator: ":")
+                    if parts.count >= 2 {
+                        let portPart = parts.last?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        let numericPort = portPart.filter { "0123456789".contains($0) }
+                        if let port = UInt16(numericPort) {
+                            if !ports.contains(port) {
+                                ports.append(port)
+                            }
+                        }
+----------------------------------------
+Conflict 2:
+HEAD:
+    // Attempt connection using custom port directly without mDNS discovery
+    private static func attemptDirectConnection(adbPath: String, fullAddress: String) {
+        logBinaryDetection("Attempting direct connection to custom port: \(adbPath) connect \(fullAddress)")
+
+        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress], completion: { output in
+            let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+            DispatchQueue.main.async {
+                UserDefaults.standard.lastADBCommand = "adb connect \(fullAddress)"
+
+                if trimmedOutput.contains("connected to") {
+                    // Success! Connection established
+                    if let portStr = fullAddress.split(separator: ":").last,
+                       let port = UInt16(portStr) {
+                        AppState.shared.adbPort = port
+                    }
+                    AppState.shared.adbConnected = true
+                    AppState.shared.adbConnectionResult = trimmedOutput
+                    logBinaryDetection("(/^▽^)/ ADB connection successful to \(fullAddress)")
+                    AppState.shared.adbConnecting = false
+                    connectionLock.lock()
+                    clearConnectionFlag()
+                    connectionLock.unlock()
+                } else {
+                    // Connection failed - show error popup only on final failure
+                    AppState.shared.adbConnected = false
+                    logBinaryDetection("(T＿T) Custom port connection failed: \(trimmedOutput)")
+                    AppState.shared.adbConnectionResult = """
+Failed to connect to custom ADB port.
+
+Address: \(fullAddress)
+Error: \(trimmedOutput)
+
+Possible fixes:
+- Verify the custom port is correct
+- Ensure Wireless Debugging is enabled on the device
+- Check that the device is reachable at the specified IP
+- Disable custom port and use automatic discovery
+"""
+                    AppState.shared.adbConnecting = false
+                    connectionLock.lock()
+                    clearConnectionFlag()
+                    connectionLock.unlock()
+                    
+                    // Show alert popup for custom port failure (unless suppressed)
+                    if !AppState.shared.suppressAdbFailureAlerts {
+                        let alert = NSAlert()
+                        alert.alertStyle = .warning
+                        alert.addButton(withTitle: "Don't warn me again")
+                        alert.addButton(withTitle: "OK")
+                        alert.messageText = "Failed to connect to ADB on custom port."
+                        alert.informativeText = """
+Address: \(fullAddress)
+
+Possible fixes:
+- Verify the custom port is correct
+- Ensure Wireless Debugging is enabled on the device
+- Check that the device is reachable at the specified IP
+- Disable custom port and use automatic discovery
+
+Please see the ADB console for more details.
+"""
+                        let response = alert.runModal()
+                        if response == .alertFirstButtonReturn {
+                            DispatchQueue.main.async {
+                                AppState.shared.suppressAdbFailureAlerts = true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    // Recursive function to try each port until one succeeds
+INCOMING:
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
+    private static func attemptConnectionToNextPort(adbPath: String, ip: String, portsToTry: [UInt16], currentIndex: Int, reportedIP: String? = nil) {
+        if currentIndex >= portsToTry.count {
+            if let reportedIP = reportedIP, reportedIP != ip {
+                logBinaryDetection("Failed to connect on discovered IP \(ip), attempting fallback to reported IP \(reportedIP)...")
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+                    attemptConnectionToNextPort(adbPath: adbPath, ip: reportedIP, portsToTry: portsToTry, currentIndex: 0, reportedIP: nil)
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                AppState.shared.adbConnected = false
+                logBinaryDetection("(∩︵∩) ADB connection failed on all ports.")
+                AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nFailed to connect to device on any available port."
+                AppState.shared.adbConnecting = false
+                
+                if !AppState.shared.suppressAdbFailureAlerts {
+                    let alert = NSAlert()
+                    alert.alertStyle = .warning
+                    alert.addButton(withTitle: "Don't warn me again")
+                    alert.addButton(withTitle: "OK")
+                    alert.messageText = "Failed to connect to ADB."
+                    alert.informativeText = "Suggestions:\n• Ensure your Android device is in Wireless debugging mode\n• Try toggling Wireless Debugging off and on again\n• Reconnect to the same Wi-Fi as your Mac"
+                    
+                    presentAlertAsynchronously(alert) { response in
+                        if response == .alertFirstButtonReturn {
+                            AppState.shared.suppressAdbFailureAlerts = true
+                        }
+                    }
+                }
+            }
+            connectionLock.lock()
+            clearConnectionFlag()
+            connectionLock.unlock()
+            return
+        }
+
+        let currentPort = portsToTry[currentIndex]
+        let fullAddress = "\(ip):\(currentPort)"
+        logBinaryDetection("Attempting connection to port \(currentPort) (attempt \(currentIndex + 1)/\(portsToTry.count)): \(fullAddress)")
+
+        runADBCommand(adbPath: adbPath, arguments: ["connect", fullAddress], completion: { output in
+            let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+            DispatchQueue.main.async {
+                UserDefaults.standard.lastADBCommand = "adb connect \(fullAddress)"
+
+                if trimmedOutput.contains("connected to") {
+                    AppState.shared.adbConnected = true
+                    AppState.shared.adbPort = currentPort
+                    AppState.shared.adbConnectedIP = ip
+                    AppState.shared.adbConnectionResult = trimmedOutput
+                    logBinaryDetection("(/^▽^)/ ADB connection successful to \(fullAddress)")
+                    AppState.shared.adbConnecting = false
+                    connectionLock.lock()
+                    clearConnectionFlag()
+<<<<<<< HEAD
+                    connectionLock.unlock()
+                }
+                else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
+                    // Connection exists elsewhere, show error and try next port
+                    AppState.shared.adbConnected = false
+                    logBinaryDetection("(T＿T) Port \(currentPort): ADB connection failed due to existing connection.")
+                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
+
+Port \(currentPort) (attempt \(portNumber)/\(totalPorts)): Connection failed - another ADB instance already using the device.
+"""
+                    // Try next port after a short delay instead of giving up
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP)
+                    }
+                }
+                else {
+                    // This port didn't work, try the next one
+                    logBinaryDetection("Port \(currentPort) (attempt \(portNumber)/\(totalPorts)): Connection failed, trying next port...")
+                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
+
+Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOutput)
+"""
+                    // Try next port after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+=======
+                } else {
+                    logBinaryDetection("Port \(currentPort) failed, trying next...")
+                    DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+----------------------------------------
+=== airsync-mac/Core/Util/NotificationDelegate.swift ===
+Conflict 1:
+HEAD:
+        // Handle Live Activities actions
+        handleLiveActivitiesAction(response)
+        let userInfo = response.notification.request.content.userInfo
+        
+        if response.actionIdentifier == "OPEN_LINK" {
+INCOMING:
+        // Handle call notification actions
+        if notificationType == "call" {
+            let eventId = userInfo["eventId"] as? String ?? response.notification.request.identifier
+            
+            if response.actionIdentifier == "ACCEPT_CALL" {
+                print("[notification-delegate] User accepted call: \(eventId)")
+                WebSocketServer.shared.sendCallAction(eventId: eventId, action: "accept")
+            } else if response.actionIdentifier == "DECLINE_CALL" {
+                print("[notification-delegate] User declined call: \(eventId)")
+                WebSocketServer.shared.sendCallAction(eventId: eventId, action: "decline")
+            }
+            
+            // Remove the notification
+            DispatchQueue.main.async {
+                AppState.shared.removeCallEventById(eventId)
+            }
+        }
+        // Handle Quick Share notification actions
+        else if notificationType == "quickshare" {
+            let transferID = userInfo["transferID"] as? String ?? ""
+            if response.actionIdentifier == "QUICKSHARE_ACCEPT" {
+                QuickShareManager.shared.handleUserConsent(transferID: transferID, accepted: true)
+            } else if response.actionIdentifier == "QUICKSHARE_DECLINE" {
+                QuickShareManager.shared.handleUserConsent(transferID: transferID, accepted: false)
+            }
+        }
+        // Handle link open
+        else if response.actionIdentifier == "OPEN_LINK" {
+----------------------------------------
+=== airsync-mac/Core/WebSocket/WebSocketServer.swift ===
+Conflict 1:
+HEAD:
+import Swifter
+internal import Combine
+import CryptoKit
+import AppKit
+import CoreGraphics
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
+// Media key constants
+private let NX_KEYTYPE_PLAY: Int32 = 16
+private let NX_KEYTYPE_NEXT: Int32 = 17
+private let NX_KEYTYPE_PREVIOUS: Int32 = 18
+private let NX_KEYTYPE_FAST: Int32 = 19
+private let NX_KEYTYPE_REWIND: Int32 = 20
+
+#if canImport(SwiftUI)
+struct MirrorFallbackView: View {
+    @ObservedObject private var appState = AppState.shared
+    var body: some View {
+        ZStack {
+            if let image = appState.latestMirrorFrame {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .background(Color.black)
+            } else {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Waiting for mirror frames…")
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+            }
+        }
+        .frame(minWidth: 320, minHeight: 600)
+    }
+}
+#endif
+
+enum WebSocketStatus {
+    case stopped
+    case starting
+    case started(port: UInt16, ip: String?)
+    case failed(error: String)
+}
+
+class WebSocketServer: ObservableObject {
+    static let shared = WebSocketServer()
+
+    private var server = HttpServer()
+    // Use a wrapper to store weak references to sessions
+    private class WeakSessionBox {
+        weak var session: WebSocketSession?
+        init(_ session: WebSocketSession) {
+            self.session = session
+        }
+    }
+    private var sessionBoxes: [WeakSessionBox] = []
+    private var activeSessions: [WebSocketSession] {
+        // Clean up nil references and return valid sessions
+        sessionBoxes = sessionBoxes.filter { $0.session != nil }
+        return sessionBoxes.compactMap { $0.session }
+    }
+INCOMING:
+import Combine
+import Network
+
+class WebSocketServer: ObservableObject {
+    static let shared = WebSocketServer()
+    
+    internal var server = HttpServer()
+    internal var activeSessions: [WebSocketSession] = []
+    internal var primarySessionID: ObjectIdentifier?
+    internal var pingTimer: Timer?
+    internal let pingInterval: TimeInterval = 12.5
+    internal var lastActivity: [ObjectIdentifier: Date] = [:]
+    internal let activityTimeout: TimeInterval = 45.0
+    
+----------------------------------------
+Conflict 2:
+HEAD:
+    private var lastKnownIP: String?
+    private var networkMonitorTimer: Timer?
+    private let networkCheckInterval: TimeInterval = 10.0 // seconds
+INCOMING:
+    internal var lastKnownIP: String?
+    internal var isRestarting: Bool = false
+    internal var networkMonitorTimer: Timer?
+    internal var networkPathMonitor: NWPathMonitor?
+    internal let networkMonitorQueue = DispatchQueue(label: "com.airsync.networkmonitor", qos: .utility)
+    internal let networkCheckInterval: TimeInterval = 10.0
+    internal let lock = NSRecursiveLock()
+    internal let fileQueue = DispatchQueue(label: "com.airsync.fileio")
+    private let jsonDecoder = JSONDecoder()
+----------------------------------------
+Conflict 3:
+HEAD:
+                    // Skip verbose logging for mirror frames (check raw text before decryption)
+                    let isMirrorFrameRaw = text.contains("mirrorFrame")
+                    if !isMirrorFrameRaw {
+                        print("[websocket] [raw] incoming text length=\(text.count)")
+                    }
+                    // Step 1: Decrypt the message
+                    let decryptedText: String
+                    if let key = self.symmetricKey {
+                        decryptedText = decryptMessage(text, using: key) ?? ""
+                    } else {
+                        decryptedText = text
+                    }
+                    let usedEncryption = (self.symmetricKey != nil)
+                    
+                    // Skip verbose logging for mirror frames (too frequent)
+                    let isMirrorFrame = decryptedText.contains("\"type\":\"mirrorFrame\"") || decryptedText.contains("\"type\": \"mirrorFrame\"")
+                    
+                    if !isMirrorFrame {
+                        print("[websocket] [decrypt] used=\(usedEncryption) decryptedLen=\(decryptedText.count)")
+                        let truncated = decryptedText.count > 300
+                        ? decryptedText.prefix(300) + "..."
+                        : decryptedText
+                        print("[websocket] [received] \n\(truncated)")
+                    }
+
+
+                    // Step 2: Decode JSON and handle
+                    if let data = decryptedText.data(using: .utf8) {
+                        do {
+                            // Use JSONSerialization instead of Codable for flexible parsing
+                            guard let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                                print("[websocket] Failed to parse JSON as dictionary")
+                                return
+                            }
+                            
+                            // Extract type and data manually
+                            guard let typeString = jsonObject["type"] as? String,
+                                  let messageType = MessageType(rawValue: typeString) else {
+                                print("[websocket] Invalid or missing message type")
+                                return
+                            }
+                            
+                            let messageData = jsonObject["data"] as? [String: Any] ?? [:]
+                            
+                            // Skip verbose logging for mirror frames
+                            if messageType != .mirrorFrame {
+                                print("[websocket] ✅ Parsed JSON - type: \(typeString), data keys: \(messageData.keys.joined(separator: ", "))")
+                            }
+                            
+                            // Create message with raw dictionary data
+                            let message = FlexibleMessage(type: messageType, data: messageData)
+                            DispatchQueue.main.async {
+                                    self.handleFlexibleMessage(message)
+                            }
+                        } catch {
+                            let snippet = String(decryptedText.prefix(200))
+                            print("[websocket] WebSocket JSON decode failed: \(error) | snippet=\(snippet)")
+INCOMING:
+                if decryptedText.contains("\"type\":\"pong\"") {
+                    self.lock.lock()
+                    self.lastActivity[ObjectIdentifier(session)] = Date()
+                    self.lock.unlock()
+                    DispatchQueue.main.async {
+                        if AppState.shared.isConnectionWeak {
+                            AppState.shared.isConnectionWeak = false
+                        }
+                    }
+                    return
+                }
+
+                if let data = decryptedText.data(using: .utf8) {
+                    do {
+                        let message = try self.jsonDecoder.decode(Message.self, from: data)
+                        self.lock.lock()
+                        self.lastActivity[ObjectIdentifier(session)] = Date()
+                        self.lock.unlock()
+                        DispatchQueue.main.async {
+                            if AppState.shared.isConnectionWeak {
+                                AppState.shared.isConnectionWeak = false
+                            }
+                        }
+                        
+                        if message.type == .fileChunk || message.type == .fileChunkAck || message.type == .fileTransferComplete || message.type == .fileTransferInit {
+                             self.handleMessage(message, session: session)
+                        } else {
+                            DispatchQueue.main.async { self.handleMessage(message, session: session) }
+----------------------------------------
+Conflict 4:
+HEAD:
+
+INCOMING:
+            binary: { [weak self] session, _ in
+                self?.lock.lock()
+                self?.lastActivity[ObjectIdentifier(session)] = Date()
+                self?.lock.unlock()
+                DispatchQueue.main.async {
+                    if AppState.shared.isConnectionWeak {
+                        AppState.shared.isConnectionWeak = false
+                    }
+                }
+            },
+----------------------------------------
+Conflict 5:
+HEAD:
+                // Enforce single active session to avoid reconnect loops
+                if !self.sessionBoxes.isEmpty {
+                    print("[websocket] Replacing existing session")
+                    // Keep only the newest session; drop references to older ones
+                    self.sessionBoxes.removeAll()
+                }
+                
+                // Add new session with weak reference
+                self.sessionBoxes.append(WeakSessionBox(session))
+                print("[websocket] Active sessions: \(self.activeSessions.count)")
+                
+                // Send a welcome message to confirm connection
+                let welcomeMessage = """
+                {
+                    "type": "connectionConfirmed",
+                    "data": {
+                        "message": "Connected to Mac successfully",
+                        "timestamp": "\(Date().timeIntervalSince1970)"
+                    }
+                }
+                """
+                
+                // Send message on a background queue to avoid blocking
+                DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                    self?.sendToFirstAvailable(message: welcomeMessage)
+INCOMING:
+                if self.primarySessionID == nil {
+                    self.primarySessionID = sessionId
+                }
+                
+                if sessionCount == 1 {
+                    MacRemoteManager.shared.startVolumeMonitoring()
+                    self.startPing()
+----------------------------------------
+Conflict 6:
+HEAD:
+                        // Clear mirror state when last session disconnects
+                        AppState.shared.isMirrorActive = false
+                        AppState.shared.latestMirrorFrame = nil
+                        
+                        // Close mirror window if open
+                        self.mirrorWindow?.close()
+                        self.mirrorWindow = nil
+INCOMING:
+                        ADBConnector.disconnectADB()
+                        AppState.shared.adbConnected = false
+                        // Guard against cascading restarts from multiple disconnected callbacks
+                        self.restartServer()
+----------------------------------------
+Conflict 7:
+HEAD:
+    /// Starts mirror and presents UI in one step.
+    /// - Parameters:
+    ///   - mode: "device", "desktop", or "app" (optional)
+    ///   - package: Package name when mode == "app" (optional)
+    ///   - options: Additional options to merge (optional)
+    func startMirrorAndPresentUI(mode: String? = nil, package: String? = nil, options: [String: Any] = [:]) {
+        print("[mirror] 🎬 Starting mirror request...")
+        
+        // Mark mirror request as pending to disable the button
+        DispatchQueue.main.async {
+            AppState.shared.isMirrorRequestPending = true
+            AppState.shared.mirrorError = nil
+        }
+        
+        // Set timeout for mirror request (10 seconds)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            if AppState.shared.isMirrorRequestPending && !AppState.shared.isMirroring {
+                print("[mirror] ⏱️ Mirror request timed out - no response from Android")
+                AppState.shared.isMirrorRequestPending = false
+                AppState.shared.mirrorError = "Mirror request timed out. Please try again."
+            }
+        }
+
+        // 2) Send the mirrorRequest to Android with user-configured quality settings
+        var mergedOptions = options
+        if mergedOptions["transport"] == nil { mergedOptions["transport"] = "websocket" }
+        if mergedOptions["fps"] == nil { mergedOptions["fps"] = AppState.shared.mirrorFPS }
+        if mergedOptions["maxWidth"] == nil { mergedOptions["maxWidth"] = AppState.shared.mirrorMaxWidth }
+        if mergedOptions["quality"] == nil { mergedOptions["quality"] = AppState.shared.mirrorQuality }
+        if mergedOptions["bitrate"] == nil { mergedOptions["bitrate"] = AppState.shared.mirrorBitrate }
+
+        print("[mirror] 📤 Sending mirror request with options: fps=\(mergedOptions["fps"] ?? 0), maxWidth=\(mergedOptions["maxWidth"] ?? 0)")
+        self.sendMirrorRequest(action: "start", mode: mode, package: package, options: mergedOptions)
+    }
+    
+    /// Request app-specific mirroring via WebSocket
+    func requestAppMirror(packageName: String) {
+        print("[mirror] 📱 Requesting app-specific mirror for: \(packageName)")
+        
+        // Get the app name for display
+        let appName = AppState.shared.androidApps[packageName]?.name ?? packageName
+        
+        // Mark mirror request as pending
+        DispatchQueue.main.async {
+            AppState.shared.isMirrorRequestPending = true
+            AppState.shared.mirrorError = nil
+        }
+        
+        // Set timeout for mirror request (10 seconds)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            if AppState.shared.isMirrorRequestPending && !AppState.shared.isMirroring {
+                print("[mirror] ⏱️ App mirror request timed out for \(appName)")
+                AppState.shared.isMirrorRequestPending = false
+                AppState.shared.mirrorError = "Mirror request timed out. Please try again."
+            }
+        }
+        
+        // Send app-specific mirror request with package name
+        var options: [String: Any] = [:]
+        options["transport"] = "websocket"
+        options["fps"] = AppState.shared.mirrorFPS
+        options["maxWidth"] = AppState.shared.mirrorMaxWidth
+        options["quality"] = AppState.shared.mirrorQuality
+        options["bitrate"] = AppState.shared.mirrorBitrate
+        
+        print("[mirror] 📤 Sending app mirror request: app=\(appName), package=\(packageName)")
+        self.sendMirrorRequest(action: "start", mode: "app", package: packageName, options: options)
+    }
+    
+    func stopMirroring() {
+        // Guard against re-entrant teardown
+        guard !isStoppingMirror else {
+            print("[mirror] 🛑 Already stopping mirror, ignoring duplicate call")
+            return
+        }
+        isStoppingMirror = true
+        
+        print("[mirror] 🛑 Mac requesting to stop mirroring")
+        
+        // Stop processing decoded frames immediately (before any async work)
+        unifiedDecoder.onDecodedFrame = nil
+        
+        // Send stop message to Android
+        let message = """
+        {
+            "type": "stopMirroring",
+            "data": {}
+        }
+        """
+        sendToFirstAvailable(message: message)
+        
+        // Update state on main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            AppState.shared.isMirrorRequestPending = false
+            AppState.shared.isMirroring = false
+            AppState.shared.isMirrorActive = false
+            AppState.shared.latestMirrorFrame = nil
+            
+            #if os(macOS)
+            // Safe window cleanup
+            if let window = self.mirrorWindow {
+                window.delegate = nil
+                self.mirrorWindowDelegate = nil
+                window.orderOut(nil)
+            }
+            self.mirrorWindow = nil
+            #endif
+            
+            print("[mirror] ✅ Stop mirroring completed")
+            
+            // Reset guard flag after cleanup
+            self.isStoppingMirror = false
+        }
+    }
+    
+    // Stop mirroring without closing window (called from window delegate)
+    func stopMirroringWithoutClosingWindow() {
+        // Guard against re-entrant teardown
+        guard !isStoppingMirror else {
+            print("[mirror] 🛑 Already stopping mirror, ignoring duplicate call")
+            return
+        }
+        isStoppingMirror = true
+        
+        print("[mirror] 🛑 Stopping mirroring (window already closing)")
+        
+        // Stop processing decoded frames immediately (before any async work)
+        unifiedDecoder.onDecodedFrame = nil
+        
+        // Send stop message to Android
+        let message = """
+        {
+            "type": "stopMirroring",
+            "data": {}
+        }
+        """
+        sendToFirstAvailable(message: message)
+        
+        // Update state on main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            AppState.shared.isMirrorRequestPending = false
+            AppState.shared.isMirroring = false
+            AppState.shared.isMirrorActive = false
+            AppState.shared.latestMirrorFrame = nil
+            
+            print("[mirror] ✅ Stop mirroring without closing window completed")
+            
+            // Reset guard flag after cleanup
+            self.isStoppingMirror = false
+        }
+    }
+    
+    // MARK: - Mac Media Control
+    
+    private func executeMacMediaControl(action: String) {
+        #if os(macOS)
+        var success = false
+        
+        // Use system media keys to control the currently playing app (not just Music)
+        let keyCode: Int32
+        
+        switch action {
+        case "play", "pause", "playPause":
+            keyCode = NX_KEYTYPE_PLAY
+        case "next":
+            keyCode = NX_KEYTYPE_NEXT
+        case "previous":
+            keyCode = NX_KEYTYPE_PREVIOUS
+        default:
+            print("[websocket] ❌ Unknown Mac media control action: \(action)")
+            sendMacMediaControlResponse(action: action, success: false)
+            return
+        }
+        
+        // Send media key event
+        success = sendMediaKeyEvent(keyCode: keyCode)
+        
+        if success {
+            print("[websocket] ✅ Mac media control '\(action)' executed via system media keys")
+        } else {
+            print("[websocket] ❌ Failed to send media key event for '\(action)'")
+        }
+        
+        // Send response back to Android
+        sendMacMediaControlResponse(action: action, success: success)
+        #else
+        sendMacMediaControlResponse(action: action, success: false)
+        #endif
+    }
+    
+    private func sendMediaKeyEvent(keyCode: Int32) -> Bool {
+        #if os(macOS)
+        // Create NSEvent for media key
+        let flags: Int = 0xA00 // Key down flags
+        let data1: Int = ((Int(keyCode) << 16) | flags)
+        
+        // Key down event
+        if let downEvent = NSEvent.otherEvent(
+            with: .systemDefined,
+            location: NSPoint.zero,
+            modifierFlags: NSEvent.ModifierFlags(rawValue: 0),
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            subtype: 8, // Media key subtype
+            data1: data1,
+            data2: -1
+        ) {
+            downEvent.cgEvent?.post(tap: .cghidEventTap)
+        }
+        
+        // Key up event
+        let upFlags: Int = 0xB00 // Key up flags
+        let upData1: Int = ((Int(keyCode) << 16) | upFlags)
+        
+        if let upEvent = NSEvent.otherEvent(
+            with: .systemDefined,
+            location: NSPoint.zero,
+            modifierFlags: NSEvent.ModifierFlags(rawValue: 0),
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            subtype: 8, // Media key subtype
+            data1: upData1,
+            data2: -1
+        ) {
+            upEvent.cgEvent?.post(tap: .cghidEventTap)
+        }
+        
+        return true
+        #else
+        return false
+        #endif
+    }
+    
+INCOMING:
+    // MARK: - Restart Helper
+
+    /// Single entry-point for all server restart logic.
+    /// Guarded by `isRestarting` to prevent cascading calls from multiple
+    /// simultaneous `disconnected` callbacks or stale-ping handlers.
+    /// Waits 1.5 s before restarting so any remaining callbacks finish first,
+    /// then re-broadcasts presence so Android can rediscover the Mac.
+    func restartServer() {
+        self.lock.lock()
+        guard !isRestarting else {
+            self.lock.unlock()
+            print("[websocket] Restart already in progress – skipping duplicate request")
+            return
+        }
+        isRestarting = true
+        let port = self.localPort ?? Defaults.serverPort
+        self.lock.unlock()
+
+        print("[websocket] Scheduling server restart in 1.5 s…")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            self.stop()
+            self.start(port: port)
+
+            // Re-announce presence immediately after restart so Android can find us
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DiscoveryManager.shared.broadcastBurst()
+                self.lock.lock()
+                self.isRestarting = false
+                self.lock.unlock()
+                print("[websocket] Server restart complete. Presence re-broadcast sent.")
+            }
+        }
+    }
+----------------------------------------
+=== airsync-mac/Model/TabIdentifier.swift ===
+Conflict 1:
+HEAD:
+    case transfers = "transfers.tab"
+    case calls = "calls.tab"
+    case messages = "messages.tab"
+    case health = "health.tab"
+INCOMING:
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
+    case settings = "settings.tab"
+    case qr = "qr.tab"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .notifications: return "bell.badge"
+        case .apps: return "app"
+<<<<<<< HEAD
+        case .transfers: return "tray.and.arrow.up"
+        case .calls: return "phone.fill"
+        case .messages: return "message.fill"
+        case .health: return "heart.fill"
+=======
+----------------------------------------
+Conflict 2:
+HEAD:
+        case .transfers: return "3"
+        case .calls: return "4"
+        case .messages: return "5"
+        case .health: return "6"
+INCOMING:
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
+        case .settings: return ","
+        case .qr: return "."
+        }
+    }
+
+    static var availableTabs: [TabIdentifier] {
+        var tabs: [TabIdentifier] = [.qr, .settings]
+        if AppState.shared.device != nil {
+            tabs.remove(at: 0)
+            tabs.insert(.notifications, at: 0)
+            tabs.insert(.apps, at: 1)
+<<<<<<< HEAD
+            tabs.insert(.transfers, at: 2)
+            tabs.insert(.calls, at: 3)
+            tabs.insert(.messages, at: 4)
+            tabs.insert(.health, at: 5)
+=======
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/AppContentView.swift ===
+Conflict 1:
+HEAD:
+        ZStack(alignment: .bottom) {
+            ZStack {
+                switch AppState.shared.selectedTab {
+                case .notifications:
+                    NotificationView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            if appState.notifications.count > 0 || appState.callEvents.count > 0 {
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button {
+                                        notificationStacks.toggle()
+                                    } label: {
+                                        Label("Toggle Notification Stacks", systemImage: notificationStacks ? "mail" : "mail.stack")
+                                    }
+                                    .help(notificationStacks ? "Switch to stacked view" : "Switch to expanded view")
+                                }
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button {
+                                        appState.clearNotifications()
+                                    } label: {
+                                        Label("Clear", systemImage: "wind")
+                                    }
+                                    .help("Clear all notifications")
+                                    .keyboardShortcut(.delete, modifiers: .command)
+                                    .badge(appState.notifications.count + appState.callEvents.count)
+INCOMING:
+        TabView(selection: $appState.selectedTab) {
+            // QR Scanner Tab (only when device is NOT connected)
+            if appState.device == nil {
+                ScannerView()
+                    .tabItem {
+                        Image(systemName: "iphone.motion")
+                        //                    Label("Scan", systemImage: "qrcode")
+                    }
+                    .tag(TabIdentifier.qr)
+                    .toolbar {
+                        ToolbarItemGroup {
+                            Button("Help", systemImage: "questionmark.circle") {
+                                showHelpSheet = true
+                            }
+                            .help("Feedback and How to?")
+
+                            Button("Refresh", systemImage: "repeat") {
+                                WebSocketServer.shared.stop()
+                                WebSocketServer.shared.start()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    appState.shouldRefreshQR = true
+----------------------------------------
+Conflict 2:
+HEAD:
+                case .calls:
+                    CallsView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button("Refresh", systemImage: "arrow.clockwise") {
+                                    _ = LiveNotificationManager.shared.getCallLogs(forceRefresh: true)
+                                }
+                                .help("Refresh call logs")
+                            }
+                        }
+
+                case .messages:
+                    MessagesView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button("Refresh", systemImage: "arrow.clockwise") {
+                                    _ = LiveNotificationManager.shared.getSmsThreads(forceRefresh: true)
+                                }
+                                .help("Refresh messages")
+                            }
+                        }
+
+                case .health:
+                    HealthView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button("Refresh", systemImage: "arrow.clockwise") {
+                                    WebSocketServer.shared.requestHealthSummary()
+                                }
+                                .help("Refresh health data")
+                            }
+                        }
+
+                case .settings:
+                    SettingsView()
+                        .transition(.blurReplace)
+                        .toolbar {
+                            ToolbarItemGroup {
+                                Button("Help", systemImage: "questionmark.circle") {
+                                    showHelpSheet = true
+                                }
+                                .help("Feedback and How to?")
+                            }
+                        }
+
+                case .qr:
+                    ScannerView()
+                        .transition(.blurReplace)
+                }
+INCOMING:
+                // Apps Tab
+                AppsView()
+                    .tabItem {
+                        Image(systemName: "app")
+                        //                        Label("Apps", systemImage: "app")
+                    }
+                    .tag(TabIdentifier.apps)
+
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/AppsView/AppGridView.swift ===
+Conflict 1:
+HEAD:
+                .padding(12)
+                Spacer(minLength: 100)
+INCOMING:
+                .whatsNewPopover(item: .appsGrid, arrowEdge: .top)
+
+                // Hint Chip & Floating Searchbar VStack
+                VStack(spacing: 8) {
+                    if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("Press ⏎ to launch")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .glassBoxIfAvailable(radius: 12)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .bottom)),
+                                removal: .opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .bottom))
+                            ))
+                    }
+
+                    // Liquid glass floating searchbar
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+
+                        TextField("Search Apps", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12))
+                            .focused($isSearchFocused)
+                            .onSubmit {
+                                if let firstApp = sortedAppsList.first {
+                                    launchApp(firstApp)
+                                }
+                            }
+                            .onExitCommand {
+                                searchText = ""
+                            }
+
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(width: 260)
+                    .glassBoxIfAvailable(radius: 20)
+                    .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+                }
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding(.bottom, 16)
+----------------------------------------
+Conflict 2:
+HEAD:
+                .onDrag(createDragProvider)
+                .help(appState.device != nil ? "Tap to mirror \(app.name)" : app.name)
+INCOMING:
+            }
+            .onTapGesture(perform: onLaunch)
+            .contextMenu {
+                AppContextMenuContent(app: app)
+            }
+            .onDrag(createDragProvider)
+----------------------------------------
+Conflict 3:
+HEAD:
+    private func handleTap() {
+        // Use WebSocket mirroring instead of scrcpy
+        if appState.device != nil {
+            WebSocketServer.shared.requestAppMirror(packageName: app.packageName)
+        }
+    }
+INCOMING:
+
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/Components/CallWindowView.swift ===
+Conflict 1:
+HEAD:
+                // Action buttons (show when ringing/offhook - works via WebSocket or ADB)
+                if showActionButtons {
+                    VStack(spacing: 12) {
+                        HStack(spacing: 16) {
+
+                            if callEvent.direction == .incoming {
+                                if isCallAccepted {
+                                    // Call is accepted - show End button and audio controls
+                                    
+                                    // Mic toggle
+                                    GlassButtonView(
+                                        label: CallAudioManager.shared.isMicEnabled ? "Mute" : "Mic",
+                                        systemImage: CallAudioManager.shared.isMicEnabled ? "mic.fill" : "mic.slash.fill",
+                                        size: .large,
+                                        action: {
+                                            CallAudioManager.shared.toggleMic()
+                                        }
+                                    )
+                                    .foregroundStyle(CallAudioManager.shared.isMicEnabled ? .blue : .secondary)
+                                    .transition(.identity)
+                                    
+                                    GlassButtonView(
+                                        label: "End",
+                                        systemImage: "phone.down.fill",
+                                        size: .extraLarge,
+                                        action: {
+                                            appState.sendCallAction(callEvent.eventId, action: "end")
+                                        }
+                                    )
+                                    .foregroundStyle(.red)
+                                    .transition(.identity)
+                                } else {
+                                    // Call is ringing - show Accept and Decline buttons
+                                    GlassButtonView(
+                                        label: "Accept",
+                                        systemImage: "phone.fill",
+                                        size: .extraLarge,
+                                        action: {
+                                            appState.sendCallAction(callEvent.eventId, action: "accept")
+                                        }
+                                    )
+                                    .foregroundStyle(.green)
+                                    .transition(.identity)
+
+
+                                    GlassButtonView(
+                                        label: "Decline",
+                                        systemImage: "phone.down.fill",
+                                        size: .extraLarge,
+                                        action: {
+                                            appState.sendCallAction(callEvent.eventId, action: "decline")
+                                        }
+                                    )
+                                    .foregroundStyle(.red)
+                                    .transition(.identity)
+                                }
+
+                            } else if callEvent.direction == .outgoing {
+                                
+                                // Mic toggle for outgoing calls
+                                GlassButtonView(
+                                    label: CallAudioManager.shared.isMicEnabled ? "Mute" : "Mic",
+                                    systemImage: CallAudioManager.shared.isMicEnabled ? "mic.fill" : "mic.slash.fill",
+                                    size: .large,
+                                    action: {
+                                        CallAudioManager.shared.toggleMic()
+                                    }
+                                )
+                                .foregroundStyle(CallAudioManager.shared.isMicEnabled ? .blue : .secondary)
+                                .transition(.identity)
+INCOMING:
+                // Action buttons (only show when ringing/offhook AND companion device is active AND is an AirSync+ subscriber)
+                if showActionButtons && appState.device != nil && appState.isPlus {
+                    HStack(spacing: 16) {
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/NotificationView/NotificationCardView.swift ===
+Conflict 1:
+HEAD:
+    var closeButtonPadding: CGFloat = 6
+INCOMING:
+    @State private var isHovering = false
+----------------------------------------
+Conflict 2:
+HEAD:
+            .padding()
+
+            // Top-right dismiss (cross) button
+            Button(action: { deleteNotification() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.secondary, .quaternary)
+                    .imageScale(.medium)
+                    .padding(.top, closeButtonPadding)
+                    .padding(.trailing, closeButtonPadding)
+            }
+            .buttonStyle(.borderless)
+            .help("Dismiss this notification")
+INCOMING:
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Hover Actions Pill
+            if isHovering {
+                HStack(spacing: 4) {
+                    Button {
+                        hideNotification()
+                    } label: {
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 14, weight: .bold))
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Hide")
+                    .glassBoxIfAvailable(radius: 24)
+
+                    Button {
+                        deleteNotification()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Dismiss")
+                    .glassBoxIfAvailable(radius: 32)
+
+                }
+                .padding(6)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/PhoneView/DeviceStatusView.swift ===
+Conflict 1:
+HEAD:
+                        if AppState.shared.isPlus || !AppState.shared.licenseCheck {
+                            if let currentVolume = appState.status?.music.volume {
+INCOMING:
+                        if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                            if let currentVolume = appState.status?.music?.volume {
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/PhoneView/MediaPlayerView.swift ===
+Conflict 1:
+HEAD:
+
+
+                HStack{
+                    if (AppState.shared.status?.music.likeStatus == "liked" || AppState.shared.status?.music.likeStatus == "not_liked") {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: {
+                                if let like = AppState.shared.status?.music.likeStatus {
+                                    switch like {
+                                    case "liked": return "heart.fill"
+                                    case "not_liked": return "heart"
+                                    default: return "heart.slash"
+                                    }
+                                }
+                                return "heart.slash"
+                            }(),
+                            iconOnly: true,
+                            action: {
+                                if AppState.shared.isPlus || !AppState.shared.licenseCheck {
+                                    guard let like = AppState.shared.status?.music.likeStatus else { return }
+                                    if like == "liked" {
+                                        WebSocketServer.shared.unlike()
+                                    } else if like == "not_liked" {
+                                        WebSocketServer.shared.like()
+                                    } else {
+                                        WebSocketServer.shared.toggleLike()
+                                    }
+                                } else {
+                                    showingPlusPopover = true
+                                }
+                            }
+                        )
+                        .help("Like / Unlike")
+                    } else {
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "backward.end",
+                            iconOnly: true,
+                            action: {
+                                if AppState.shared.isPlus || !AppState.shared.licenseCheck {
+                                    WebSocketServer.shared.skipPrevious()
+                                } else {
+                                    showingPlusPopover = true
+                                }
+                            }
+                        )
+                        .keyboardShortcut(
+                            .leftArrow,
+                            modifiers: .control
+                        )
+INCOMING:
+                Group {
+                    if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                        VStack(spacing: 6) {
+                            // Seekbar (shown only when duration is known and toggle is enabled)
+                            if hasSeekbar {
+                                MediaSeekbarView(music: music)
+                                    .padding(.top, 2)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                            }
+
+                            // Media control buttons
+                            HStack {
+                                if music.likeStatus == "liked" || music.likeStatus == "not_liked" {
+                                    GlassButtonView(
+                                        label: "",
+                                        systemImage: {
+                                            switch music.likeStatus {
+                                            case "liked":     return "heart.fill"
+                                            case "not_liked": return "heart"
+                                            default:          return "heart.slash"
+                                            }
+                                        }(),
+                                        iconOnly: true,
+                                        action: {
+                                            if music.likeStatus == "liked" {
+                                                WebSocketServer.shared.unlike()
+                                            } else if music.likeStatus == "not_liked" {
+                                                WebSocketServer.shared.like()
+                                            } else {
+                                                WebSocketServer.shared.toggleLike()
+                                            }
+                                        }
+                                    )
+                                    .help("Like / Unlike")
+                                } else {
+                                    GlassButtonView(
+                                        label: "",
+                                        systemImage: "backward.end",
+                                        iconOnly: true,
+                                        action: { WebSocketServer.shared.skipPrevious() }
+                                    )
+                                    .keyboardShortcut(.leftArrow, modifiers: .control)
+                                }
+
+                                GlassButtonView(
+                                    label: "",
+                                    systemImage: music.isPlaying ? "pause.fill" : "play.fill",
+                                    iconOnly: true,
+                                    primary: true,
+                                    action: { WebSocketServer.shared.togglePlayPause() }
+                                )
+                                .keyboardShortcut(.space, modifiers: .control)
+
+                                GlassButtonView(
+                                    label: "",
+                                    systemImage: "forward.end",
+                                    iconOnly: true,
+                                    action: { WebSocketServer.shared.skipNext() }
+                                )
+                                .keyboardShortcut(.rightArrow, modifiers: .control)
+                            }
+                        }
+----------------------------------------
+=== airsync-mac/Screens/HomeScreen/SidebarView.swift ===
+Conflict 1:
+HEAD:
+            .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
+            .frame(minWidth: 280, minHeight: 400)
+            .safeAreaInset(edge: .bottom) {
+                HStack{
+                    if appState.device != nil {
+                        // Mirror button with dynamic state
+                        GlassButtonView(
+                            label: appState.isMirroring ? "Stop Mirroring" : (appState.isMirrorRequestPending ? "Starting..." : "Start Mirroring"),
+                            systemImage: appState.isMirroring ? "stop.circle" : "rectangle.on.rectangle",
+                            primary: !appState.isMirroring,
+                            action: {
+                                if appState.isMirroring {
+                                    // Stop mirroring
+                                    WebSocketServer.shared.stopMirroring()
+                                    print("[ui] Requested stop mirroring")
+                                } else if !appState.isMirrorRequestPending {
+                                    // If ADB is enabled AND connected AND tools are present -> use scrcpy
+                                    let adbEnabled = appState.adbEnabled && appState.adbConnected
+                                    let hasADB = ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil
+                                    let hasScrcpy = ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil
+
+                                    if adbEnabled && hasADB && hasScrcpy {
+                                        // Use scrcpy when ADB is connected
+                                        guard let device = appState.device else { return }
+                                        ADBConnector.startScrcpy(
+                                            ip: device.ipAddress,
+                                            port: appState.adbPort,
+                                            deviceName: device.name
+                                        )
+                                    } else {
+                                        // WebSocket transport: ask Android to connect back to the Mac's WS server
+                                        WebSocketServer.shared.sendMirrorRequest(
+                                            action: "start",
+                                            mode: "device",
+                                            package: nil,
+                                            options: [
+                                                "transport": "websocket",
+                                                "fps": appState.mirrorFPS,
+                                                "quality": appState.mirrorQuality,
+                                                "maxWidth": appState.mirrorMaxWidth,
+                                                "autoApprove": true
+                                            ]
+                                        )
+                                        print("[ui] Requested WebSocket mirroring (device mode)")
+                                    }
+                                }
+                            }
+                        )
+                        .disabled(appState.isMirrorRequestPending)
+                        .transition(.identity)
+
+                        GlassButtonView(
+                            label: "Disconnect",
+                            systemImage: "xmark",
+                            action: {
+                                showDisconnectAlert = true
+INCOMING:
+        }
+        .animation(.easeInOut(duration: 0.5), value: appState.status != nil)
+        .frame(minWidth: 250, minHeight: 400)
+        .safeAreaInset(edge: .bottom) {
+
+            if appState.adbConnected {
+                HStack(spacing: 12) {
+                    GlassButtonView(
+                        label: appState.isSidebarMirroring ? "Close" : "Mirror",
+                        systemImage: appState.isSidebarMirroring ? "xmark.circle" : "apps.iphone",
+                        action: {
+                            if appState.isSidebarMirroring {
+                                appState.isSidebarMirroring = false
+                            } else {
+                                if appState.useNativeMirroringByDefault {
+                                    appState.isNativeMirroring = true
+                                } else {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone"
+                                    )
+                                }
+----------------------------------------
+=== airsync-mac/Screens/MenubarView/MenubarView.swift ===
+Conflict 1:
+HEAD:
+        VStack {
+            VStack(spacing: 12){
+                // Header
+                Text("AirSync - \(getDeviceName())")
+                    .font(.headline)
+
+                HStack(spacing: 10){
+                    GlassButtonView(
+                        label: "Open App",
+                        systemImage: "arrow.up.forward.app",
+                        iconOnly: true,
+                        circleSize: toolButtonSize
+                    ) {
+                        openAndFocusMainWindow()
+                    }
+                    GlassButtonView(
+                        label: "Quick Connect",
+                        systemImage: "bolt.horizontal.circle",
+                        iconOnly: true,
+                        circleSize: toolButtonSize,
+                        action: {
+                            QuickConnectManager.shared.wakeUpLastConnectedDevice()
+                        }
+                    )
+                    .help("Reconnect to last device")
+
+                    if (appState.device != nil){
+                        GlassButtonView(
+                            label: "Sync Clipboard",
+                            systemImage: "doc.on.clipboard",
+                            iconOnly: true,
+                            circleSize: toolButtonSize,
+                            action: {
+                                let pasteboard = NSPasteboard.general
+                                if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], let firstUrl = urls.first {
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        WebSocketServer.shared.sendFile(url: firstUrl)
+                                    }
+                                } else if let image = NSImage(pasteboard: pasteboard) {
+                                    // Handle copied image data
+                                    let tempDir = FileManager.default.temporaryDirectory
+                                    let tempUrl = tempDir.appendingPathComponent("clipboard_image_\(Int(Date().timeIntervalSince1970)).png")
+                                    if let tiffData = image.tiffRepresentation,
+                                       let bitmap = NSBitmapImageRep(data: tiffData),
+                                       let pngData = bitmap.representation(using: .png, properties: [:]) {
+                                        do {
+                                            try pngData.write(to: tempUrl)
+                                            DispatchQueue.global(qos: .userInitiated).async {
+                                                WebSocketServer.shared.sendFile(url: tempUrl)
+                                            }
+                                        } catch {
+                                            print("[MenubarView] Failed to save clipboard image: \(error)")
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        .transition(.identity)
+                        .keyboardShortcut(
+                            "v",
+                            modifiers: [.command, .shift]
+                        )
+                        
+                        GlassButtonView(
+                            label: "Send",
+                            systemImage: "square.and.arrow.up",
+                            iconOnly: true,
+                            circleSize: toolButtonSize,
+                            action: {
+                                let panel = NSOpenPanel()
+                                panel.canChooseFiles = true
+                                panel.canChooseDirectories = false
+                                panel.allowsMultipleSelection = false
+                                panel.begin { response in
+                                    if response == .OK, let url = panel.url {
+                                        DispatchQueue.global(qos: .userInitiated).async {
+                                            WebSocketServer.shared.sendFile(url: url)
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        .transition(.identity)
+                        .keyboardShortcut(
+                            "f",
+                            modifiers: .command
+                        )
+                    }
+
+
+                    // Mirror button - uses scrcpy when ADB connected, WebSocket mirror otherwise
+                    GlassButtonView(
+                        label: "Mirror",
+                        systemImage: "apps.iphone",
+                        iconOnly: true,
+                        circleSize: toolButtonSize,
+                        action: {
+                            if appState.adbConnected {
+                                // Use scrcpy when ADB is connected
+                                ADBConnector
+                                    .startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone"
+                                    )
+                            } else {
+                                // Use WebSocket mirror when ADB is not connected
+                                WebSocketServer.shared.startMirrorAndPresentUI()
+                            }
+                        }
+                    )
+                    .transition(.identity)
+                    .keyboardShortcut(
+                        "p",
+                        modifiers: .command
+                    )
+                    .contextMenu {
+                        if appState.adbConnected {
+                            Button("Desktop Mode") {
+                                ADBConnector.startScrcpy(
+                                    ip: appState.device?.ipAddress ?? "",
+                                    port: appState.adbPort,
+                                    deviceName: appState.device?.name ?? "My Phone",
+                                    desktop: true
+                                )
+                            }
+                        }
+                    }
+
+                    GlassButtonView(
+                        label: "Quit",
+                        systemImage: "power",
+                        iconOnly: true,
+                        circleSize: toolButtonSize
+                    ) {
+                        NSApplication.shared.terminate(nil)
+                    }
+                }
+                .padding(8)
+
+                if (appState.status != nil){
+                    DeviceStatusView(showMediaToggle: false)
+                        .transition(.opacity.combined(with: .scale))
+                }
+
+                if let music = appState.status?.music,
+                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                !title.isEmpty {
+
+                    MediaPlayerView(music: music)
+                        .transition(.opacity.combined(with: .scale))
+                }
+
+
+                if !appState.notifications.isEmpty {
+                    GlassButtonView(
+                        label: "Clear All",
+                        systemImage: "wind",
+                        action: {
+                            appState.clearNotifications()
+                        }
+                    )
+                    .help("Clear all notifications")
+                }
+            }
+            .padding(10)
+
+            if appState.device != nil {
+                MenuBarNotificationsListView()
+                    .frame(maxWidth: .infinity)
+            }
+
+INCOMING:
+        VStack(spacing: 6) {
+                
+            TopSegmentView(
+                toolButtonSize: toolButtonSize,
+                openAndFocusMainWindow: openAndFocusMainWindow
+            )
+            .staggeredEntrance(index: 0, isVisible: appState.isMenubarWindowOpen)
+            
+            CallControlSegmentView()
+                .staggeredEntrance(index: 1, isVisible: appState.isMenubarWindowOpen)
+            
+            DiscoverySegmentView()
+                .staggeredEntrance(index: 2, isVisible: appState.isMenubarWindowOpen)
+            
+            MediaSegmentView()
+                .staggeredEntrance(index: 3, isVisible: appState.isMenubarWindowOpen)
+            
+            NotificationsSegmentView()
+                .staggeredEntrance(index: 4, isVisible: appState.isMenubarWindowOpen)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
+        .frame(width: minWidthTabs + 48)
+        .environment(\.controlActiveState, .active)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            // Optional: close if it loses focus
+----------------------------------------
+=== airsync-mac/Screens/Settings/SettingsView.swift ===
+Conflict 1:
+HEAD:
+    @State private var showMirror: Bool = false
+
+    @State private var deviceName: String = ""
+    @State private var port: String = "6996"
+    @State private var availableAdapters: [(name: String, address: String)] = []
+    @State private var currentIPAddress: String = "N/A"
+    
+    @AppStorage("automaticallyChecksForUpdates") private var automaticallyChecksForUpdates: Bool = true
+    @AppStorage("automaticallyDownloadsUpdates") private var automaticallyDownloadsUpdates: Bool = false
+    @State private var showRemoteSheet = false
+
+
+    var body: some View {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // 1. Device
+                    VStack {
+                        DeviceNameView(deviceName: $deviceName)
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    // 2. Server
+                    headerSection(title: "Server", icon: "server.rack")
+                    VStack(spacing: 12) {
+                        HStack {
+                            Label("Network Adapter", systemImage: "rectangle.connected.to.line.below")
+                            Spacer()
+
+                            Picker("", selection: Binding(
+                                get: { appState.selectedNetworkAdapterName },
+                                set: { appState.selectedNetworkAdapterName = $0 }
+                            )) {
+                                Text("Auto").tag(nil as String?)
+                                ForEach(availableAdapters, id: \.name) { adapter in
+                                    Text("\(adapter.name) (\(adapter.address))").tag(Optional(adapter.name))
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                        .onAppear {
+                            availableAdapters = WebSocketServer.shared.getAvailableNetworkAdapters() 
+                            currentIPAddress = WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
+                        }
+                        .onChange(of: appState.selectedNetworkAdapterName) { _, _ in
+                            currentIPAddress = WebSocketServer.shared.getLocalIPAddress(adapterName: appState.selectedNetworkAdapterName) ?? "N/A"
+                            WebSocketServer.shared.stop()
+                            if let port = UInt16(port) {
+                                WebSocketServer.shared.start(port: port)
+                            } else {
+                                WebSocketServer.shared.start()
+                            }
+                            appState.shouldRefreshQR = true
+                        }
+
+                        Divider()
+
+                        // MARK: - Mirror Settings (Hidden)
+                        // Commented out - Mirror settings moved to separate view
+                        /*
+                        // Mirror method picker directly under Network
+                        HStack {
+                            Label("Mirror method", systemImage: "display")
+                            Spacer()
+                            Picker("", selection: Binding(
+                                get: { UserDefaults.standard.string(forKey: "connection.mode") ?? "remote" },
+                                set: { UserDefaults.standard.set($0, forKey: "connection.mode") }
+                            )) {
+                                Text("Remote Connect").tag("remote")
+                                Text("ADB Connect").tag("adb")
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(maxWidth: 260)
+                        }
+
+                        // Inline remote settings when Remote is chosen
+                        if (UserDefaults.standard.string(forKey: "connection.mode") ?? "remote") == "remote" {
+                            // Reuse MirrorSettingsView content without its own mode picker
+                            MirrorSettingsView(showModePicker: false)
+                                .padding(.top, 8)
+                        }
+                        */
+
+                        ConnectionInfoText(
+                            label: "IP Address",
+                            icon: "wifi",
+                            text: currentIPAddress,
+                            activeIp: appState.activeMacIp
+                        )
+
+                        HStack {
+                            Label("Server Port", systemImage: "rectangle.connected.to.line.below")
+                                .padding(.trailing, 20)
+                            Spacer()
+                            TextField("Server Port", text: $port)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: port) { oldValue, newValue in
+                                    port = newValue.filter { "0123456789".contains($0) }
+                                }
+                                .frame(maxWidth: 100)
+                        }
+
+                        HStack {
+                            Label("Fallback to mdns services", systemImage: "antenna.radiowaves.left.and.right")
+                            Spacer()
+                            Toggle("", isOn: $appState.fallbackToMdns)
+                                .toggleStyle(.switch)
+                        }
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    HStack {
+                        Spacer()
+                        SaveAndRestartButton(
+                            title: "Save and Restart the Server",
+                            systemImage: "square.and.arrow.down.badge.checkmark",
+                            deviceName: deviceName,
+                            port: port,
+                            version: appState.device?.version ?? "",
+                            onSave: nil,
+                            onRestart: nil
+                        )
+                    }
+
+                    // 2. Features
+                    headerSection(title: "Features", icon: "square.grid.2x2")
+                    SettingsFeaturesView()
+                        .background(.background.opacity(0.3))
+                        .cornerRadius(12.0)
+
+                    Spacer(minLength: 32)
+                    
+                    // Bluetooth Pairing
+                    BluetoothPairingView()
+
+                    Spacer(minLength: 32)
+
+                    VStack {
+                        HStack {
+                            Label("Remote Control Permission", systemImage: "accessibility")
+                            Spacer()
+                            GlassButtonView(label: "Configure", systemImage: "gearshape"){
+                                showRemoteSheet = true
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+                    .sheet(isPresented: $showRemoteSheet) {
+                        RemotePermissionView()
+                    }
+
+                    VStack{
+                        HStack{
+                            Label("Show File Share Dialog", systemImage: "doc.on.doc")
+                            Spacer()
+                            Toggle("", isOn: $appState.showFileShareDialog)
+                                .toggleStyle(.switch)
+                        }
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    // 3. Appearance
+                    headerSection(title: "Appearance", icon: "paintbrush")
+                    VStack(spacing: 12) {
+                        HStack{
+                            Label("Liquid Opacity", systemImage: "app.background.dotted")
+                            Spacer()
+                            Slider(
+                                value: $appState.windowOpacity,
+                                in: 0...1.0
+                            )
+                            .frame(width: 150)
+                        }
+
+                        HStack{
+                            Label("Hide Dock Icon", systemImage: "dock.rectangle")
+                            Spacer()
+                            Toggle("", isOn: $appState.hideDockIcon)
+                                .toggleStyle(.switch)
+                        }
+
+                        HStack{
+                            Label("Dock Size", systemImage: "rectangle.dock")
+                            Spacer()
+                            Slider(
+                                value: $appState.dockSize,
+                                in: 32...64,
+                                step: 4
+                            )
+                            .frame(width: 200)
+                            
+                            Text("\(Int(appState.dockSize))px")
+                                .font(.caption)
+                                .frame(width: 40, alignment: .trailing)
+                        }
+
+                        HStack{
+                            Label("Always Open Window", systemImage: "macwindow")
+                            Spacer()
+                            Toggle("", isOn: $appState.alwaysOpenWindow)
+                                .toggleStyle(.switch)
+                        }
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    // 4. Menu Bar
+                    headerSection(title: "Menu Bar", icon: "menubar.arrow.up.rectangle")
+                    VStack(spacing: 12) {
+                        HStack{
+                            Label("Show Menu Bar Text", systemImage: "text.alignleft")
+                            Spacer()
+                            Toggle("", isOn: $appState.showMenubarText)
+                                .toggleStyle(.switch)
+                        }
+
+                        if appState.showMenubarText {
+                            VStack(spacing: 12) {
+                                
+                                HStack {
+                                    Label("Max Length", systemImage: "arrow.left.and.right")
+                                    Spacer()
+                                    Slider(
+                                        value: Binding(
+                                            get: { Double(appState.menubarTextMaxLength) },
+                                            set: { appState.menubarTextMaxLength = Int($0) }
+                                        ),
+                                        in: 10...80,
+                                        step: 5
+                                    )
+                                    .frame(width: 150)
+                                    .controlSize(.small)
+                                }
+
+                                HStack{
+                                    Label("Show Device Name", systemImage: "iphone.gen3")
+                                    Spacer()
+                                    Toggle("", isOn: $appState.showMenubarDeviceName)
+                                        .toggleStyle(.switch)
+                                }
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    // 5. Application
+                    headerSection(title: "Application", icon: "app.badge")
+                    VStack(spacing: 12) {
+                        SettingsToggleView(name: "Check for updates automatically", icon: "sparkles", isOn: $automaticallyChecksForUpdates)
+                        SettingsToggleView(name: "Download updates automatically", icon: "arrow.down.circle", isOn: $automaticallyDownloadsUpdates)
+                    }
+                    .padding()
+                    .background(.background.opacity(0.3))
+                    .cornerRadius(12.0)
+
+                    // 6. AirSync+
+                    headerSection(title: "AirSync+", icon: "plus.diamond.fill")
+                    SettingsPlusView()
+                        .padding()
+                        .background(.background.opacity(0.3))
+                        .cornerRadius(12.0)
+                }
+                .padding()
+                .animation(.spring(), value: appState.showMenubarText)
+
+                Spacer(minLength: 100 + (appState.dockSize - 48))
+INCOMING:
+
+    var body: some View {
+        Group {
+            switch appState.selectedSettingsTab {
+            case .myMac:
+                MyMacSettingsView()
+            case .sync:
+                SyncSettingsView()
+            case .notifications:
+                NotificationsSettingsView()
+            case .mirroring:
+                MirroringSettingsView()
+            case .quickShare:
+                QuickShareSettingsView()
+            case .menubar:
+                MenubarSettingsView()
+            case .appleIntelligence:
+                AppleIntelligenceSettingsView()
+            case .appearance:
+                AppearanceSettingsView()
+            case .airsyncPlus:
+                AirSyncPlusSettingsView()
+----------------------------------------

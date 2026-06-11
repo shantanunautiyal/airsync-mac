@@ -7,7 +7,7 @@
 
 import Foundation
 import Darwin
-internal import Combine
+import Combine
 
 /// Manages quick reconnection functionality for previously connected devices
 class QuickConnectManager: ObservableObject {
@@ -24,6 +24,9 @@ class QuickConnectManager: ObservableObject {
     // Using network prefix instead of exact Mac IP to handle DHCP IP changes
     @Published var lastConnectedDevices: [String: Device] = [:]
     private var autoReconnectTimer: Timer?
+    
+    // Track which device is currently being connected to 
+    @Published var connectingDeviceID: String? = nil
     
     private init() {
         loadDeviceHistoryFromDisk()
@@ -46,13 +49,24 @@ class QuickConnectManager: ObservableObject {
             return
         }
         
-        let networkKey = getNetworkKey(from: currentMacIP)
+        let isBLE = device.ipAddress == "Bluetooth LE" || device.ipAddress == "BLE"
         
         DispatchQueue.main.async {
-            self.lastConnectedDevices[networkKey] = device
+            if isBLE {
+                if let existing = self.lastConnectedDevices[currentMacIP] {
+                    let existingIsBLE = existing.ipAddress == "Bluetooth LE" || existing.ipAddress == "BLE"
+                    if !existingIsBLE {
+                        print("[quick-connect] Not overwriting existing Wi-Fi device (\(existing.name): \(existing.ipAddress)) with BLE device")
+                        return
+                    }
+                }
+            }
+            
+            self.lastConnectedDevices[currentMacIP] = device
             self.saveDeviceHistoryToDisk()
+            print("[quick-connect] Saved last connected device for network \(currentMacIP): \(device.name) (\(device.ipAddress))")
         }
-        print("[quick-connect] Saved last connected device for network \(networkKey): \(device.name) (\(device.ipAddress))")
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
     }
     
     /// Clears the last connected device for the current network
@@ -69,8 +83,36 @@ class QuickConnectManager: ObservableObject {
     
     /// Attempts to wake up and reconnect to a specific discovered device
     func connect(to discoveredDevice: DiscoveredDevice) {
+        let hasWifiIPs = discoveredDevice.ips.contains { $0 != "Bluetooth LE" && !$0.isEmpty }
+        if (discoveredDevice.type == "ble" || discoveredDevice.ips.contains("Bluetooth LE")) && !hasWifiIPs {
+            print("[quick-connect] Discovered device is Bluetooth LE, connecting directly via BLE...")
+            // Show progress in UI
+            DispatchQueue.main.async {
+                self.connectingDeviceID = discoveredDevice.id
+            }
+            
+            // Save as last connected device (so we can auto-reconnect later)
+            let device = Device(
+                name: discoveredDevice.name,
+                ipAddress: "Bluetooth LE",
+                port: discoveredDevice.port,
+                version: "Unknown",
+                adbPorts: [],
+                deviceId: discoveredDevice.deviceId
+            )
+            saveLastConnectedDevice(device)
+            
+            BLECentralManager.shared.connectManually(toUuid: discoveredDevice.deviceId)
+            
+            // Clear progress after short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                self.connectingDeviceID = nil
+            }
+            return
+        }
+        
         // Pick best IP: prefer local (non-100.x) over VPN
-        let bestIP = discoveredDevice.ips.first(where: { !$0.hasPrefix("100.") }) ?? discoveredDevice.ips.first ?? ""
+        let bestIP = discoveredDevice.ips.first(where: { !$0.hasPrefix("100.") && $0 != "Bluetooth LE" }) ?? discoveredDevice.ips.first(where: { $0 != "Bluetooth LE" }) ?? ""
         
         // Convert DiscoveredDevice to Device model
         let device = Device(
@@ -78,12 +120,19 @@ class QuickConnectManager: ObservableObject {
             ipAddress: bestIP,
             port: discoveredDevice.port,
             version: "Unknown",
-            adbPorts: []
+            adbPorts: [],
+            deviceId: discoveredDevice.deviceId
         )
         
         saveLastConnectedDevice(device)
         
         print("[quick-connect] Initiating connection to discovered device: \(device.name) at \(device.ipAddress)")
+        
+        // Show progress in UI
+        DispatchQueue.main.async {
+            self.connectingDeviceID = discoveredDevice.id
+        }
+        
         Task {
             await sendWakeUpRequest(to: device)
         }
@@ -108,6 +157,12 @@ class QuickConnectManager: ObservableObject {
         if macNetwork != deviceNetwork {
             print("[quick-connect] ⚠️ Device IP \(lastDevice.ipAddress) is on different network than Mac \(currentMacIP)")
             print("[quick-connect] Skipping wake-up - device may have changed networks or IP")
+            return
+        }
+        
+        if lastDevice.ipAddress == "Bluetooth LE" {
+            print("[quick-connect] Last connected device is BLE. Initiating BLE reconnection...")
+            BLECentralManager.shared.connectManually(toUuid: lastDevice.deviceId)
             return
         }
         
@@ -171,9 +226,28 @@ class QuickConnectManager: ObservableObject {
     
     private func sendWakeUpRequest(to device: Device) async {
         // Get current connection info to send in wake-up request
-        guard let currentIP = getBestLocalIP(for: device.ipAddress),
-              let currentPort = getCurrentMacPort() else {
-            print("[quick-connect] Cannot wake up device - no current connection info available")
+        var currentIP = getBestLocalIP(for: device.ipAddress)
+        var currentPort = getCurrentMacPort()
+        
+        if currentIP == nil || currentPort == nil {
+            print("[quick-connect] Network info not ready, waiting for WebSocket server...")
+            for i in 1...10 {
+                try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                currentIP = getBestLocalIP(for: device.ipAddress)
+                currentPort = getCurrentMacPort()
+                
+                if currentIP != nil && currentPort != nil {
+                    print("[quick-connect] Network info obtained after \(i * 200)ms")
+                    break
+                }
+            }
+        }
+        
+        guard let finalIP = currentIP, let finalPort = currentPort else {
+            print("[quick-connect] Cannot wake up device - no current connection info available after waiting")
+            DispatchQueue.main.async {
+                self.connectingDeviceID = nil
+            }
             return
         }
         
@@ -184,8 +258,8 @@ class QuickConnectManager: ObservableObject {
         {
             "type": "wakeUpRequest",
             "data": {
-                "macIP": "\(currentIP)",
-                "macPort": \(currentPort),
+                "macIP": "\(finalIP)",
+                "macPort": \(finalPort),
                 "macName": "\(macName)",
                 "isPlus": \(AppState.shared.isPlus)
             }
@@ -194,6 +268,11 @@ class QuickConnectManager: ObservableObject {
         
         // Try to send HTTP POST request to the Android device
         await sendHTTPWakeUpRequest(to: device, message: wakeUpMessage)
+        
+        // Clear progress after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.connectingDeviceID = nil
+        }
     }
     
     /// Selects the best local IP to present to the target device
@@ -247,27 +326,43 @@ class QuickConnectManager: ObservableObject {
         request.httpBody = message.data(using: .utf8)
         request.timeoutInterval = 3.0 // Reduced timeout
         
+        var success = false
+        
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 200 {
+<<<<<<< HEAD
                     print("[quick-connect] ✅ Wake-up request successful - device should reconnect soon")
+=======
+                    print("[quick-connect] Wake-up request successful - device should reconnect soon")
+                    success = true
+                } else if httpResponse.statusCode == 502 {
+                    print("[quick-connect] Wake-up request failed with 502 (Bad Gateway). Retrying once...")
+                    
+                    // Small delay before retry
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    
+                    if let (_, secondResponse) = try? await URLSession.shared.data(for: request),
+                       let secondHttpResponse = secondResponse as? HTTPURLResponse,
+                       secondHttpResponse.statusCode == 200 {
+                        print("[quick-connect] Wake-up retry successful")
+                        success = true
+                    } else {
+                        print("[quick-connect] Wake-up retry failed")
+                    }
                 } else {
                     print("[quick-connect] ⚠️ Wake-up request failed with status: \(httpResponse.statusCode)")
                 }
             }
         } catch {
-            // Only log if it's not a connection refused error (which is expected if service isn't running)
-            let nsError = error as NSError
-            if nsError.code != -1004 { // -1004 is "Could not connect to server"
-                print("[quick-connect] ⚠️ Wake-up error: \(error.localizedDescription)")
-            } else {
-                print("[quick-connect] ℹ️ Android wake-up service not available (this is normal if not implemented)")
-            }
-            
-            // Don't fallback to UDP if HTTP fails - it's likely the service isn't running
-            // await sendUDPWakeUpRequest(to: device, message: message)
+            print("[quick-connect] Failed to send wake-up request: \(error)")
+        }
+        
+        if !success {
+            // Fallback: Try UDP broadcast
+            await sendUDPWakeUpRequest(to: device, message: message)
         }
     }
     

@@ -280,8 +280,32 @@ struct SettingsView: View {
                 .animation(.spring(), value: appState.showMenubarText)
 
                 Spacer(minLength: 100 + (appState.dockSize - 48))
+
+    var body: some View {
+        Group {
+            switch appState.selectedSettingsTab {
+            case .myMac:
+                MyMacSettingsView()
+            case .sync:
+                SyncSettingsView()
+            case .notifications:
+                NotificationsSettingsView()
+            case .mirroring:
+                MirroringSettingsView()
+            case .quickShare:
+                QuickShareSettingsView()
+            case .menubar:
+                MenubarSettingsView()
+            case .appleIntelligence:
+                AppleIntelligenceSettingsView()
+            case .appearance:
+                AppearanceSettingsView()
+            case .airsyncPlus:
+                AirSyncPlusSettingsView()
             }
+        }
         .frame(minWidth: 300)
+<<<<<<< HEAD
         .onReceive(Foundation.NotificationCenter.default.publisher(for: Foundation.Notification.Name.mirrorShouldOpen)) { _ in
             showMirror = true
         }
@@ -314,6 +338,8 @@ struct SettingsView: View {
             Spacer()
         }
         .padding(.horizontal, 8)
+=======
+>>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
     }
 }
 

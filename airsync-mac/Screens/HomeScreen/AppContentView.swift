@@ -40,6 +40,27 @@ struct AppContentView: View {
                                     .help("Clear all notifications")
                                     .keyboardShortcut(.delete, modifiers: .command)
                                     .badge(appState.notifications.count + appState.callEvents.count)
+        TabView(selection: $appState.selectedTab) {
+            // QR Scanner Tab (only when device is NOT connected)
+            if appState.device == nil {
+                ScannerView()
+                    .tabItem {
+                        Image(systemName: "iphone.motion")
+                        //                    Label("Scan", systemImage: "qrcode")
+                    }
+                    .tag(TabIdentifier.qr)
+                    .toolbar {
+                        ToolbarItemGroup {
+                            Button("Help", systemImage: "questionmark.circle") {
+                                showHelpSheet = true
+                            }
+                            .help("Feedback and How to?")
+
+                            Button("Refresh", systemImage: "repeat") {
+                                WebSocketServer.shared.stop()
+                                WebSocketServer.shared.start()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    appState.shouldRefreshQR = true
                                 }
                             }
                         }
@@ -115,6 +136,14 @@ struct AppContentView: View {
                     ScannerView()
                         .transition(.blurReplace)
                 }
+                // Apps Tab
+                AppsView()
+                    .tabItem {
+                        Image(systemName: "app")
+                        //                        Label("Apps", systemImage: "app")
+                    }
+                    .tag(TabIdentifier.apps)
+
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
             .frame(minWidth: 550)
@@ -122,8 +151,29 @@ struct AppContentView: View {
             DockTabBar()
                 .zIndex(1)
         }
+        .background(
+            Group {
+                Button("") {
+                    if appState.device != nil {
+                        appState.selectedTab = .notifications
+                    }
+                }
+                .keyboardShortcut("n", modifiers: [.command])
+                .opacity(0)
+                .allowsHitTesting(false)
+
+                Button("") {
+                    if appState.device != nil {
+                        appState.selectedTab = .apps
+                    }
+                }
+                .keyboardShortcut("a", modifiers: [.command])
+                .opacity(0)
+                .allowsHitTesting(false)
+            }
+        )
         .tabViewStyle(.automatic)
-        .frame(minWidth: 550)
+        .frame(minWidth: 550, minHeight: 510)
         .onAppear {
             // Ensure the correct tab is selected when the view appears
             if appState.device == nil {

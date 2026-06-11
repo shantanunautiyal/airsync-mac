@@ -44,8 +44,10 @@ struct MenubarView: View {
         appState.device?.name ?? "Ready"
     }
 
-    private let minWidthTabs: CGFloat = 280
-    private let toolButtonSize: CGFloat = 38
+    private let minWidthTabs: CGFloat = 360
+    private let toolButtonSize: CGFloat = 42
+
+    @State private var isAppearing = false
 
     var body: some View {
         VStack {
@@ -220,9 +222,33 @@ struct MenubarView: View {
                     .frame(maxWidth: .infinity)
             }
 
+        VStack(spacing: 6) {
+                
+            TopSegmentView(
+                toolButtonSize: toolButtonSize,
+                openAndFocusMainWindow: openAndFocusMainWindow
+            )
+            .staggeredEntrance(index: 0, isVisible: appState.isMenubarWindowOpen)
+            
+            CallControlSegmentView()
+                .staggeredEntrance(index: 1, isVisible: appState.isMenubarWindowOpen)
+            
+            DiscoverySegmentView()
+                .staggeredEntrance(index: 2, isVisible: appState.isMenubarWindowOpen)
+            
+            MediaSegmentView()
+                .staggeredEntrance(index: 3, isVisible: appState.isMenubarWindowOpen)
+            
+            NotificationsSegmentView()
+                .staggeredEntrance(index: 4, isVisible: appState.isMenubarWindowOpen)
         }
-        .frame(minWidth: minWidthTabs)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
+        .frame(width: minWidthTabs + 48)
+        .environment(\.controlActiveState, .active)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            // Optional: close if it loses focus
+        }
     }
 }
 

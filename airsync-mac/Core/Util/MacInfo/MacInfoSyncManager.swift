@@ -5,10 +5,11 @@
 //  Created by Sameera Sandakelum on 2025-09-17.
 //
 import Foundation
-internal import Combine
+import Combine
 import CryptoKit
 
 class MacInfoSyncManager: ObservableObject {
+    static let shared = MacInfoSyncManager()
     @Published var title: String = "Unknown Title"
     @Published var artist: String = "Unknown Artist"
     @Published var album: String = "Unknown Album"
@@ -34,6 +35,8 @@ class MacInfoSyncManager: ObservableObject {
             let isMuted: Bool
             let albumArt: String
             let likeStatus: String
+            let elapsedTime: Int
+            let duration: Int
         }
         let batteryLevel: Int
         let isCharging: Bool
@@ -69,7 +72,6 @@ class MacInfoSyncManager: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 7, repeats: true) { [weak self] _ in
             self?.fetch()
         }
-        RunLoop.main.add(timer!, forMode: .common)
     }
 
     private func stopPolling() {
@@ -80,19 +82,21 @@ class MacInfoSyncManager: ObservableObject {
         timer = nil
 
         // Reset published properties when stopping
-        title = "Unknown Title"
-        artist = "Unknown Artist"
-        album = "Unknown Album"
-        elapsed = 0
-        duration = 0
-        isPlaying = false
-        artworkBase64 = ""
-        lastSentInfo = nil
-        lastSentSnapshot = nil
-        lastSentArtworkHash = nil
+        DispatchQueue.main.async {
+            self.title = "Unknown Title"
+            self.artist = "Unknown Artist"
+            self.album = "Unknown Album"
+            self.elapsed = 0
+            self.duration = 0
+            self.isPlaying = false
+            self.artworkBase64 = ""
+            self.lastSentInfo = nil
+            self.lastSentSnapshot = nil
+            self.lastSentArtworkHash = nil
+        }
     }
 
-    private func fetch() {
+    func fetch() {
         // Only fetch if there's a connected device
         guard AppState.shared.device != nil else { return }
 
@@ -106,6 +110,21 @@ class MacInfoSyncManager: ObservableObject {
                     self?.sendDeviceStatusWithoutMusic()
                     return
                 }
+
+                // IMPORTANT: Filter out AirSync's own bundle ID.
+                // NowPlayingPublisher writes Android's media info into macOS
+                // MPNowPlayingInfoCenter so boringNotch can display it.
+                // media-control reads from the same source, so without this guard
+                // we'd forward AirSync's own published entry back to Android,
+                // creating a play/pause feedback loop.
+                let ownBundleId = Bundle.main.bundleIdentifier ?? ""
+                if let bundleId = info.bundleIdentifier, !ownBundleId.isEmpty,
+                   bundleId == ownBundleId {
+                    // This is our own reflection — treat as nothing playing on Mac
+                    self?.sendDeviceStatusWithoutMusic()
+                    return
+                }
+
                 // MUST update @Published properties on main thread
                 DispatchQueue.main.async {
 //                    print("Now Playing fetched:", info) // debug
@@ -211,10 +230,12 @@ class MacInfoSyncManager: ObservableObject {
                 isPlaying: info.isPlaying ?? false,
                 title: info.title ?? "",
                 artist: info.artist ?? "",
-                volume: 50, // must match payload default
-                isMuted: false, // must match payload default
+                volume: MacRemoteManager.shared.lastVolumeLevel,
+                isMuted: MacRemoteManager.shared.lastVolumeLevel == 0,
                 albumArt: currentHash ?? "", // Use hash for snapshot comparison
-                likeStatus: "none" // must match payload default
+                likeStatus: "none", // must match payload default
+                elapsedTime: Int(info.elapsedTime ?? 0),
+                duration: Int(info.duration ?? 0)
             )
         }()
 

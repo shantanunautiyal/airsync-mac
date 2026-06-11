@@ -9,6 +9,7 @@ struct GlassButtonView: View {
     var primary: Bool = false
     var circleSize: CGFloat? = nil
     var fixedIconSize: CGFloat? = nil
+    var isLoading: Bool = false
     var action: () -> Void = {}
 
     var body: some View {
@@ -31,8 +32,22 @@ struct GlassButtonView: View {
 
     @ViewBuilder
     private var labelContent: some View {
-        if customIconSizingActive, iconOnly, let (imgView, altText) = iconImageView() {
-            imgView.accessibilityLabel(Text(altText))
+        if isLoading {
+            ProgressView()
+                .controlSize(.small)
+                .frame(minWidth: 20)
+        } else if iconOnly {
+            if customIconSizingActive, let (imgView, altText) = iconImageView() {
+                imgView.accessibilityLabel(Text(altText))
+            } else {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                } else if let image {
+                    Image(image)
+                } else {
+                    Text(label)
+                }
+            }
         } else {
             if let systemImage { Label(label, systemImage: systemImage) }
             else if let image { Label(label, image: image) }
@@ -81,7 +96,7 @@ struct GlassButtonView: View {
     }
 }
 
-private extension View {
+extension View {
     @ViewBuilder
     func ifLet<T, Content: View>(_ value: T?, transform: (Self, T) -> Content) -> some View {
         if let value = value {

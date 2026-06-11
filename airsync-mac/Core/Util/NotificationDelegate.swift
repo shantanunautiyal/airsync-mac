@@ -10,17 +10,8 @@ import UserNotifications
 import AppKit
 internal import Combine
 
+@MainActor
 class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                didRemoveDeliveredNotifications identifiers: [String]) {
-        for nid in identifiers {
-            print("[notification-delegate] User dismissed system notification with nid: \(nid)")
-            DispatchQueue.main.async {
-                AppState.shared.removeNotificationById(nid)
-            }
-        }
-    }
-
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
@@ -36,6 +27,34 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let userInfo = response.notification.request.content.userInfo
         
         if response.actionIdentifier == "OPEN_LINK" {
+        // Handle call notification actions
+        if notificationType == "call" {
+            let eventId = userInfo["eventId"] as? String ?? response.notification.request.identifier
+            
+            if response.actionIdentifier == "ACCEPT_CALL" {
+                print("[notification-delegate] User accepted call: \(eventId)")
+                WebSocketServer.shared.sendCallAction(eventId: eventId, action: "accept")
+            } else if response.actionIdentifier == "DECLINE_CALL" {
+                print("[notification-delegate] User declined call: \(eventId)")
+                WebSocketServer.shared.sendCallAction(eventId: eventId, action: "decline")
+            }
+            
+            // Remove the notification
+            DispatchQueue.main.async {
+                AppState.shared.removeCallEventById(eventId)
+            }
+        }
+        // Handle Quick Share notification actions
+        else if notificationType == "quickshare" {
+            let transferID = userInfo["transferID"] as? String ?? ""
+            if response.actionIdentifier == "QUICKSHARE_ACCEPT" {
+                QuickShareManager.shared.handleUserConsent(transferID: transferID, accepted: true)
+            } else if response.actionIdentifier == "QUICKSHARE_DECLINE" {
+                QuickShareManager.shared.handleUserConsent(transferID: transferID, accepted: false)
+            }
+        }
+        // Handle link open
+        else if response.actionIdentifier == "OPEN_LINK" {
             if let urlString = userInfo["url"] as? String, let url = URL(string: urlString) {
                 NSWorkspace.shared.open(url)
             }
@@ -54,6 +73,16 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 )
             } else {
                 print("[notification-delegate] Missing device details or package for scrcpy.")
+            }
+        }
+        // Handle body tap (user clicked the notification itself, not an action button)
+        else if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            if AppState.shared.openAppOnNotificationClick,
+               let package = userInfo["package"] as? String {
+                let opened = MacAppLaunchManager.open(package: package)
+                if !opened {
+                    print("[notification-delegate] No launch preference configured for package: \(package)")
+                }
             }
         }
         // Handle custom actions
