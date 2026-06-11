@@ -933,14 +933,14 @@ extension Securegcm_LoginNotificationInfo: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "securegcm"
 
-extension Securegcm_AppleDeviceDiagonalMils: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_AppleDeviceDiagonalMils: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     4000: .same(proto: "APPLE_PHONE"),
     7900: .same(proto: "APPLE_PAD"),
   ]
 }
 
-extension Securegcm_DeviceType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_DeviceType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "ANDROID"),
@@ -951,7 +951,7 @@ extension Securegcm_DeviceType: @preconcurrency SwiftProtobuf._ProtoNameProvidin
   ]
 }
 
-extension Securegcm_SoftwareFeature: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_SoftwareFeature: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_FEATURE"),
     1: .same(proto: "BETTER_TOGETHER_HOST"),
@@ -965,7 +965,7 @@ extension Securegcm_SoftwareFeature: @preconcurrency SwiftProtobuf._ProtoNamePro
   ]
 }
 
-extension Securegcm_InvocationReason: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_InvocationReason: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "REASON_UNKNOWN"),
     1: .same(proto: "REASON_INITIALIZATION"),
@@ -986,7 +986,7 @@ extension Securegcm_InvocationReason: @preconcurrency SwiftProtobuf._ProtoNamePr
   ]
 }
 
-extension Securegcm_Type: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Type: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "ENROLLMENT"),
     1: .same(proto: "TICKLE"),
@@ -1007,7 +1007,7 @@ extension Securegcm_Type: @preconcurrency SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
-extension Securegcm_GcmDeviceInfo: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_GcmDeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GcmDeviceInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "android_device_id"),
@@ -1378,7 +1378,7 @@ extension Securegcm_GcmDeviceInfo: @preconcurrency SwiftProtobuf.Message, @preco
   }
 }
 
-extension Securegcm_GcmMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_GcmMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GcmMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -1425,7 +1425,7 @@ extension Securegcm_GcmMetadata: @preconcurrency SwiftProtobuf.Message, @preconc
   }
 }
 
-extension Securegcm_Tickle: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Tickle: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Tickle"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "expiry_time"),
@@ -1461,7 +1461,7 @@ extension Securegcm_Tickle: @preconcurrency SwiftProtobuf.Message, @preconcurren
   }
 }
 
-extension Securegcm_LoginNotificationInfo: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_LoginNotificationInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".LoginNotificationInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     2: .standard(proto: "creation_time"),

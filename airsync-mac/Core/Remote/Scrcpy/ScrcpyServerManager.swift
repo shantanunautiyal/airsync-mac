@@ -169,7 +169,8 @@ class ScrcpyServerManager: NSObject {
             try process.run()
             
             // Watchdog timer: if we don't see the log in 5s, proceed anyway
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
                 self.launchTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
                     if let completion = self?.launchCompletion {
                         print("[ScrcpyServerManager] Readiness log timeout - proceeding anyway")

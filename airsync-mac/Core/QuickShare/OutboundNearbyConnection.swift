@@ -63,7 +63,7 @@ public class OutboundNearbyConnection:NearbyConnection{
 			cancel.v1.type = .cancel
 			try? sendTransferSetupFrame(cancel)
 		}
-		try? sendDisconnectionAndDisconnect()
+		sendDisconnectionAndDisconnect()
 	}
 	
 	override func connectionReady() {
@@ -90,11 +90,11 @@ public class OutboundNearbyConnection:NearbyConnection{
 			case .initial:
 				protocolError()
 			case .sentUkeyClientInit:
-				try processUkey2ServerInit(frame: try Securegcm_Ukey2Message(serializedData: frameData), raw: frameData)
+				try processUkey2ServerInit(frame: try Securegcm_Ukey2Message(serializedBytes: frameData), raw: frameData)
 			case .sentUkeyClientFinish:
-				try processConnectionResponse(frame: try Location_Nearby_Connections_OfflineFrame(serializedData: frameData))
+				try processConnectionResponse(frame: try Location_Nearby_Connections_OfflineFrame(serializedBytes: frameData))
 			default:
-				let smsg=try Securemessage_SecureMessage(serializedData: frameData)
+				let smsg=try Securemessage_SecureMessage(serializedBytes: frameData)
 				try decryptAndProcessReceivedSecureMessage(smsg)
 			}
 		}catch{
@@ -110,7 +110,7 @@ public class OutboundNearbyConnection:NearbyConnection{
 	override func processTransferSetupFrame(_ frame: Sharing_Nearby_Frame) throws {
 		if frame.hasV1 && frame.v1.hasType, case .cancel = frame.v1.type {
 			print("Transfer canceled")
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 			delegate?.outboundConnection(connection: self, failedWithError: NearbyError.canceled(reason: .userCanceled))
 			return
 		}
@@ -192,7 +192,7 @@ public class OutboundNearbyConnection:NearbyConnection{
 			sendUkey2Alert(type: .badMessageType)
 			throw NearbyError.ukey2
 		}
-		let serverInit=try Securegcm_Ukey2ServerInit(serializedData: frame.messageData)
+		let serverInit=try Securegcm_Ukey2ServerInit(serializedBytes: frame.messageData)
 		guard serverInit.version==1 else{
 			sendUkey2Alert(type: .badVersion)
 			throw NearbyError.ukey2
@@ -206,7 +206,7 @@ public class OutboundNearbyConnection:NearbyConnection{
 			throw NearbyError.ukey2
 		}
 		
-		let serverKey=try Securemessage_GenericPublicKey(serializedData: serverInit.publicKey)
+		let serverKey=try Securemessage_GenericPublicKey(serializedBytes: serverInit.publicKey)
 		try finalizeKeyExchange(peerKey: serverKey)
 		sendFrameAsync(ukeyClientFinishMsgData!)
 		currentState = .sentUkeyClientFinish
@@ -336,23 +336,23 @@ public class OutboundNearbyConnection:NearbyConnection{
 			}
 		case .reject, .unknown:
 			delegate?.outboundConnection(connection: self, failedWithError: NearbyError.canceled(reason: .userRejected))
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 		case .notEnoughSpace:
 			delegate?.outboundConnection(connection: self, failedWithError: NearbyError.canceled(reason: .notEnoughSpace))
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 		case .timedOut:
 			delegate?.outboundConnection(connection: self, failedWithError: NearbyError.canceled(reason: .timedOut))
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 		case .unsupportedAttachmentType:
 			delegate?.outboundConnection(connection: self, failedWithError: NearbyError.canceled(reason: .unsupportedType))
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 		}
 	}
 	
 	private func sendURL() throws{
 		try sendBytesPayload(data: Data(urlsToSend[0].absoluteString.utf8), id: textPayloadID)
 		delegate?.outboundConnectionTransferFinished(connection: self)
-		try sendDisconnectionAndDisconnect()
+		sendDisconnectionAndDisconnect()
 	}
 	
 	private func sendNextFileChunk() throws{
@@ -367,7 +367,7 @@ public class OutboundNearbyConnection:NearbyConnection{
 				#if DEBUG
 				print("Disconnecting because all files have been transferred")
 				#endif
-				try sendDisconnectionAndDisconnect()
+				sendDisconnectionAndDisconnect()
 				delegate?.outboundConnectionTransferFinished(connection: self)
 				return
 			}

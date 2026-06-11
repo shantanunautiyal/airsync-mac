@@ -431,7 +431,7 @@ extension Securegcm_Ukey2ClientFinished: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "securegcm"
 
-extension Securegcm_Ukey2HandshakeCipher: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2HandshakeCipher: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "RESERVED"),
     100: .same(proto: "P256_SHA512"),
@@ -439,7 +439,7 @@ extension Securegcm_Ukey2HandshakeCipher: @preconcurrency SwiftProtobuf._ProtoNa
   ]
 }
 
-extension Securegcm_Ukey2Message: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2Message: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Ukey2Message"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "message_type"),
@@ -481,7 +481,7 @@ extension Securegcm_Ukey2Message: @preconcurrency SwiftProtobuf.Message, @precon
   }
 }
 
-extension Securegcm_Ukey2Message.TypeEnum: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2Message.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_DO_NOT_USE"),
     1: .same(proto: "ALERT"),
@@ -491,7 +491,7 @@ extension Securegcm_Ukey2Message.TypeEnum: @preconcurrency SwiftProtobuf._ProtoN
   ]
 }
 
-extension Securegcm_Ukey2Alert: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2Alert: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Ukey2Alert"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -533,7 +533,7 @@ extension Securegcm_Ukey2Alert: @preconcurrency SwiftProtobuf.Message, @preconcu
   }
 }
 
-extension Securegcm_Ukey2Alert.AlertType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2Alert.AlertType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "BAD_MESSAGE"),
     2: .same(proto: "BAD_MESSAGE_TYPE"),
@@ -548,7 +548,7 @@ extension Securegcm_Ukey2Alert.AlertType: @preconcurrency SwiftProtobuf._ProtoNa
   ]
 }
 
-extension Securegcm_Ukey2ClientInit: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2ClientInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Ukey2ClientInit"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
@@ -602,7 +602,7 @@ extension Securegcm_Ukey2ClientInit: @preconcurrency SwiftProtobuf.Message, @pre
   }
 }
 
-extension Securegcm_Ukey2ClientInit.CipherCommitment: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2ClientInit.CipherCommitment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Securegcm_Ukey2ClientInit.protoMessageName + ".CipherCommitment"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "handshake_cipher"),
@@ -644,7 +644,7 @@ extension Securegcm_Ukey2ClientInit.CipherCommitment: @preconcurrency SwiftProto
   }
 }
 
-extension Securegcm_Ukey2ServerInit: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2ServerInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Ukey2ServerInit"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
@@ -698,7 +698,7 @@ extension Securegcm_Ukey2ServerInit: @preconcurrency SwiftProtobuf.Message, @pre
   }
 }
 
-extension Securegcm_Ukey2ClientFinished: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Ukey2ClientFinished: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Ukey2ClientFinished"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "public_key"),

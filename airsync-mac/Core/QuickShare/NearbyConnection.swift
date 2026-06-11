@@ -168,7 +168,7 @@ public class NearbyConnection{
 			UInt8(truncatingIfNeeded: length)
 		])
 		lengthPrefixedData.append(frame)
-		connection.send(content: lengthPrefixedData, completion: .contentProcessed({ [weak self] error in
+		connection.send(content: lengthPrefixedData, completion: .contentProcessed({ error in
 			Task { @MainActor in
 				if let completion=completion{
 					completion()
@@ -251,7 +251,7 @@ public class NearbyConnection{
 		guard smsg.hasSignature, smsg.hasHeaderAndBody else { throw NearbyError.requiredFieldMissing("secureMessage.signature|headerAndBody") }
 		let hmac=Data(HMAC<SHA256>.authenticationCode(for: smsg.headerAndBody, using: recvHmacKey!))
 		guard hmac==smsg.signature else { throw NearbyError.protocolError("hmac!=signature") }
-		let headerAndBody=try Securemessage_HeaderAndBody(serializedData: smsg.headerAndBody)
+		let headerAndBody=try Securemessage_HeaderAndBody(serializedBytes: smsg.headerAndBody)
 		var decryptedData=Data(count: headerAndBody.body.count)
 		
 		var decryptedLength:Int=0
@@ -269,11 +269,11 @@ public class NearbyConnection{
 			guard status==kCCSuccess else { fatalError("CCCrypt error: \(status)") }
 		})
 		decryptedData=decryptedData.prefix(decryptedLength)
-		let d2dMsg=try Securegcm_DeviceToDeviceMessage(serializedData: decryptedData)
+		let d2dMsg=try Securegcm_DeviceToDeviceMessage(serializedBytes: decryptedData)
 		guard d2dMsg.hasMessage, d2dMsg.hasSequenceNumber else { throw NearbyError.requiredFieldMissing("d2dMessage.message|sequenceNumber") }
 		clientSeq+=1
 		guard d2dMsg.sequenceNumber==clientSeq else { throw NearbyError.protocolError("Wrong sequence number. Expected \(clientSeq), got \(d2dMsg.sequenceNumber)") }
-		let offlineFrame=try Location_Nearby_Connections_OfflineFrame(serializedData: d2dMsg.message)
+		let offlineFrame=try Location_Nearby_Connections_OfflineFrame(serializedBytes: d2dMsg.message)
 		
 		if offlineFrame.hasV1 && offlineFrame.v1.hasType, case .payloadTransfer = offlineFrame.v1.type {
 			guard offlineFrame.v1.hasPayloadTransfer else { throw NearbyError.requiredFieldMissing("offlineFrame.v1.payloadTransfer") }
@@ -302,7 +302,7 @@ public class NearbyConnection{
 				if (chunk.flags & 1)==1 {
 					payloadBuffers.removeValue(forKey: payloadID)
 					if !(try processBytesPayload(payload: Data(buffer), id: payloadID)){
-						let innerFrame=try Sharing_Nearby_Frame(serializedData: buffer as Data)
+						let innerFrame=try Sharing_Nearby_Frame(serializedBytes: buffer as Data)
 						try processTransferSetupFrame(innerFrame)
 					}
 				}

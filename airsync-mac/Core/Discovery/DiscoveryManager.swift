@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+internal import Combine
 import Network
 
 class DiscoveryManager: ObservableObject {
@@ -172,7 +172,8 @@ class DiscoveryManager: ObservableObject {
     }
     
     private func startReachabilityTimer() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.reachabilityTimer?.invalidate()
             self.reachabilityTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
                 self?.checkMdnsDevicesReachability()

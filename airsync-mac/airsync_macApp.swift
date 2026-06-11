@@ -67,7 +67,7 @@ struct airsync_macApp: App {
         loadCachedIcons()
         loadCachedWallpapers()
 
-
+        AppState.shared.completeLaunchSetup()
 
         // Initialize trial manager early so entitlement state is up-to-date on launch.
         _ = TrialManager.shared
@@ -84,11 +84,15 @@ struct airsync_macApp: App {
                     .containerBackground(.ultraThinMaterial, for: .window)
                     .applyMainWindowSetup(appDelegate: appDelegate, appState: appState)
                     .dropTarget(appState: appState)
+                    .onAppear {
+                        AppState.shared.completeLaunchSetup()
+                    }
             } else {
                 HomeView()
                     .applyMainWindowSetup(appDelegate: appDelegate, appState: appState)
                     .dropTarget(appState: appState)
                     .onAppear {
+                        AppState.shared.completeLaunchSetup()
                         if !appState.isNativeMirroring {
                             dismissWindow(id: "nativeMirror")
                         }
@@ -326,8 +330,10 @@ struct airsync_macApp: App {
                     window.isOpaque = false
                     
                     NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
-                        AppState.shared.showingQuickShareTransfer = false
-                        QuickShareManager.shared.stopDiscovery()
+                        Task { @MainActor in
+                            AppState.shared.showingQuickShareTransfer = false
+                            QuickShareManager.shared.stopDiscovery()
+                        }
                     }
                 }))
         }

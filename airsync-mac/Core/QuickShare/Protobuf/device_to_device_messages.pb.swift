@@ -283,13 +283,13 @@ extension Securegcm_SpakeHandshakeMessage: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "securegcm"
 
-extension Securegcm_Curve: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_Curve: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "ED_25519"),
   ]
 }
 
-extension Securegcm_DeviceToDeviceMessage: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_DeviceToDeviceMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DeviceToDeviceMessage"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "message"),
@@ -331,7 +331,7 @@ extension Securegcm_DeviceToDeviceMessage: @preconcurrency SwiftProtobuf.Message
   }
 }
 
-extension Securegcm_InitiatorHello: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_InitiatorHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InitiatorHello"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "public_dh_key"),
@@ -378,7 +378,7 @@ extension Securegcm_InitiatorHello: @preconcurrency SwiftProtobuf.Message, @prec
   }
 }
 
-extension Securegcm_ResponderHello: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_ResponderHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ResponderHello"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "public_dh_key"),
@@ -425,7 +425,7 @@ extension Securegcm_ResponderHello: @preconcurrency SwiftProtobuf.Message, @prec
   }
 }
 
-extension Securegcm_EcPoint: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_EcPoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".EcPoint"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "curve"),
@@ -480,7 +480,7 @@ extension Securegcm_EcPoint: @preconcurrency SwiftProtobuf.Message, @preconcurre
   }
 }
 
-extension Securegcm_SpakeHandshakeMessage: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securegcm_SpakeHandshakeMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SpakeHandshakeMessage"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "flow_number"),

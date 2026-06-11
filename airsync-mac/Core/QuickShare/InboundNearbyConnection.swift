@@ -51,17 +51,17 @@ public class InboundNearbyConnection: NearbyConnection{
 		do{
 			switch currentState {
 			case .initial:
-				let frame=try Location_Nearby_Connections_OfflineFrame(serializedData: frameData)
+				let frame=try Location_Nearby_Connections_OfflineFrame(serializedBytes: frameData)
 				try processConnectionRequestFrame(frame)
 			case .receivedConnectionRequest:
-				let msg=try Securegcm_Ukey2Message(serializedData: frameData)
+				let msg=try Securegcm_Ukey2Message(serializedBytes: frameData)
 				ukeyClientInitMsgData=frameData
 				try processUkey2ClientInit(msg)
 			case .sentUkeyServerInit:
-				let msg=try Securegcm_Ukey2Message(serializedData: frameData)
+				let msg=try Securegcm_Ukey2Message(serializedBytes: frameData)
 				try processUkey2ClientFinish(msg, raw: frameData)
 			case .receivedUkeyClientFinish:
-				let frame=try Location_Nearby_Connections_OfflineFrame(serializedData: frameData)
+				let frame=try Location_Nearby_Connections_OfflineFrame(serializedBytes: frameData)
 				try processConnectionResponseFrame(frame)
 			default:
 				let smsg=try Securemessage_SecureMessage(serializedBytes: frameData)
@@ -79,7 +79,7 @@ public class InboundNearbyConnection: NearbyConnection{
 	override internal func processTransferSetupFrame(_ frame:Sharing_Nearby_Frame) throws{
 		if frame.hasV1 && frame.v1.hasType, case .cancel = frame.v1.type {
 			print("Transfer canceled")
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 			return
 		}
 		switch currentState{
@@ -141,7 +141,7 @@ public class InboundNearbyConnection: NearbyConnection{
 			if let urlStr=String(data: payload, encoding: .utf8), let url=URL(string: urlStr){
 				NSWorkspace.shared.open(url)
 			}
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 			return true
 		}else if let fileInfo=transferredFiles[id]{
 			fileInfo.fileHandle?.write(payload)
@@ -154,7 +154,7 @@ public class InboundNearbyConnection: NearbyConnection{
 			fileInfo.progress?.unpublish()
 			completedURLs.append(fileInfo.destinationURL)
 			transferredFiles.removeValue(forKey: id)
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 			return true
 		}
 		return false
@@ -383,7 +383,7 @@ public class InboundNearbyConnection: NearbyConnection{
 			cancel.v1.type = .cancel
 			try? sendTransferSetupFrame(cancel)
 		}
-		try? sendDisconnectionAndDisconnect()
+		sendDisconnectionAndDisconnect()
 	}
 	
 	private func acceptTransfer(){
@@ -421,7 +421,7 @@ public class InboundNearbyConnection: NearbyConnection{
 		frame.v1.connectionResponse.status = reason
 		do{
 			try sendTransferSetupFrame(frame)
-			try sendDisconnectionAndDisconnect()
+			sendDisconnectionAndDisconnect()
 		}catch{
 			print("Error \(error)")
 			protocolError()

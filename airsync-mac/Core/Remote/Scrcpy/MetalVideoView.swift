@@ -301,7 +301,6 @@ struct MetalVideoView: NSViewRepresentable {
         func draw(in view: MTKView) {
             lock.lock()
             guard let buffer = currentBuffer,
-                  let device = device,
                   let commandQueue = commandQueue,
                   let pipelineState = pipelineState,
                   let textureCache = textureCache,

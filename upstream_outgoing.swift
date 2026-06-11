@@ -1,0 +1,468 @@
+//
+//  WebSocketServer+Outgoing.swift
+//  airsync-mac
+//
+
+import Foundation
+import Swifter
+import CryptoKit
+import AppKit
+
+extension WebSocketServer {
+    
+    // MARK: - Sending Helpers
+
+    func broadcast(message: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard primarySessionID != nil else { return }
+        activeSessions.forEach { $0.writeText(message) }
+    }
+
+    @discardableResult
+    func sendToFirstAvailable(message: String) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let pId = primarySessionID,
+              let session = activeSessions.first(where: { ObjectIdentifier($0) == pId }) else {
+            return false
+        }
+        let key = symmetricKey
+        
+        if let key = key, let encrypted = encryptMessage(message, using: key) {
+            session.writeText(encrypted)
+        } else {
+            session.writeText(message)
+        }
+        return true
+    }
+
+    private func sendMessage(type: String, data: [String: Any]) {
+        let messageDict: [String: Any] = [
+            "type": type,
+            "data": data
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                let sent = sendToFirstAvailable(message: jsonString)
+                if !sent && BLECentralManager.shared.isAuthenticated {
+                    sendOverBLE(type: type, data: data)
+                }
+            }
+        } catch {
+            print("[websocket] Error creating \(type) message: \(error)")
+        }
+    }
+
+    private func sendOverBLE(type: String, data: [String: Any]) {
+        print("[ble] Sending message over BLE: \(type)")
+        switch type {
+        case "notificationAction":
+            if let id = data["id"] as? String, let name = data["name"] as? String {
+                let text = data["text"] as? String ?? ""
+                let payload = "\(id)|\(name)|\(text)"
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charNotificationAction, payload: payload)
+            }
+        case "mediaControl":
+            if let action = data["action"] as? String {
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: action)
+            }
+        case "volumeControl":
+            if let action = data["action"] as? String {
+                if action == "setVolume", let volume = data["volume"] as? Int {
+                    let payload = "setVolume|\(volume)"
+                    BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: payload)
+                } else {
+                    BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: action)
+                }
+            }
+        case "callControl":
+            if let action = data["action"] as? String {
+                let bleAction: String
+                switch action {
+                case "accept": bleAction = "callAccept"
+                case "decline": bleAction = "callDecline"
+                case "end": bleAction = "callEnd"
+                default: bleAction = action
+                }
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: bleAction)
+            }
+        case "clipboardUpdate":
+            if let content = data["content"] as? String {
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charClipboardDataWrite, payload: content)
+            }
+        case "dismissNotification":
+            if let id = data["id"] as? String {
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charNotificationDismiss, payload: id)
+            }
+        case "status":
+            // Handle status over BLE
+            if let battery = data["battery"] as? [String: Any],
+               let level = battery["level"] as? Int,
+               let charging = battery["isCharging"] as? Bool {
+                let payload = [String(level), charging ? "1" : "0"].joined(separator: BLEConstants.delimiter)
+                BLECentralManager.shared.write(characteristicUUID: BLEConstants.charMacBattery, data: payload.data(using: .utf8)!)
+            }
+            // For media status
+            if let music = data["music"] as? [String: Any] {
+                let isPlaying = music["isPlaying"] as? Bool ?? false
+                let title = music["title"] as? String ?? ""
+                let artist = music["artist"] as? String ?? ""
+                let volume = music["volume"] as? Int ?? 0
+                let isMuted = music["isMuted"] as? Bool ?? false
+                let likeStatus = music["likeStatus"] as? String ?? "none"
+                let albumArt = music["albumArtLite"] as? String ?? "" // Use lite version for BLE
+                
+                let payload = [
+                    isPlaying ? "1" : "0",
+                    title,
+                    artist,
+                    String(volume),
+                    isMuted ? "1" : "0",
+                    likeStatus,
+                    albumArt
+                ].joined(separator: BLEConstants.delimiter)
+                
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMacMediaState, payload: payload)
+            }
+        case "toggleAppNotif":
+            if let package = data["package"] as? String, let state = data["state"] as? String {
+                let payload = "toggleNotif|\(package)|\(state)"
+                BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: payload)
+            }
+        case "disconnectRequest":
+            // Maybe handle disconnect?
+            break
+        default:
+            print("[ble] No BLE mapping for type: \(type)")
+        }
+    }
+
+    // MARK: - Outgoing Requests
+
+    func sendDisconnectRequest() {
+        sendMessage(type: "disconnectRequest", data: [:])
+    }
+
+    func sendQuickShareTrigger() {
+        // print("[websocket] Quick Share trigger requested")
+        sendMessage(type: "startQuickShare", data: [:])
+    }
+
+    func sendRefreshAdbPortsRequest() {
+        sendMessage(type: "refreshAdbPorts", data: [:])
+    }
+
+    func sendTransferCancel(id: String) {
+        sendMessage(type: "fileTransferCancel", data: ["id": id])
+    }
+
+    func toggleNotification(for package: String, to state: Bool) {
+        guard var app = AppState.shared.androidApps[package] else { return }
+        app.listening = state
+        AppState.shared.androidApps[package] = app
+        AppState.shared.saveAppsToDisk()
+
+        sendMessage(type: "toggleAppNotif", data: ["package": package, "state": "\(state)"])
+    }
+
+    func sendBrowseRequest(path: String, showHidden: Bool = false) {
+        sendMessage(type: "browseLs", data: ["path": path, "showHidden": showHidden])
+    }
+
+    func sendPullRequest(path: String) {
+        let message = FileTransferProtocol.buildFilePull(path: path)
+        sendToFirstAvailable(message: message)
+    }
+
+    func dismissNotification(id: String) {
+        sendMessage(type: "dismissNotification", data: ["id": id])
+    }
+
+    func sendNotificationAction(id: String, name: String, text: String? = nil) {
+        var data: [String: Any] = ["id": id, "name": name]
+        if let t = text, !t.isEmpty { data["text"] = t }
+        sendMessage(type: "notificationAction", data: data)
+    }
+
+    // MARK: - Media Controls
+
+    func togglePlayPause() { sendMediaAction("playPause") }
+    func skipNext() { sendMediaAction("next") }
+    func skipPrevious() { sendMediaAction("previous") }
+    func stopMedia() { sendMediaAction("stop") }
+    func toggleLike() { sendMediaAction("toggleLike") }
+    func like() { sendMediaAction("like") }
+    func unlike() { sendMediaAction("unlike") }
+
+    /// Seek Android playback to a specific position (in seconds).
+    func seekTo(positionSeconds: Double) {
+        let positionMs = Int(positionSeconds * 1000)
+        sendMessage(type: "mediaControl", data: ["action": "seekTo", "positionMs": positionMs])
+    }
+
+    private func sendMediaAction(_ action: String) {
+        sendMessage(type: "mediaControl", data: ["action": action])
+        
+        // Also send via BLE
+        BLETransportBridge.shared.sendMediaControl(action)
+    }
+
+    /// Forward a system media command (from MPRemoteCommandCenter) back to Android.
+    /// - action: "play", "pause", "playPause", "nextTrack", "previousTrack"
+    func sendAndroidMediaControl(action: String) {
+        // Map MPRemoteCommandCenter-style names to the Android protocol's action names
+        let androidAction: String
+        switch action {
+        case "play":          androidAction = "play"
+        case "pause":         androidAction = "pause"
+        case "playPause":     androidAction = "playPause"
+        case "nextTrack":     androidAction = "next"
+        case "previousTrack": androidAction = "previous"
+        default:              androidAction = action
+        }
+        sendMediaAction(androidAction)
+    }
+
+    // MARK: - Volume Controls
+
+    func volumeUp() { sendVolumeAction("volumeUp") }
+    func volumeDown() { sendVolumeAction("volumeDown") }
+    func toggleMute() { sendVolumeAction("mute") }
+
+    func setVolume(_ volume: Int) {
+        sendMessage(type: "volumeControl", data: ["action": "setVolume", "volume": volume])
+    }
+
+    private func sendVolumeAction(_ action: String) {
+        sendMessage(type: "volumeControl", data: ["action": action])
+        
+        // Map volume actions to media actions or specific BLE writes if needed
+        // For now, only media control is explicitly in the BLE protocol
+        if action == "volumeUp" {
+            BLETransportBridge.shared.sendMediaControl("volUp")
+        } else if action == "volumeDown" {
+            BLETransportBridge.shared.sendMediaControl("volDown")
+        }
+    }
+
+    func sendMacVolumeUpdate(level: Int) {
+        sendMessage(type: "macVolume", data: ["volume": level])
+    }
+
+    func sendModifierStatus(status: [String: [String: Any]]) {
+        sendMessage(type: "modifierStatus", data: status)
+    }
+
+    func sendClipboardUpdate(_ message: String) {
+        let sent = sendToFirstAvailable(message: message)
+        if !sent && BLECentralManager.shared.isAuthenticated {
+             // Extract text if possible or just send raw
+             if let data = message.data(using: .utf8),
+                let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let innerData = dict["data"] as? [String: Any],
+                let text = innerData["text"] as? String {
+                 BLETransportBridge.shared.sendClipboard(text)
+             }
+        }
+    }
+
+    // MARK: - Device Status (Mac -> Android)
+
+    func sendDeviceStatus(batteryLevel: Int, isCharging: Bool, isPaired: Bool, musicInfo: NowPlayingInfo?, albumArtBase64: String? = nil) {
+        var statusDict: [String: Any] = [
+            "battery": ["level": batteryLevel, "isCharging": isCharging],
+            "isPaired": isPaired
+        ]
+
+        if let musicInfo {
+            var musicDict: [String: Any] = [
+                "isPlaying": musicInfo.isPlaying ?? false,
+                "title": musicInfo.title ?? "",
+                "artist": musicInfo.artist ?? "",
+                "volume": MacRemoteManager.shared.lastVolumeLevel,
+                "isMuted": MacRemoteManager.shared.lastVolumeLevel == 0,
+                "likeStatus": "none",
+                "elapsedTime": musicInfo.elapsedTime ?? 0,
+                "duration": musicInfo.duration ?? 0,
+                "timestamp": musicInfo.timestamp ?? "",
+                "playbackRate": musicInfo.playbackRate ?? 1.0
+            ]
+            
+            if let art = albumArtBase64 {
+                musicDict["albumArt"] = art
+            }
+
+            // Create lite version for BLE (scaled down and compressed)
+            if let artworkData = musicInfo.artworkData, let image = NSImage(data: artworkData) {
+                let size = NSSize(width: 80, height: 80)
+                let frame = NSRect(x: 0, y: 0, width: size.width, height: size.height)
+                if let representation = image.bestRepresentation(for: frame, context: nil, hints: nil) {
+                    let resizedImage = NSImage(size: size, flipped: false, drawingHandler: { (_) -> Bool in
+                        return representation.draw(in: frame)
+                    })
+                    if let tiff = resizedImage.tiffRepresentation,
+                       let bitmap = NSBitmapImageRep(data: tiff),
+                       let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.3]) {
+                        musicDict["albumArtLite"] = jpegData.base64EncodedString()
+                    }
+                }
+            }
+            
+            statusDict["music"] = musicDict
+        }
+
+        sendMessage(type: "status", data: statusDict)
+    }
+
+    // MARK: - Call Control
+
+    /// Executes a call control action on the Android device via ADB.
+    /// Maps generic actions (accept, end) to specific ADB key events.
+    func sendMacStatusOverBLE() {
+        let batteryLevel: Int
+        let isCharging: Bool
+        
+        if let status = BatteryInfo.fetchStatus() {
+            batteryLevel = status.percentage
+            isCharging = status.isCharging
+        } else {
+            batteryLevel = -1 // Desktop Mac
+            isCharging = false
+        }
+        
+        let payload = "\(batteryLevel)|\(isCharging ? "1" : "0")"
+        if let data = payload.data(using: .utf8) {
+            BLECentralManager.shared.write(characteristicUUID: BLEConstants.charMacBattery, data: data)
+        }
+        
+        // Also send name if we have it
+        let name = Host.current().localizedName ?? "My Mac"
+        BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charDeviceName, payload: name)
+    }
+
+    func sendCallAction(eventId: String, action: String) {
+        let commandAction: String
+        switch action.lowercased() {
+        case "accept":
+            commandAction = "accept"
+        case "decline":
+            commandAction = "decline"
+        case "end":
+            commandAction = "end"
+        default:
+            commandAction = action.lowercased()
+        }
+        
+        // Natively send programmatic control command over WebSocket / BLE sync channel
+        sendMessage(type: "callControl", data: ["action": commandAction])
+    }
+
+    // MARK: - File Transfer (Mac -> Android)
+
+    /// Initiates a robust file transfer to the connected device.
+    /// Implements a sliding window protocol with checksum verification and retry logic for reliable delivery.
+    func sendFile(url: URL, chunkSize: Int = 64 * 1024, isClipboard: Bool = false) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            guard FileManager.default.fileExists(atPath: url.path) else { return }
+
+            let fileName = url.lastPathComponent
+            let mime = self.mimeType(for: url) ?? "application/octet-stream"
+            
+            guard let fileHandle = try? FileHandle(forReadingFrom: url) else { return }
+            
+            let totalSize: Int
+            do {
+                let attr = try FileManager.default.attributesOfItem(atPath: url.path)
+                totalSize = attr[.size] as? Int ?? 0
+            } catch { return }
+            
+            var hasher = SHA256()
+            let hashBuffer = 1024 * 1024
+            while true {
+                let data = fileHandle.readData(ofLength: hashBuffer)
+                if data.isEmpty { break }
+                hasher.update(data: data)
+            }
+            let checksum = hasher.finalize().compactMap { String(format: "%02x", $0) }.joined()
+            try? fileHandle.seek(toOffset: 0)
+
+            let transferId = UUID().uuidString
+
+            let initMessage = FileTransferProtocol.buildInit(id: transferId, name: fileName, size: Int64(totalSize), mime: mime, chunkSize: chunkSize, checksum: checksum, isClipboard: isClipboard)
+            self.sendToFirstAvailable(message: initMessage)
+
+            let windowSize = 8
+            let totalChunks = totalSize == 0 ? 1 : (totalSize + chunkSize - 1) / chunkSize
+            
+            self.lock.lock()
+            self.outgoingAcks[transferId] = []
+            self.lock.unlock()
+
+            var sentBuffer: [Int: (payload: String, attempts: Int, lastSent: Date)] = [:]
+            var nextIndexToSend = 0
+
+            var transferFailed = false
+            while !transferFailed {
+                self.lock.lock()
+                let acked = self.outgoingAcks[transferId] ?? []
+                self.lock.unlock()
+                
+                var baseIndex = 0
+                while acked.contains(baseIndex) {
+                    sentBuffer.removeValue(forKey: baseIndex)
+                    baseIndex += 1
+                }
+
+                let _ = min(baseIndex * chunkSize, totalSize)
+
+                if baseIndex >= totalChunks { break }
+
+                while nextIndexToSend < totalChunks && (nextIndexToSend - baseIndex) < windowSize {
+
+                    // sendChunkAt logic
+                    let offset = UInt64(nextIndexToSend * chunkSize)
+                    do {
+                        try fileHandle.seek(toOffset: offset)
+                        let chunk = fileHandle.readData(ofLength: chunkSize)
+                        let base64 = chunk.base64EncodedString()
+                        let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: nextIndexToSend, base64Chunk: base64)
+                        self.sendToFirstAvailable(message: chunkMessage)
+                        sentBuffer[nextIndexToSend] = (payload: base64, attempts: 1, lastSent: Date())
+                    } catch {
+                        transferFailed = true
+                        break
+                    }
+                    nextIndexToSend += 1
+                }
+
+                let now = Date()
+                for (idx, entry) in sentBuffer {
+                    if acked.contains(idx) { continue }
+                    let elapsedMs = now.timeIntervalSince(entry.lastSent) * 1000.0
+                    if elapsedMs > Double(self.ackWaitMs) {
+                             print("[websocket] Multiple retries failed for chunk \(idx)")
+                        let chunkMessage = FileTransferProtocol.buildChunk(id: transferId, index: idx, base64Chunk: entry.payload)
+                        self.sendToFirstAvailable(message: chunkMessage)
+                        sentBuffer[idx] = (payload: entry.payload, attempts: entry.attempts + 1, lastSent: Date())
+                    }
+                }
+                usleep(20_000)
+            }
+
+            try? fileHandle.close()
+            
+            if !transferFailed {
+                let completeMessage = FileTransferProtocol.buildComplete(id: transferId, name: fileName, size: Int64(totalSize), checksum: checksum)
+                self.sendToFirstAvailable(message: completeMessage)
+            }
+            
+            self.lock.lock()
+            self.outgoingAcks.removeValue(forKey: transferId)
+            self.lock.unlock()
+        }
+    }
+}

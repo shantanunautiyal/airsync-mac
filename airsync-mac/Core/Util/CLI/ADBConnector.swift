@@ -228,8 +228,6 @@ struct ADBConnector {
         runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"], completion: { output in
             let lines = output.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: .newlines)
             var ports: [UInt16] = []
-            var tlsPort: UInt16?
-            var normalPort: UInt16?
 
             for line in lines {
                 if line.contains(ip) {
@@ -246,14 +244,6 @@ struct ADBConnector {
                 }
             }
             
-            // Prefer TLS port, then normal port
-            if let tls = tlsPort {
-                ports.append(tls)
-            }
-            if let normal = normalPort {
-                ports.append(normal)
-            }
-            
             completion(ports)
         })
     }
@@ -266,7 +256,6 @@ struct ADBConnector {
         }
     }
 
->>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
     private static func attemptConnectionToNextPort(adbPath: String, ip: String, portsToTry: [UInt16], currentIndex: Int, reportedIP: String? = nil) {
         if currentIndex >= portsToTry.count {
             if let reportedIP = reportedIP, reportedIP != ip {
@@ -323,34 +312,21 @@ struct ADBConnector {
                     AppState.shared.adbConnecting = false
                     connectionLock.lock()
                     clearConnectionFlag()
-<<<<<<< HEAD
                     connectionLock.unlock()
-                }
-                else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
+                } else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
                     // Connection exists elsewhere, show error and try next port
                     AppState.shared.adbConnected = false
                     logBinaryDetection("(T＿T) Port \(currentPort): ADB connection failed due to existing connection.")
-                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
-
-Port \(currentPort) (attempt \(portNumber)/\(totalPorts)): Connection failed - another ADB instance already using the device.
-"""
+                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nPort \(currentPort): Connection failed - another ADB instance already using the device."
                     // Try next port after a short delay instead of giving up
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP)
                     }
-                }
-                else {
-                    // This port didn't work, try the next one
-                    logBinaryDetection("Port \(currentPort) (attempt \(portNumber)/\(totalPorts)): Connection failed, trying next port...")
-                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + """
-
-Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOutput)
-"""
-                    // Try next port after a short delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-=======
                 } else {
-                    logBinaryDetection("Port \(currentPort) failed, trying next...")
+                    // This port didn't work, try the next one
+                    logBinaryDetection("Port \(currentPort): Connection failed, trying next port...")
+                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nAttempt on port \(currentPort): Failed - \(trimmedOutput)"
+                    // Try next port after a short delay
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
                         attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP)
                     }
@@ -553,17 +529,8 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
             }
         }
     }
-<<<<<<< HEAD
-    
-    // MARK: - ADB File Transfer
-    static func pull(remotePath: String, completion: ((Bool) -> Void)? = nil) {
-        guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
-            completion?(false)
-            return
-        }
-=======
->>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
 
+    // MARK: - ADB File Transfer
     static func pull(remotePath: String, completion: ((Bool) -> Void)? = nil) {
         DispatchQueue.main.async {
             let panel = NSOpenPanel()
@@ -605,7 +572,7 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
                                 args.insert(contentsOf: ["-s", fullAddress], at: 0)
                             }
                             
-                            runADBCommand(adbPath: adbPath, arguments: args) { output in
+                            runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
                                 let success = !output.contains("error") && !output.contains("failed")
                                 DispatchQueue.main.async {
                                     AppState.shared.isADBTransferring = false
@@ -613,7 +580,7 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
                                     if success { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: destiny) }
                                     completion?(success)
                                 }
-                            }
+                            })
                         }
                     }
                 } else {
@@ -656,14 +623,14 @@ Attempt \(portNumber)/\(totalPorts) on port \(currentPort): Failed - \(trimmedOu
                         args.insert(contentsOf: ["-s", fullAddress], at: 0)
                     }
                     
-                    runADBCommand(adbPath: adbPath, arguments: args) { output in
+                    runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
                         let success = !output.contains("error") && !output.contains("failed")
                         DispatchQueue.main.async {
                             AppState.shared.isADBTransferring = false
                             AppState.shared.adbTransferringFilePath = nil
                             completion?(success)
                         }
-                    }
+                    })
                 }
             }
         }

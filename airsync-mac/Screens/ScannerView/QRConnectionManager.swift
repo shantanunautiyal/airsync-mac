@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Combine
+internal import Combine
 import QRCode
 import LocalAuthentication
 
@@ -64,8 +64,10 @@ class QRConnectionManager: ObservableObject {
         
         if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
             let reason = "Authenticate to reveal connection credentials"
-            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, authenticationError in
-                DispatchQueue.main.async {
+            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { [weak self] success, authenticationError in
+                guard let self = self else { return }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     if success {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             self.isUnlocked = true

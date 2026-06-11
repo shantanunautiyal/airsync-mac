@@ -2959,7 +2959,7 @@ extension Location_Nearby_Connections_PresenceDevice.DeviceType: @unchecked Send
 
 fileprivate let _protobuf_package = "location.nearby.connections"
 
-extension Location_Nearby_Connections_EndpointType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_EndpointType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_ENDPOINT"),
     1: .same(proto: "CONNECTIONS_ENDPOINT"),
@@ -2967,7 +2967,7 @@ extension Location_Nearby_Connections_EndpointType: @preconcurrency SwiftProtobu
   ]
 }
 
-extension Location_Nearby_Connections_OfflineFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_OfflineFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".OfflineFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
@@ -3009,14 +3009,14 @@ extension Location_Nearby_Connections_OfflineFrame: @preconcurrency SwiftProtobu
   }
 }
 
-extension Location_Nearby_Connections_OfflineFrame.Version: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_OfflineFrame.Version: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_VERSION"),
     1: .same(proto: "V1"),
   ]
 }
 
-extension Location_Nearby_Connections_V1Frame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_V1Frame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".V1Frame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -3180,7 +3180,7 @@ extension Location_Nearby_Connections_V1Frame: @preconcurrency SwiftProtobuf.Mes
   }
 }
 
-extension Location_Nearby_Connections_V1Frame.FrameType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_V1Frame.FrameType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_FRAME_TYPE"),
     1: .same(proto: "CONNECTION_REQUEST"),
@@ -3198,7 +3198,7 @@ extension Location_Nearby_Connections_V1Frame.FrameType: @preconcurrency SwiftPr
   ]
 }
 
-extension Location_Nearby_Connections_ConnectionRequestFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionRequestFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ConnectionRequestFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "endpoint_id"),
@@ -3404,7 +3404,7 @@ extension Location_Nearby_Connections_ConnectionRequestFrame: @preconcurrency Sw
   }
 }
 
-extension Location_Nearby_Connections_ConnectionRequestFrame.Medium: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionRequestFrame.Medium: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_MEDIUM"),
     1: .same(proto: "MDNS"),
@@ -3423,14 +3423,14 @@ extension Location_Nearby_Connections_ConnectionRequestFrame.Medium: @preconcurr
   ]
 }
 
-extension Location_Nearby_Connections_ConnectionRequestFrame.ConnectionMode: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionRequestFrame.ConnectionMode: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "LEGACY"),
     1: .same(proto: "INSTANT"),
   ]
 }
 
-extension Location_Nearby_Connections_ConnectionResponseFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionResponseFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ConnectionResponseFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "status"),
@@ -3514,7 +3514,7 @@ extension Location_Nearby_Connections_ConnectionResponseFrame: @preconcurrency S
   }
 }
 
-extension Location_Nearby_Connections_ConnectionResponseFrame.ResponseStatus: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionResponseFrame.ResponseStatus: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_RESPONSE_STATUS"),
     1: .same(proto: "ACCEPT"),
@@ -3522,7 +3522,7 @@ extension Location_Nearby_Connections_ConnectionResponseFrame.ResponseStatus: @p
   ]
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PayloadTransferFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "packet_type"),
@@ -3576,7 +3576,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame: @preconcurrency Swif
   }
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.PacketType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.PacketType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_PACKET_TYPE"),
     1: .same(proto: "DATA"),
@@ -3585,7 +3585,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame.PacketType: @preconcu
   ]
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_PayloadTransferFrame.protoMessageName + ".PayloadHeader"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
@@ -3657,7 +3657,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader: @preco
   }
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader.PayloadType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader.PayloadType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_PAYLOAD_TYPE"),
     1: .same(proto: "BYTES"),
@@ -3666,7 +3666,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame.PayloadHeader.Payload
   ]
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.PayloadChunk: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.PayloadChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_PayloadTransferFrame.protoMessageName + ".PayloadChunk"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "flags"),
@@ -3720,13 +3720,13 @@ extension Location_Nearby_Connections_PayloadTransferFrame.PayloadChunk: @precon
   }
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.PayloadChunk.Flags: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.PayloadChunk.Flags: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "LAST_CHUNK"),
   ]
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_PayloadTransferFrame.protoMessageName + ".ControlMessage"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "event"),
@@ -3768,7 +3768,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage: @prec
   }
 }
 
-extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage.EventType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage.EventType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_EVENT_TYPE"),
     1: .same(proto: "PAYLOAD_ERROR"),
@@ -3777,7 +3777,7 @@ extension Location_Nearby_Connections_PayloadTransferFrame.ControlMessage.EventT
   ]
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".BandwidthUpgradeNegotiationFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "event_type"),
@@ -3837,7 +3837,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame: @preconc
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.EventType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.EventType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_EVENT_TYPE"),
     1: .same(proto: "UPGRADE_PATH_AVAILABLE"),
@@ -3850,7 +3850,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.EventType
   ]
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.protoMessageName + ".UpgradePathInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "medium"),
@@ -3998,7 +3998,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.Medium: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.Medium: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_MEDIUM"),
     1: .same(proto: "MDNS"),
@@ -4016,7 +4016,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   ]
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiHotspotCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiHotspotCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".WifiHotspotCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "ssid"),
@@ -4076,7 +4076,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiLanSocket: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiLanSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".WifiLanSocket"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "ip_address"),
@@ -4118,7 +4118,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.BluetoothCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.BluetoothCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".BluetoothCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "service_name"),
@@ -4160,7 +4160,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiAwareCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiAwareCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".WifiAwareCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "service_id"),
@@ -4208,7 +4208,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiDirectCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WifiDirectCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".WifiDirectCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "ssid"),
@@ -4274,7 +4274,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WebRtcCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.WebRtcCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".WebRtcCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "peer_id"),
@@ -4316,7 +4316,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.AwdlCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.AwdlCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".AwdlCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "service_name"),
@@ -4364,7 +4364,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.UpgradePathRequest: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.UpgradePathRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePathInfo.protoMessageName + ".UpgradePathRequest"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "mediums"),
@@ -4406,7 +4406,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.UpgradePa
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.SafeToClosePriorChannel: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.SafeToClosePriorChannel: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.protoMessageName + ".SafeToClosePriorChannel"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "sta_frequency"),
@@ -4442,7 +4442,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.SafeToClo
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientIntroduction: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientIntroduction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.protoMessageName + ".ClientIntroduction"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "endpoint_id"),
@@ -4490,7 +4490,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientInt
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientIntroductionAck: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientIntroductionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.protoMessageName + ".ClientIntroductionAck"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -4509,7 +4509,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeNegotiationFrame.ClientInt
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".BandwidthUpgradeRetryFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "supported_medium"),
@@ -4551,7 +4551,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame: @preconcurrenc
   }
 }
 
-extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame.Medium: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame.Medium: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_MEDIUM"),
     2: .same(proto: "BLUETOOTH"),
@@ -4569,7 +4569,7 @@ extension Location_Nearby_Connections_BandwidthUpgradeRetryFrame.Medium: @precon
   ]
 }
 
-extension Location_Nearby_Connections_KeepAliveFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_KeepAliveFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".KeepAliveFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "ack"),
@@ -4611,7 +4611,7 @@ extension Location_Nearby_Connections_KeepAliveFrame: @preconcurrency SwiftProto
   }
 }
 
-extension Location_Nearby_Connections_DisconnectionFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_DisconnectionFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DisconnectionFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "request_safe_to_disconnect"),
@@ -4653,7 +4653,7 @@ extension Location_Nearby_Connections_DisconnectionFrame: @preconcurrency SwiftP
   }
 }
 
-extension Location_Nearby_Connections_PairedKeyEncryptionFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PairedKeyEncryptionFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PairedKeyEncryptionFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "signed_data"),
@@ -4689,7 +4689,7 @@ extension Location_Nearby_Connections_PairedKeyEncryptionFrame: @preconcurrency 
   }
 }
 
-extension Location_Nearby_Connections_AuthenticationMessageFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AuthenticationMessageFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AuthenticationMessageFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "auth_message"),
@@ -4725,7 +4725,7 @@ extension Location_Nearby_Connections_AuthenticationMessageFrame: @preconcurrenc
   }
 }
 
-extension Location_Nearby_Connections_AuthenticationResultFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AuthenticationResultFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AuthenticationResultFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "result"),
@@ -4761,7 +4761,7 @@ extension Location_Nearby_Connections_AuthenticationResultFrame: @preconcurrency
   }
 }
 
-extension Location_Nearby_Connections_AutoResumeFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AutoResumeFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AutoResumeFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "event_type"),
@@ -4815,7 +4815,7 @@ extension Location_Nearby_Connections_AutoResumeFrame: @preconcurrency SwiftProt
   }
 }
 
-extension Location_Nearby_Connections_AutoResumeFrame.EventType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AutoResumeFrame.EventType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_AUTO_RESUME_EVENT_TYPE"),
     1: .same(proto: "PAYLOAD_RESUME_TRANSFER_START"),
@@ -4823,7 +4823,7 @@ extension Location_Nearby_Connections_AutoResumeFrame.EventType: @preconcurrency
   ]
 }
 
-extension Location_Nearby_Connections_AutoReconnectFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AutoReconnectFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AutoReconnectFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "endpoint_id"),
@@ -4871,7 +4871,7 @@ extension Location_Nearby_Connections_AutoReconnectFrame: @preconcurrency SwiftP
   }
 }
 
-extension Location_Nearby_Connections_AutoReconnectFrame.EventType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AutoReconnectFrame.EventType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_EVENT_TYPE"),
     1: .same(proto: "CLIENT_INTRODUCTION"),
@@ -4879,7 +4879,7 @@ extension Location_Nearby_Connections_AutoReconnectFrame.EventType: @preconcurre
   ]
 }
 
-extension Location_Nearby_Connections_MediumMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_MediumMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".MediumMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "supports_5_ghz"),
@@ -5035,7 +5035,7 @@ extension Location_Nearby_Connections_MediumMetadata: @preconcurrency SwiftProto
   }
 }
 
-extension Location_Nearby_Connections_AvailableChannels: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_AvailableChannels: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AvailableChannels"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "channels"),
@@ -5067,7 +5067,7 @@ extension Location_Nearby_Connections_AvailableChannels: @preconcurrency SwiftPr
   }
 }
 
-extension Location_Nearby_Connections_WifiDirectCliUsableChannels: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_WifiDirectCliUsableChannels: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiDirectCliUsableChannels"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "channels"),
@@ -5099,7 +5099,7 @@ extension Location_Nearby_Connections_WifiDirectCliUsableChannels: @preconcurren
   }
 }
 
-extension Location_Nearby_Connections_WifiLanUsableChannels: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_WifiLanUsableChannels: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiLanUsableChannels"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "channels"),
@@ -5131,7 +5131,7 @@ extension Location_Nearby_Connections_WifiLanUsableChannels: @preconcurrency Swi
   }
 }
 
-extension Location_Nearby_Connections_WifiAwareUsableChannels: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_WifiAwareUsableChannels: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiAwareUsableChannels"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "channels"),
@@ -5163,7 +5163,7 @@ extension Location_Nearby_Connections_WifiAwareUsableChannels: @preconcurrency S
   }
 }
 
-extension Location_Nearby_Connections_WifiHotspotStaUsableChannels: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_WifiHotspotStaUsableChannels: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiHotspotStaUsableChannels"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "channels"),
@@ -5195,7 +5195,7 @@ extension Location_Nearby_Connections_WifiHotspotStaUsableChannels: @preconcurre
   }
 }
 
-extension Location_Nearby_Connections_MediumRole: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_MediumRole: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".MediumRole"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "support_wifi_direct_group_owner"),
@@ -5273,7 +5273,7 @@ extension Location_Nearby_Connections_MediumRole: @preconcurrency SwiftProtobuf.
   }
 }
 
-extension Location_Nearby_Connections_LocationHint: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_LocationHint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".LocationHint"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "location"),
@@ -5315,7 +5315,7 @@ extension Location_Nearby_Connections_LocationHint: @preconcurrency SwiftProtobu
   }
 }
 
-extension Location_Nearby_Connections_LocationStandard: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_LocationStandard: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".LocationStandard"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -5334,7 +5334,7 @@ extension Location_Nearby_Connections_LocationStandard: @preconcurrency SwiftPro
   }
 }
 
-extension Location_Nearby_Connections_LocationStandard.Format: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_LocationStandard.Format: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "E164_CALLING"),
@@ -5342,7 +5342,7 @@ extension Location_Nearby_Connections_LocationStandard.Format: @preconcurrency S
   ]
 }
 
-extension Location_Nearby_Connections_OsInfo: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_OsInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".OsInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -5378,7 +5378,7 @@ extension Location_Nearby_Connections_OsInfo: @preconcurrency SwiftProtobuf.Mess
   }
 }
 
-extension Location_Nearby_Connections_OsInfo.OsType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_OsInfo.OsType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_OS_TYPE"),
     1: .same(proto: "ANDROID"),
@@ -5389,7 +5389,7 @@ extension Location_Nearby_Connections_OsInfo.OsType: @preconcurrency SwiftProtob
   ]
 }
 
-extension Location_Nearby_Connections_ConnectionsDevice: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_ConnectionsDevice: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ConnectionsDevice"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "endpoint_id"),
@@ -5443,7 +5443,7 @@ extension Location_Nearby_Connections_ConnectionsDevice: @preconcurrency SwiftPr
   }
 }
 
-extension Location_Nearby_Connections_PresenceDevice: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PresenceDevice: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PresenceDevice"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "endpoint_id"),
@@ -5533,7 +5533,7 @@ extension Location_Nearby_Connections_PresenceDevice: @preconcurrency SwiftProto
   }
 }
 
-extension Location_Nearby_Connections_PresenceDevice.DeviceType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Location_Nearby_Connections_PresenceDevice.DeviceType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "PHONE"),

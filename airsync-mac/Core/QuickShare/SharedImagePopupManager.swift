@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 import Foundation
 import UniformTypeIdentifiers
-import Combine
+public import Combine
 import ImageIO
 import AVFoundation
 

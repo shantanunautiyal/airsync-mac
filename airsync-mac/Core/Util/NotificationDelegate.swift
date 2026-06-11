@@ -25,8 +25,8 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         // Handle Live Activities actions
         handleLiveActivitiesAction(response)
         let userInfo = response.notification.request.content.userInfo
-        
-        if response.actionIdentifier == "OPEN_LINK" {
+        let notificationType = userInfo["type"] as? String ?? ""
+
         // Handle call notification actions
         if notificationType == "call" {
             let eventId = userInfo["eventId"] as? String ?? response.notification.request.identifier
@@ -143,7 +143,6 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         // Live Health Actions
         case "LIVE_HEALTH_VIEW":
             print("[live-activities] User wants to view health details")
-            // Navigate to health tab
             DispatchQueue.main.async {
                 AppState.shared.selectedTab = .health
             }

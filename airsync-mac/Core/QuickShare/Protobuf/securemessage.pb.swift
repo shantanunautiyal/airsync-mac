@@ -506,7 +506,7 @@ extension Securemessage_GenericPublicKey: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "securemessage"
 
-extension Securemessage_SigScheme: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_SigScheme: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "HMAC_SHA256"),
     2: .same(proto: "ECDSA_P256_SHA256"),
@@ -514,14 +514,14 @@ extension Securemessage_SigScheme: @preconcurrency SwiftProtobuf._ProtoNameProvi
   ]
 }
 
-extension Securemessage_EncScheme: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_EncScheme: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "NONE"),
     2: .same(proto: "AES_256_CBC"),
   ]
 }
 
-extension Securemessage_PublicKeyType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_PublicKeyType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "EC_P256"),
     2: .same(proto: "RSA2048"),
@@ -529,7 +529,7 @@ extension Securemessage_PublicKeyType: @preconcurrency SwiftProtobuf._ProtoNameP
   ]
 }
 
-extension Securemessage_SecureMessage: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_SecureMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SecureMessage"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "header_and_body"),
@@ -577,7 +577,7 @@ extension Securemessage_SecureMessage: @preconcurrency SwiftProtobuf.Message, @p
   }
 }
 
-extension Securemessage_Header: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_Header: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Header"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "signature_scheme"),
@@ -655,7 +655,7 @@ extension Securemessage_Header: @preconcurrency SwiftProtobuf.Message, @preconcu
   }
 }
 
-extension Securemessage_HeaderAndBody: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_HeaderAndBody: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".HeaderAndBody"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "header"),
@@ -704,7 +704,7 @@ extension Securemessage_HeaderAndBody: @preconcurrency SwiftProtobuf.Message, @p
   }
 }
 
-extension Securemessage_HeaderAndBodyInternal: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_HeaderAndBodyInternal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".HeaderAndBodyInternal"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "header"),
@@ -752,7 +752,7 @@ extension Securemessage_HeaderAndBodyInternal: @preconcurrency SwiftProtobuf.Mes
   }
 }
 
-extension Securemessage_EcP256PublicKey: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_EcP256PublicKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".EcP256PublicKey"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "x"),
@@ -800,7 +800,7 @@ extension Securemessage_EcP256PublicKey: @preconcurrency SwiftProtobuf.Message, 
   }
 }
 
-extension Securemessage_SimpleRsaPublicKey: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_SimpleRsaPublicKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SimpleRsaPublicKey"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "n"),
@@ -847,7 +847,7 @@ extension Securemessage_SimpleRsaPublicKey: @preconcurrency SwiftProtobuf.Messag
   }
 }
 
-extension Securemessage_DhPublicKey: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_DhPublicKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DhPublicKey"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "y"),
@@ -888,7 +888,7 @@ extension Securemessage_DhPublicKey: @preconcurrency SwiftProtobuf.Message, @pre
   }
 }
 
-extension Securemessage_GenericPublicKey: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Securemessage_GenericPublicKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GenericPublicKey"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),

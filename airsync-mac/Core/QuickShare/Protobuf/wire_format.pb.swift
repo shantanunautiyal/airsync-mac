@@ -1478,7 +1478,7 @@ extension Sharing_Nearby_StreamDetails: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "sharing.nearby"
 
-extension Sharing_Nearby_FileMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_FileMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".FileMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
@@ -1562,7 +1562,7 @@ extension Sharing_Nearby_FileMetadata: @preconcurrency SwiftProtobuf.Message, @p
   }
 }
 
-extension Sharing_Nearby_FileMetadata.TypeEnum: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_FileMetadata.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "IMAGE"),
@@ -1574,7 +1574,7 @@ extension Sharing_Nearby_FileMetadata.TypeEnum: @preconcurrency SwiftProtobuf._P
   ]
 }
 
-extension Sharing_Nearby_TextMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_TextMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TextMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     2: .standard(proto: "text_title"),
@@ -1640,7 +1640,7 @@ extension Sharing_Nearby_TextMetadata: @preconcurrency SwiftProtobuf.Message, @p
   }
 }
 
-extension Sharing_Nearby_TextMetadata.TypeEnum: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_TextMetadata.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "TEXT"),
@@ -1650,7 +1650,7 @@ extension Sharing_Nearby_TextMetadata.TypeEnum: @preconcurrency SwiftProtobuf._P
   ]
 }
 
-extension Sharing_Nearby_WifiCredentialsMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_WifiCredentialsMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiCredentialsMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     2: .same(proto: "ssid"),
@@ -1704,7 +1704,7 @@ extension Sharing_Nearby_WifiCredentialsMetadata: @preconcurrency SwiftProtobuf.
   }
 }
 
-extension Sharing_Nearby_WifiCredentialsMetadata.SecurityType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_WifiCredentialsMetadata.SecurityType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_SECURITY_TYPE"),
     1: .same(proto: "OPEN"),
@@ -1714,7 +1714,7 @@ extension Sharing_Nearby_WifiCredentialsMetadata.SecurityType: @preconcurrency S
   ]
 }
 
-extension Sharing_Nearby_AppMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_AppMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AppMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "app_name"),
@@ -1786,7 +1786,7 @@ extension Sharing_Nearby_AppMetadata: @preconcurrency SwiftProtobuf.Message, @pr
   }
 }
 
-extension Sharing_Nearby_StreamMetadata: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_StreamMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StreamMetadata"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "description"),
@@ -1840,7 +1840,7 @@ extension Sharing_Nearby_StreamMetadata: @preconcurrency SwiftProtobuf.Message, 
   }
 }
 
-extension Sharing_Nearby_Frame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_Frame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Frame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
@@ -1882,14 +1882,14 @@ extension Sharing_Nearby_Frame: @preconcurrency SwiftProtobuf.Message, @preconcu
   }
 }
 
-extension Sharing_Nearby_Frame.Version: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_Frame.Version: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_VERSION"),
     1: .same(proto: "V1"),
   ]
 }
 
-extension Sharing_Nearby_V1Frame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_V1Frame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".V1Frame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -2005,7 +2005,7 @@ extension Sharing_Nearby_V1Frame: @preconcurrency SwiftProtobuf.Message, @precon
   }
 }
 
-extension Sharing_Nearby_V1Frame.FrameType: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_V1Frame.FrameType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN_FRAME_TYPE"),
     1: .same(proto: "INTRODUCTION"),
@@ -2018,7 +2018,7 @@ extension Sharing_Nearby_V1Frame.FrameType: @preconcurrency SwiftProtobuf._Proto
   ]
 }
 
-extension Sharing_Nearby_IntroductionFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_IntroductionFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".IntroductionFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "file_metadata"),
@@ -2102,7 +2102,7 @@ extension Sharing_Nearby_IntroductionFrame: @preconcurrency SwiftProtobuf.Messag
   }
 }
 
-extension Sharing_Nearby_IntroductionFrame.SharingUseCase: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_IntroductionFrame.SharingUseCase: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "NEARBY_SHARE"),
@@ -2110,7 +2110,7 @@ extension Sharing_Nearby_IntroductionFrame.SharingUseCase: @preconcurrency Swift
   ]
 }
 
-extension Sharing_Nearby_ProgressUpdateFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_ProgressUpdateFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ProgressUpdateFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "progress"),
@@ -2152,7 +2152,7 @@ extension Sharing_Nearby_ProgressUpdateFrame: @preconcurrency SwiftProtobuf.Mess
   }
 }
 
-extension Sharing_Nearby_ConnectionResponseFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_ConnectionResponseFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ConnectionResponseFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "status"),
@@ -2200,7 +2200,7 @@ extension Sharing_Nearby_ConnectionResponseFrame: @preconcurrency SwiftProtobuf.
   }
 }
 
-extension Sharing_Nearby_ConnectionResponseFrame.Status: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_ConnectionResponseFrame.Status: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "ACCEPT"),
@@ -2211,7 +2211,7 @@ extension Sharing_Nearby_ConnectionResponseFrame.Status: @preconcurrency SwiftPr
   ]
 }
 
-extension Sharing_Nearby_AttachmentDetails: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_AttachmentDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AttachmentDetails"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "type"),
@@ -2253,7 +2253,7 @@ extension Sharing_Nearby_AttachmentDetails: @preconcurrency SwiftProtobuf.Messag
   }
 }
 
-extension Sharing_Nearby_AttachmentDetails.TypeEnum: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_AttachmentDetails.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "FILE"),
@@ -2264,7 +2264,7 @@ extension Sharing_Nearby_AttachmentDetails.TypeEnum: @preconcurrency SwiftProtob
   ]
 }
 
-extension Sharing_Nearby_FileAttachmentDetails: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_FileAttachmentDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".FileAttachmentDetails"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "receiver_existing_file_size"),
@@ -2306,7 +2306,7 @@ extension Sharing_Nearby_FileAttachmentDetails: @preconcurrency SwiftProtobuf.Me
   }
 }
 
-extension Sharing_Nearby_PayloadsDetails: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PayloadsDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PayloadsDetails"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "payload_details"),
@@ -2338,7 +2338,7 @@ extension Sharing_Nearby_PayloadsDetails: @preconcurrency SwiftProtobuf.Message,
   }
 }
 
-extension Sharing_Nearby_PayloadDetails: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PayloadDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PayloadDetails"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
@@ -2386,7 +2386,7 @@ extension Sharing_Nearby_PayloadDetails: @preconcurrency SwiftProtobuf.Message, 
   }
 }
 
-extension Sharing_Nearby_PairedKeyEncryptionFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PairedKeyEncryptionFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PairedKeyEncryptionFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "signed_data"),
@@ -2440,7 +2440,7 @@ extension Sharing_Nearby_PairedKeyEncryptionFrame: @preconcurrency SwiftProtobuf
   }
 }
 
-extension Sharing_Nearby_PairedKeyResultFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PairedKeyResultFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PairedKeyResultFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "status"),
@@ -2482,7 +2482,7 @@ extension Sharing_Nearby_PairedKeyResultFrame: @preconcurrency SwiftProtobuf.Mes
   }
 }
 
-extension Sharing_Nearby_PairedKeyResultFrame.Status: @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PairedKeyResultFrame.Status: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "UNKNOWN"),
     1: .same(proto: "SUCCESS"),
@@ -2491,7 +2491,7 @@ extension Sharing_Nearby_PairedKeyResultFrame.Status: @preconcurrency SwiftProto
   ]
 }
 
-extension Sharing_Nearby_CertificateInfoFrame: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_CertificateInfoFrame: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CertificateInfoFrame"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "public_certificate"),
@@ -2523,7 +2523,7 @@ extension Sharing_Nearby_CertificateInfoFrame: @preconcurrency SwiftProtobuf.Mes
   }
 }
 
-extension Sharing_Nearby_PublicCertificate: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_PublicCertificate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PublicCertificate"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "secret_id"),
@@ -2595,7 +2595,7 @@ extension Sharing_Nearby_PublicCertificate: @preconcurrency SwiftProtobuf.Messag
   }
 }
 
-extension Sharing_Nearby_WifiCredentials: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_WifiCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WifiCredentials"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "password"),
@@ -2637,7 +2637,7 @@ extension Sharing_Nearby_WifiCredentials: @preconcurrency SwiftProtobuf.Message,
   }
 }
 
-extension Sharing_Nearby_StreamDetails: @preconcurrency SwiftProtobuf.Message, @preconcurrency SwiftProtobuf._MessageImplementationBase, @preconcurrency SwiftProtobuf._ProtoNameProviding {
+extension Sharing_Nearby_StreamDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StreamDetails"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "input_stream_parcel_file_descriptor_bytes"),

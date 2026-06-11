@@ -201,9 +201,8 @@ private struct AppGridItemView: View {
                     ProgressView()
                         .controlSize(.small)
                 }
-                .onDrag(createDragProvider)
-                .help(appState.device != nil ? "Tap to mirror \(app.name)" : app.name)
             }
+            .help(appState.device != nil ? "Tap to mirror \(app.name)" : app.name)
             .onTapGesture(perform: onLaunch)
             .contextMenu {
                 AppContextMenuContent(app: app)

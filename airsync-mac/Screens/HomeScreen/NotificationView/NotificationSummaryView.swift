@@ -7,7 +7,7 @@
 
 import SwiftUI
 import FoundationModels
-import Combine
+internal import Combine
 
 struct SummaryLine: Identifiable {
     let id = UUID()

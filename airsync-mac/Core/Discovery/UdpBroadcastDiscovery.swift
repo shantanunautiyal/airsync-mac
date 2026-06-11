@@ -1,6 +1,6 @@
 import Foundation
 import Network
-import Combine
+internal import Combine
 import SwiftUI
 
 enum DiscoverySource: String, Codable, CaseIterable {
@@ -385,7 +385,6 @@ class UdpBroadcastDiscovery: ObservableObject {
         
         DispatchQueue.main.async {
             withAnimation(.easeInOut(duration: 0.6)) {
-                let initialCount = self.discoveredDevices.count
                 self.discoveredDevices = self.discoveredDevices.filter {
                     now.timeIntervalSince($0.lastSeen) <= 35
                 }

@@ -135,7 +135,11 @@ class BluetoothManager: NSObject, ObservableObject {
     }
     
     func stopScanning() {
-        centralManager?.stopScan()
+        if let central = centralManager, central.state == .poweredOn {
+            central.stopScan()
+        } else {
+            print("[Bluetooth] skip stopScan because Bluetooth is not powered on")
+        }
         isScanning = false
         if case .scanning = connectionState {
             connectionState = .disconnected
@@ -248,7 +252,11 @@ class BluetoothManager: NSObject, ObservableObject {
         }
         
         shouldSendPairingRequestOnServicesDiscovered = true
-        centralManager?.connect(device.peripheral, options: nil)
+        if let central = centralManager, central.state == .poweredOn {
+            central.connect(device.peripheral, options: nil)
+        } else {
+            print("[Bluetooth] Cannot initiate pairing connect: Bluetooth not powered on")
+        }
     }
     
     func acceptPairing() {
@@ -317,8 +325,8 @@ class BluetoothManager: NSObject, ObservableObject {
     }
     
     func cancelPairing() {
-        if let peripheral = pendingPairingDevice {
-            centralManager?.cancelPeripheralConnection(peripheral)
+        if let peripheral = pendingPairingDevice, let central = centralManager, central.state == .poweredOn {
+            central.cancelPeripheralConnection(peripheral)
         }
         pendingPairingDevice = nil
         currentPairingCode = nil
@@ -329,7 +337,10 @@ class BluetoothManager: NSObject, ObservableObject {
     // MARK: - Connection
     
     func connect(to device: DiscoveredDevice) {
-        guard let central = centralManager else { return }
+        guard let central = centralManager, central.state == .poweredOn else {
+            print("[Bluetooth] Cannot connect - Bluetooth not powered on")
+            return
+        }
         
         connectionState = .connecting
         connectedPeripheral = device.peripheral
@@ -340,7 +351,9 @@ class BluetoothManager: NSObject, ObservableObject {
     
     func disconnect() {
         guard let peripheral = connectedPeripheral else { return }
-        centralManager?.cancelPeripheralConnection(peripheral)
+        if let central = centralManager, central.state == .poweredOn {
+            central.cancelPeripheralConnection(peripheral)
+        }
         connectedPeripheral = nil
         connectedDevice = nil
         connectionState = .disconnected

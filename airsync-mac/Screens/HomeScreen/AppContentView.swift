@@ -40,27 +40,6 @@ struct AppContentView: View {
                                     .help("Clear all notifications")
                                     .keyboardShortcut(.delete, modifiers: .command)
                                     .badge(appState.notifications.count + appState.callEvents.count)
-        TabView(selection: $appState.selectedTab) {
-            // QR Scanner Tab (only when device is NOT connected)
-            if appState.device == nil {
-                ScannerView()
-                    .tabItem {
-                        Image(systemName: "iphone.motion")
-                        //                    Label("Scan", systemImage: "qrcode")
-                    }
-                    .tag(TabIdentifier.qr)
-                    .toolbar {
-                        ToolbarItemGroup {
-                            Button("Help", systemImage: "questionmark.circle") {
-                                showHelpSheet = true
-                            }
-                            .help("Feedback and How to?")
-
-                            Button("Refresh", systemImage: "repeat") {
-                                WebSocketServer.shared.stop()
-                                WebSocketServer.shared.start()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    appState.shouldRefreshQR = true
                                 }
                             }
                         }
@@ -68,21 +47,6 @@ struct AppContentView: View {
                 case .apps:
                     AppsView()
                         .transition(.blurReplace)
-
-                case .transfers:
-                    TransfersView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    AppState.shared.removeCompletedTransfers()
-                                } label: {
-                                    Label("Clear completed", systemImage: "trash")
-                                }
-                                .help("Remove all completed transfers from the list")
-                                .keyboardShortcut(.delete, modifiers: .command)
-                            }
-                        }
 
                 case .calls:
                     CallsView()
@@ -124,7 +88,7 @@ struct AppContentView: View {
                     SettingsView()
                         .transition(.blurReplace)
                         .toolbar {
-                            ToolbarItemGroup {
+                            ToolbarItemGroup(placement: .automatic) {
                                 Button("Help", systemImage: "questionmark.circle") {
                                     showHelpSheet = true
                                 }
@@ -135,15 +99,26 @@ struct AppContentView: View {
                 case .qr:
                     ScannerView()
                         .transition(.blurReplace)
-                }
-                // Apps Tab
-                AppsView()
-                    .tabItem {
-                        Image(systemName: "app")
-                        //                        Label("Apps", systemImage: "app")
-                    }
-                    .tag(TabIdentifier.apps)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .automatic) {
+                                Button("Help", systemImage: "questionmark.circle") {
+                                    showHelpSheet = true
+                                }
+                                .help("Feedback and How to?")
 
+                                Button("Refresh", systemImage: "repeat") {
+                                    WebSocketServer.shared.stop()
+                                    WebSocketServer.shared.start()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        appState.shouldRefreshQR = true
+                                    }
+                                }
+                            }
+                        }
+                case .transfers:
+                    Text("Transfers")
+                        .transition(.blurReplace)
+                }
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
             .frame(minWidth: 550)
@@ -172,10 +147,8 @@ struct AppContentView: View {
                 .allowsHitTesting(false)
             }
         )
-        .tabViewStyle(.automatic)
         .frame(minWidth: 550, minHeight: 510)
         .onAppear {
-            // Ensure the correct tab is selected when the view appears
             if appState.device == nil {
                 AppState.shared.selectedTab = .qr
             } else {

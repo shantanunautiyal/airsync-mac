@@ -14,6 +14,19 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
     case calls = "calls.tab"
     case messages = "messages.tab"
     case health = "health.tab"
+    case settings = "settings.tab"
+    case qr = "qr.tab"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .notifications: return "bell"
+        case .apps: return "app"
+        case .transfers: return "arrow.up.arrow.down"
+        case .calls: return "phone"
+        case .messages: return "message"
+        case .health: return "heart"
         case .settings: return "gear"
         case .qr: return "qrcode"
         }
@@ -27,7 +40,8 @@ enum TabIdentifier: String, CaseIterable, Identifiable {
         case .calls: return "4"
         case .messages: return "5"
         case .health: return "6"
+        case .settings: return "8"
+        case .qr: return "9"
         }
-        return tabs
     }
 }

@@ -201,9 +201,6 @@ struct CallWindowView: View {
                                 )
                                 .foregroundStyle(CallAudioManager.shared.isMicEnabled ? .blue : .secondary)
                                 .transition(.identity)
-                // Action buttons (only show when ringing/offhook AND companion device is active AND is an AirSync+ subscriber)
-                if showActionButtons && appState.device != nil && appState.isPlus {
-                    HStack(spacing: 16) {
 
                                 GlassButtonView(
                                     label: "End",

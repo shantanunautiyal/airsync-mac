@@ -20,7 +20,7 @@ class SideControlWindowController {
             let height: CGFloat = 140
             
             let parentFrame = parent.frame
-            let x = parentFrame.origin.x + parentFrame.size.width + 12
+            _ = parentFrame.origin.x + parentFrame.size.width + 12
             // Start slightly to the left (tucked behind parent frame)
             let startX = parentFrame.origin.x + parentFrame.size.width - width / 2
             let targetX = parentFrame.origin.x + parentFrame.size.width + 12

@@ -202,7 +202,7 @@ private struct DockTabsSection: View {
     private let dockSpacing: CGFloat = 8
 
     var body: some View {
-        ForEach(TabIdentifier.availableTabs) { tab in
+        ForEach(TabIdentifier.allCases) { tab in
             DockTabItem(
                 tab: tab,
                 isSelected: appState.selectedTab == tab,

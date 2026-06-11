@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Combine
+internal import Combine
 import AppKit
 
 // MARK: - Seekbar sub-view
@@ -17,7 +17,6 @@ private struct MediaSeekbarView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            // Slider
             Slider(
                 value: $appState.mediaPosition,
                 in: 0...max(music.duration, 1),
@@ -43,7 +42,6 @@ private struct MediaSeekbarView: View {
                 }
             }
 
-            // Time labels
             HStack {
                 Text(formatTime(appState.mediaPosition))
                 Spacer()
@@ -77,170 +75,113 @@ struct MediaPlayerView: View {
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 6) {
-                // Title + artist
-                HStack(spacing: 4) {
-                    Image(systemName: "music.note.list")
-                    EllipsesTextView(
-                        text: music.title,
-                        font: .caption
-                    )
-                }
-                .frame(height: 14)
-
+        VStack(spacing: 6) {
+            // Title + artist
+            HStack(spacing: 4) {
+                Image(systemName: "music.note.list")
                 EllipsesTextView(
-                    text: music.artist,
-                    font: .footnote
+                    text: music.title,
+                    font: .caption
                 )
+            }
+            .frame(height: 14)
 
+            EllipsesTextView(
+                text: music.artist,
+                font: .footnote
+            )
 
+            if AppState.shared.isPlus && AppState.shared.licenseCheck {
+                VStack(spacing: 6) {
+                    // Seekbar (shown only when duration is known)
+                    if hasSeekbar {
+                        MediaSeekbarView(music: music)
+                            .padding(.top, 2)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                    }
 
-                HStack{
-                    if (AppState.shared.status?.music.likeStatus == "liked" || AppState.shared.status?.music.likeStatus == "not_liked") {
-                        GlassButtonView(
-                            label: "",
-                            systemImage: {
-                                if let like = AppState.shared.status?.music.likeStatus {
-                                    switch like {
-                                    case "liked": return "heart.fill"
+                    // Media control buttons
+                    HStack {
+                        if music.likeStatus == "liked" || music.likeStatus == "not_liked" {
+                            GlassButtonView(
+                                label: "",
+                                systemImage: {
+                                    switch music.likeStatus {
+                                    case "liked":     return "heart.fill"
                                     case "not_liked": return "heart"
-                                    default: return "heart.slash"
+                                    default:          return "heart.slash"
                                     }
-                                }
-                                return "heart.slash"
-                            }(),
-                            iconOnly: true,
-                            action: {
-                                if AppState.shared.isPlus || !AppState.shared.licenseCheck {
-                                    guard let like = AppState.shared.status?.music.likeStatus else { return }
-                                    if like == "liked" {
+                                }(),
+                                iconOnly: true,
+                                action: {
+                                    if music.likeStatus == "liked" {
                                         WebSocketServer.shared.unlike()
-                                    } else if like == "not_liked" {
+                                    } else if music.likeStatus == "not_liked" {
                                         WebSocketServer.shared.like()
                                     } else {
                                         WebSocketServer.shared.toggleLike()
                                     }
-                                } else {
-                                    showingPlusPopover = true
                                 }
-                            }
-                        )
-                        .help("Like / Unlike")
-                    } else {
+                            )
+                            .help("Like / Unlike")
+                        } else {
+                            GlassButtonView(
+                                label: "",
+                                systemImage: "backward.end",
+                                iconOnly: true,
+                                action: { WebSocketServer.shared.skipPrevious() }
+                            )
+                            .keyboardShortcut(.leftArrow, modifiers: .control)
+                        }
+
                         GlassButtonView(
                             label: "",
-                            systemImage: "backward.end",
+                            systemImage: music.isPlaying ? "pause.fill" : "play.fill",
                             iconOnly: true,
-                            action: {
-                                if AppState.shared.isPlus || !AppState.shared.licenseCheck {
-                                    WebSocketServer.shared.skipPrevious()
-                                } else {
-                                    showingPlusPopover = true
-                                }
-                            }
+                            primary: true,
+                            action: { WebSocketServer.shared.togglePlayPause() }
                         )
-                        .keyboardShortcut(
-                            .leftArrow,
-                            modifiers: .control
+                        .keyboardShortcut(.space, modifiers: .control)
+
+                        GlassButtonView(
+                            label: "",
+                            systemImage: "forward.end",
+                            iconOnly: true,
+                            action: { WebSocketServer.shared.skipNext() }
                         )
-                Group {
-                    if AppState.shared.isPlus && AppState.shared.licenseCheck {
-                        VStack(spacing: 6) {
-                            // Seekbar (shown only when duration is known and toggle is enabled)
-                            if hasSeekbar {
-                                MediaSeekbarView(music: music)
-                                    .padding(.top, 2)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.97)))
-                            }
-
-                            // Media control buttons
-                            HStack {
-                                if music.likeStatus == "liked" || music.likeStatus == "not_liked" {
-                                    GlassButtonView(
-                                        label: "",
-                                        systemImage: {
-                                            switch music.likeStatus {
-                                            case "liked":     return "heart.fill"
-                                            case "not_liked": return "heart"
-                                            default:          return "heart.slash"
-                                            }
-                                        }(),
-                                        iconOnly: true,
-                                        action: {
-                                            if music.likeStatus == "liked" {
-                                                WebSocketServer.shared.unlike()
-                                            } else if music.likeStatus == "not_liked" {
-                                                WebSocketServer.shared.like()
-                                            } else {
-                                                WebSocketServer.shared.toggleLike()
-                                            }
-                                        }
-                                    )
-                                    .help("Like / Unlike")
-                                } else {
-                                    GlassButtonView(
-                                        label: "",
-                                        systemImage: "backward.end",
-                                        iconOnly: true,
-                                        action: { WebSocketServer.shared.skipPrevious() }
-                                    )
-                                    .keyboardShortcut(.leftArrow, modifiers: .control)
-                                }
-
-                                GlassButtonView(
-                                    label: "",
-                                    systemImage: music.isPlaying ? "pause.fill" : "play.fill",
-                                    iconOnly: true,
-                                    primary: true,
-                                    action: { WebSocketServer.shared.togglePlayPause() }
-                                )
-                                .keyboardShortcut(.space, modifiers: .control)
-
-                                GlassButtonView(
-                                    label: "",
-                                    systemImage: "forward.end",
-                                    iconOnly: true,
-                                    action: { WebSocketServer.shared.skipNext() }
-                                )
-                                .keyboardShortcut(.rightArrow, modifiers: .control)
-                            }
-                        }
+                        .keyboardShortcut(.rightArrow, modifiers: .control)
                     }
-                    
+                }
+            } else {
+                // Basic controls (no Plus)
+                HStack {
+                    GlassButtonView(
+                        label: "",
+                        systemImage: "backward.end",
+                        iconOnly: true,
+                        action: {
+                            showingPlusPopover = true
+                        }
+                    )
+
                     GlassButtonView(
                         label: "",
                         systemImage: music.isPlaying ? "pause.fill" : "play.fill",
                         iconOnly: true,
                         primary: true,
                         action: {
-                            if AppState.shared.isPlus || !AppState.shared.licenseCheck {
-                                WebSocketServer.shared.togglePlayPause()
-                            } else {
-                                showingPlusPopover = true
-                            }
+                            showingPlusPopover = true
                         }
                     )
-                    .keyboardShortcut(
-                        .space,
-                        modifiers: .control
-                    )
+                    .keyboardShortcut(.space, modifiers: .control)
 
                     GlassButtonView(
                         label: "",
                         systemImage: "forward.end",
                         iconOnly: true,
                         action: {
-                            if AppState.shared.isPlus || !AppState.shared.licenseCheck {
-                                WebSocketServer.shared.skipNext()
-                            } else {
-                                showingPlusPopover = true
-                            }
+                            showingPlusPopover = true
                         }
-                    )
-                    .keyboardShortcut(
-                        .rightArrow,
-                        modifiers: .control
                     )
                 }
             }

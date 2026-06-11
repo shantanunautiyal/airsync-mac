@@ -13,232 +13,52 @@ struct MenubarView: View {
     @AppStorage("hasPairedDeviceOnce") private var hasPairedDeviceOnce: Bool = false
     private var appDelegate: AppDelegate? { AppDelegate.shared }
 
-    private func focus(window: NSWindow) {
-    if window.isMiniaturized { window.deminiaturize(nil) }
-    window.collectionBehavior.insert(.moveToActiveSpace)
-    NSApp.unhide(nil)
-    NSApp.activate(ignoringOtherApps: true)
-    window.makeKeyAndOrderFront(nil)
-    window.orderFrontRegardless()
-    }
-
-    private func openAndFocusMainWindow() {
-
-        DispatchQueue.main.async {
-            if let window = self.appDelegate?.mainWindow {
-                // Reuse the existing window
-                window.makeKeyAndOrderFront(nil)
-            } else {
-                // Trigger creation
-                self.openWindow(id: "main")
-            }
-
-            // Bring app + window to the front once
-            NSApp.activate(ignoringOtherApps: true)
-        }
-    }
-
-
-
-    private func getDeviceName() -> String {
-        appState.device?.name ?? "Ready"
-    }
-
     private let minWidthTabs: CGFloat = 360
     private let toolButtonSize: CGFloat = 42
 
     @State private var isAppearing = false
 
+    private func focus(window: NSWindow) {
+        if window.isMiniaturized { window.deminiaturize(nil) }
+        window.collectionBehavior.insert(.moveToActiveSpace)
+        NSApp.unhide(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+    }
+
+    private func openAndFocusMainWindow() {
+        DispatchQueue.main.async {
+            if let window = self.appDelegate?.mainWindow {
+                window.makeKeyAndOrderFront(nil)
+            } else {
+                self.openWindow(id: "main")
+            }
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    private func getDeviceName() -> String {
+        appState.device?.name ?? "Ready"
+    }
+
     var body: some View {
-        VStack {
-            VStack(spacing: 12){
-                // Header
-                Text("AirSync - \(getDeviceName())")
-                    .font(.headline)
-
-                HStack(spacing: 10){
-                    GlassButtonView(
-                        label: "Open App",
-                        systemImage: "arrow.up.forward.app",
-                        iconOnly: true,
-                        circleSize: toolButtonSize
-                    ) {
-                        openAndFocusMainWindow()
-                    }
-                    GlassButtonView(
-                        label: "Quick Connect",
-                        systemImage: "bolt.horizontal.circle",
-                        iconOnly: true,
-                        circleSize: toolButtonSize,
-                        action: {
-                            QuickConnectManager.shared.wakeUpLastConnectedDevice()
-                        }
-                    )
-                    .help("Reconnect to last device")
-
-                    if (appState.device != nil){
-                        GlassButtonView(
-                            label: "Sync Clipboard",
-                            systemImage: "doc.on.clipboard",
-                            iconOnly: true,
-                            circleSize: toolButtonSize,
-                            action: {
-                                let pasteboard = NSPasteboard.general
-                                if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], let firstUrl = urls.first {
-                                    DispatchQueue.global(qos: .userInitiated).async {
-                                        WebSocketServer.shared.sendFile(url: firstUrl)
-                                    }
-                                } else if let image = NSImage(pasteboard: pasteboard) {
-                                    // Handle copied image data
-                                    let tempDir = FileManager.default.temporaryDirectory
-                                    let tempUrl = tempDir.appendingPathComponent("clipboard_image_\(Int(Date().timeIntervalSince1970)).png")
-                                    if let tiffData = image.tiffRepresentation,
-                                       let bitmap = NSBitmapImageRep(data: tiffData),
-                                       let pngData = bitmap.representation(using: .png, properties: [:]) {
-                                        do {
-                                            try pngData.write(to: tempUrl)
-                                            DispatchQueue.global(qos: .userInitiated).async {
-                                                WebSocketServer.shared.sendFile(url: tempUrl)
-                                            }
-                                        } catch {
-                                            print("[MenubarView] Failed to save clipboard image: \(error)")
-                                        }
-                                    }
-                                }
-                            }
-                        )
-                        .transition(.identity)
-                        .keyboardShortcut(
-                            "v",
-                            modifiers: [.command, .shift]
-                        )
-                        
-                        GlassButtonView(
-                            label: "Send",
-                            systemImage: "square.and.arrow.up",
-                            iconOnly: true,
-                            circleSize: toolButtonSize,
-                            action: {
-                                let panel = NSOpenPanel()
-                                panel.canChooseFiles = true
-                                panel.canChooseDirectories = false
-                                panel.allowsMultipleSelection = false
-                                panel.begin { response in
-                                    if response == .OK, let url = panel.url {
-                                        DispatchQueue.global(qos: .userInitiated).async {
-                                            WebSocketServer.shared.sendFile(url: url)
-                                        }
-                                    }
-                                }
-                            }
-                        )
-                        .transition(.identity)
-                        .keyboardShortcut(
-                            "f",
-                            modifiers: .command
-                        )
-                    }
-
-
-                    // Mirror button - uses scrcpy when ADB connected, WebSocket mirror otherwise
-                    GlassButtonView(
-                        label: "Mirror",
-                        systemImage: "apps.iphone",
-                        iconOnly: true,
-                        circleSize: toolButtonSize,
-                        action: {
-                            if appState.adbConnected {
-                                // Use scrcpy when ADB is connected
-                                ADBConnector
-                                    .startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone"
-                                    )
-                            } else {
-                                // Use WebSocket mirror when ADB is not connected
-                                WebSocketServer.shared.startMirrorAndPresentUI()
-                            }
-                        }
-                    )
-                    .transition(.identity)
-                    .keyboardShortcut(
-                        "p",
-                        modifiers: .command
-                    )
-                    .contextMenu {
-                        if appState.adbConnected {
-                            Button("Desktop Mode") {
-                                ADBConnector.startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? "My Phone",
-                                    desktop: true
-                                )
-                            }
-                        }
-                    }
-
-                    GlassButtonView(
-                        label: "Quit",
-                        systemImage: "power",
-                        iconOnly: true,
-                        circleSize: toolButtonSize
-                    ) {
-                        NSApplication.shared.terminate(nil)
-                    }
-                }
-                .padding(8)
-
-                if (appState.status != nil){
-                    DeviceStatusView(showMediaToggle: false)
-                        .transition(.opacity.combined(with: .scale))
-                }
-
-                if let music = appState.status?.music,
-                let title = appState.status?.music.title.trimmingCharacters(in: .whitespacesAndNewlines),
-                !title.isEmpty {
-
-                    MediaPlayerView(music: music)
-                        .transition(.opacity.combined(with: .scale))
-                }
-
-
-                if !appState.notifications.isEmpty {
-                    GlassButtonView(
-                        label: "Clear All",
-                        systemImage: "wind",
-                        action: {
-                            appState.clearNotifications()
-                        }
-                    )
-                    .help("Clear all notifications")
-                }
-            }
-            .padding(10)
-
-            if appState.device != nil {
-                MenuBarNotificationsListView()
-                    .frame(maxWidth: .infinity)
-            }
-
         VStack(spacing: 6) {
-                
             TopSegmentView(
                 toolButtonSize: toolButtonSize,
                 openAndFocusMainWindow: openAndFocusMainWindow
             )
             .staggeredEntrance(index: 0, isVisible: appState.isMenubarWindowOpen)
-            
+
             CallControlSegmentView()
                 .staggeredEntrance(index: 1, isVisible: appState.isMenubarWindowOpen)
-            
+
             DiscoverySegmentView()
                 .staggeredEntrance(index: 2, isVisible: appState.isMenubarWindowOpen)
-            
+
             MediaSegmentView()
                 .staggeredEntrance(index: 3, isVisible: appState.isMenubarWindowOpen)
-            
+
             NotificationsSegmentView()
                 .staggeredEntrance(index: 4, isVisible: appState.isMenubarWindowOpen)
         }

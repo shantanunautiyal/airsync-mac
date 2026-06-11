@@ -7,7 +7,7 @@
 
 import Foundation
 import Darwin
-import Combine
+internal import Combine
 
 /// Manages quick reconnection functionality for previously connected devices
 class QuickConnectManager: ObservableObject {
@@ -66,7 +66,6 @@ class QuickConnectManager: ObservableObject {
             self.saveDeviceHistoryToDisk()
             print("[quick-connect] Saved last connected device for network \(currentMacIP): \(device.name) (\(device.ipAddress))")
         }
->>>>>>> ec134ad7bafb586dc3aa206bda9fcadc8c4ccd1e
     }
     
     /// Clears the last connected device for the current network
@@ -333,10 +332,7 @@ class QuickConnectManager: ObservableObject {
             
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 200 {
-<<<<<<< HEAD
                     print("[quick-connect] ✅ Wake-up request successful - device should reconnect soon")
-=======
-                    print("[quick-connect] Wake-up request successful - device should reconnect soon")
                     success = true
                 } else if httpResponse.statusCode == 502 {
                     print("[quick-connect] Wake-up request failed with 502 (Bad Gateway). Retrying once...")

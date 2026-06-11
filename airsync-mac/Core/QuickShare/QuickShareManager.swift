@@ -6,7 +6,7 @@
 import Foundation
 import SwiftUI
 import UserNotifications
-@preconcurrency import Combine
+@preconcurrency public import Combine
 import UniformTypeIdentifiers
 
 struct QuickShareTransferInfo {

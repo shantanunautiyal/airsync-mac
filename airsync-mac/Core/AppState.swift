@@ -30,6 +30,8 @@ enum CallNotificationMode: String, CaseIterable {
 class AppState: ObservableObject {
     static let shared = AppState()
     
+    private var hasCompletedLaunchSetup = false
+    
     enum ADBConnectionMode: String, Codable {
         case wireless
         case wired
@@ -141,7 +143,7 @@ class AppState: ObservableObject {
         let validatedAdapter = AppState.validateAndGetNetworkAdapter(savedName: savedAdapterName)
         self.selectedNetworkAdapterName = validatedAdapter
         
-        let adapterIP = WebSocketServer.shared.getLocalIPAddress(adapterName: validatedAdapter) ?? "N/A"
+        let adapterIP = NetworkAdapterHelper.getLocalIPAddress(adapterName: validatedAdapter) ?? "N/A"
         let deviceName = UserDefaults.standard.string(forKey: "deviceName") ?? (Host.current().localizedName ?? "My Mac")
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
         let portNumStr = UserDefaults.standard.string(forKey: "devicePort") ?? String(Defaults.serverPort)
@@ -160,18 +162,6 @@ class AppState: ObservableObject {
 
         self.isBLEEnabled = UserDefaults.standard.bool(forKey: "isBLEEnabled")
         self.isBLEAutoConnectEnabled = UserDefaults.standard.object(forKey: "isBLEAutoConnectEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isBLEAutoConnectEnabled")
-
-        if isBLEEnabled {
-            print("[AppState] BLE enabled on init; central manager state = \(BLECentralManager.shared.centralManagerStateDescription)")
-            BLECentralManager.shared.startScanning()
-        }
-
-        BLECentralManager.shared.$connectionStatus
-            .receive(on: RunLoop.main)
-            .sink { [weak self] status in
-                self?.handleBLEStatusChange(status)
-            }
-            .store(in: &cancellables)
 
         if isClipboardSyncEnabled {
             startClipboardMonitoring()
@@ -225,6 +215,23 @@ class AppState: ObservableObject {
 
         // Cleanup stale WebDAV mounts from previous sessions
         WebDAVManager.shared.unmount()
+    }
+
+    func completeLaunchSetup() {
+        guard !hasCompletedLaunchSetup else { return }
+        hasCompletedLaunchSetup = true
+
+        if isBLEEnabled {
+            print("[AppState] BLE enabled after init; central manager state = \(BLECentralManager.shared.centralManagerStateDescription)")
+            BLECentralManager.shared.startScanning()
+        }
+
+        BLECentralManager.shared.$connectionStatus
+            .receive(on: RunLoop.main)
+            .sink { [weak self] status in
+                self?.handleBLEStatusChange(status)
+            }
+            .store(in: &cancellables)
     }
 
     @Published var minAndroidVersion = Bundle.main.infoDictionary?["AndroidVersion"] as? String ?? "2.0.0"
@@ -649,6 +656,7 @@ class AppState: ObservableObject {
     @Published var isBLEEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isBLEEnabled, forKey: "isBLEEnabled")
+            guard hasCompletedLaunchSetup else { return }
             if isBLEEnabled {
                 BLECentralManager.shared.isManuallyDisconnected = false
                 BLECentralManager.shared.startScanning()
@@ -662,6 +670,7 @@ class AppState: ObservableObject {
     @Published var isBLEAutoConnectEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isBLEAutoConnectEnabled, forKey: "isBLEAutoConnectEnabled")
+            guard hasCompletedLaunchSetup else { return }
             if isBLEAutoConnectEnabled {
                 BLECentralManager.shared.isManuallyDisconnected = false
             }
