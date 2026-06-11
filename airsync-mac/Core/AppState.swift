@@ -8,7 +8,7 @@ import SwiftUI
 import ServiceManagement
 import Foundation
 import Cocoa
-import Combine
+internal import Combine
 import UserNotifications
 import AVFoundation
 
@@ -50,6 +50,7 @@ class AppState: ObservableObject {
 
         let isPlusLoaded = UserDefaults.standard.bool(forKey: "isPlus")
         self.isPlus = isPlusLoaded
+        self.licenseCheck = UserDefaults.standard.object(forKey: "licenseCheck") == nil ? true : UserDefaults.standard.bool(forKey: "licenseCheck")
 
         let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
@@ -161,6 +162,7 @@ class AppState: ObservableObject {
         self.isBLEAutoConnectEnabled = UserDefaults.standard.object(forKey: "isBLEAutoConnectEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isBLEAutoConnectEnabled")
 
         if isBLEEnabled {
+            print("[AppState] BLE enabled on init; central manager state = \(BLECentralManager.shared.centralManagerStateDescription)")
             BLECentralManager.shared.startScanning()
         }
 
@@ -256,6 +258,7 @@ class AppState: ObservableObject {
             // When a device reconnects, restore last saved notifications if none in memory
             if device != nil && self.notifications.isEmpty {
                 self.loadNotificationsFromDisk()
+            }
 
             // BLE connection management: Wi-Fi priority over BLE
             let isRegularConnection = device?.ipAddress != nil && device?.ipAddress != "BLE"
@@ -351,7 +354,7 @@ class AppState: ObservableObject {
     }
 
     @Published var deviceWallpapers: [String: String] = [:] // key = deviceName-ip, value = file path
-    @Published var isClipboardSyncEnabled: Bool {
+    @Published var isClipboardSyncEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isClipboardSyncEnabled, forKey: "isClipboardSyncEnabled")
             if isClipboardSyncEnabled {
@@ -423,7 +426,7 @@ class AppState: ObservableObject {
     // Audio player for ringtone
     private var ringtonePlayer: AVAudioPlayer?
 
-    @Published var selectedNetworkAdapterName: String? { // e.g., "en0"
+    @Published var selectedNetworkAdapterName: String? = nil { // e.g., "en0"
         didSet {
             UserDefaults.standard.set(selectedNetworkAdapterName, forKey: "selectedNetworkAdapterName")
         }
@@ -434,91 +437,91 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var selectedWiredSerial: String? {
+    @Published var selectedWiredSerial: String? = nil {
         didSet {
             UserDefaults.standard.set(selectedWiredSerial, forKey: "selectedWiredSerial")
         }
     }
 
-    @Published var showMenubarText: Bool {
+    @Published var showMenubarText: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarText, forKey: "showMenubarText")
         }
     }
 
-    @Published var showMenubarDeviceName: Bool {
+    @Published var showMenubarDeviceName: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarDeviceName, forKey: "showMenubarDeviceName")
         }
     }
 
-    @Published var menubarTextMaxLength: Int {
+    @Published var menubarTextMaxLength: Int = 0 {
         didSet {
             UserDefaults.standard.set(menubarTextMaxLength, forKey: "menubarTextMaxLength")
         }
     }
 
-    @Published var enableMarquee: Bool {
+    @Published var enableMarquee: Bool = false {
         didSet {
             UserDefaults.standard.set(enableMarquee, forKey: "enableMarquee")
         }
     }
 
-    @Published var showMenubarIcon: Bool {
+    @Published var showMenubarIcon: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarIcon, forKey: "showMenubarIcon")
         }
     }
 
-    @Published var menubarBatteryStyle: String {
+    @Published var menubarBatteryStyle: String = "both" {
         didSet {
             UserDefaults.standard.set(menubarBatteryStyle, forKey: "menubarBatteryStyle")
         }
     }
 
-    @Published var showMenubarMusicIcon: Bool {
+    @Published var showMenubarMusicIcon: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarMusicIcon, forKey: "showMenubarMusicIcon")
         }
     }
 
-    @Published var showMenubarAlbumArt: Bool {
+    @Published var showMenubarAlbumArt: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarAlbumArt, forKey: "showMenubarAlbumArt")
         }
     }
 
-    @Published var menubarFontSize: Double {
+    @Published var menubarFontSize: Double = 0.0 {
         didSet {
             UserDefaults.standard.set(menubarFontSize, forKey: "menubarFontSize")
         }
     }
 
-    @Published var menubarUnreadBadgeStyle: String {
+    @Published var menubarUnreadBadgeStyle: String = "badge" {
         didSet {
             UserDefaults.standard.set(menubarUnreadBadgeStyle, forKey: "menubarUnreadBadgeStyle")
         }
     }
 
-    @Published var menubarUnreadBadgeColor: String {
+    @Published var menubarUnreadBadgeColor: String = "accent" {
         didSet {
             UserDefaults.standard.set(menubarUnreadBadgeColor, forKey: "menubarUnreadBadgeColor")
         }
     }
 
-    @Published var showMenubarPillStroke: Bool {
+    @Published var showMenubarPillStroke: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarPillStroke, forKey: "showMenubarPillStroke")
         }
     }
 
-    @Published var menubarNotificationStyle: String {
+    @Published var menubarNotificationStyle: String = "both" {
         didSet {
             UserDefaults.standard.set(menubarNotificationStyle, forKey: "menubarNotificationStyle")
         }
     }
 
-    @Published var showMenubarCallDetails: Bool {
+    @Published var showMenubarCallDetails: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarCallDetails, forKey: "showMenubarCallDetails")
         }
@@ -574,13 +577,13 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var licenseDetails: LicenseDetails? {
+    @Published var licenseDetails: LicenseDetails? = nil {
         didSet {
             saveLicenseDetailsToUserDefaults()
         }
     }
 
-    @Published var adbPort: UInt16 {
+    @Published var adbPort: UInt16 = Defaults.serverPort {
         didSet {
             UserDefaults.standard.set(adbPort, forKey: "adbPort")
         }
@@ -594,56 +597,56 @@ class AppState: ObservableObject {
 
     @Published var adbConnectionResult: String? = nil
 
-    @Published var mirroringPlus: Bool {
+    @Published var mirroringPlus: Bool = false {
         didSet {
             UserDefaults.standard.set(mirroringPlus, forKey: "mirroringPlus")
         }
     }
 
-    @Published var adbEnabled: Bool {
+    @Published var adbEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(adbEnabled, forKey: "adbEnabled")
         }
     }
-    @Published var wiredAdbEnabled: Bool {
+    @Published var wiredAdbEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(wiredAdbEnabled, forKey: "wiredAdbEnabled")
         }
     }
 
-    @Published var suppressAdbFailureAlerts: Bool {
+    @Published var suppressAdbFailureAlerts: Bool = false {
         didSet {
             UserDefaults.standard.set(suppressAdbFailureAlerts, forKey: "suppressAdbFailureAlerts")
         }
     }
 
-    @Published var fallbackToMdns: Bool {
+    @Published var fallbackToMdns: Bool = false {
         didSet {
             UserDefaults.standard.set(fallbackToMdns, forKey: "fallbackToMdns")
         }
     }
 
-    @Published var windowOpacity: Double {
+    @Published var windowOpacity: Double = 0.0 {
         didSet {
             UserDefaults.standard.set(windowOpacity, forKey: "windowOpacity")
         }
     }
 
-    @Published var hideDockIcon: Bool {
+    @Published var hideDockIcon: Bool = false {
         didSet {
             UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon")
             updateDockIconVisibility()
         }
     }
 
-    @Published var autoStartAtLogin: Bool {
+    @Published var autoStartAtLogin: Bool = false {
         didSet {
             UserDefaults.standard.set(autoStartAtLogin, forKey: "autoStartAtLogin")
             updateAutoStart()
         }
     }
 
-    @Published var isBLEEnabled: Bool {
+    @Published var isBLEEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isBLEEnabled, forKey: "isBLEEnabled")
             if isBLEEnabled {
@@ -656,7 +659,7 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var isBLEAutoConnectEnabled: Bool {
+    @Published var isBLEAutoConnectEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isBLEAutoConnectEnabled, forKey: "isBLEAutoConnectEnabled")
             if isBLEAutoConnectEnabled {
@@ -665,25 +668,25 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var alwaysOpenWindow: Bool {
+    @Published var alwaysOpenWindow: Bool = false {
         didSet {
             UserDefaults.standard.set(alwaysOpenWindow, forKey: "alwaysOpenWindow")
         }
     }
 
-    @Published var notificationSound: String {
+    @Published var notificationSound: String = "default" {
         didSet {
             UserDefaults.standard.set(notificationSound, forKey: "notificationSound")
         }
     }
 
-    @Published var dismissNotif: Bool {
+    @Published var dismissNotif: Bool = false {
         didSet {
             UserDefaults.standard.set(dismissNotif, forKey: "dismissNotif")
         }
     }
 
-    @Published var silenceAllNotifications: Bool {
+    @Published var silenceAllNotifications: Bool = false {
         didSet {
             UserDefaults.standard.set(silenceAllNotifications, forKey: "silenceAllNotifications")
             if silenceAllNotifications {
@@ -699,61 +702,61 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var ringForCalls: Bool {
+    @Published var ringForCalls: Bool = false {
         didSet {
             UserDefaults.standard.set(ringForCalls, forKey: "ringForCalls")
         }
     }
 
-    @Published var autoOpenLinks: Bool {
+    @Published var autoOpenLinks: Bool = false {
         didSet {
             UserDefaults.standard.set(autoOpenLinks, forKey: "autoOpenLinks")
         }
     }
 
-    @Published var openAppOnNotificationClick: Bool {
+    @Published var openAppOnNotificationClick: Bool = false {
         didSet {
             UserDefaults.standard.set(openAppOnNotificationClick, forKey: "openAppOnNotificationClick")
         }
     }
 
-    @Published var autoAcceptQuickShare: Bool {
+    @Published var autoAcceptQuickShare: Bool = false {
         didSet {
             UserDefaults.standard.set(autoAcceptQuickShare, forKey: "autoAcceptQuickShare")
         }
     }
 
-    @Published var quickShareEnabled: Bool {
+    @Published var quickShareEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(quickShareEnabled, forKey: "quickShareEnabled")
         }
     }
 
-    @Published var popupSharedImages: Bool {
+    @Published var popupSharedImages: Bool = false {
         didSet {
             UserDefaults.standard.set(popupSharedImages, forKey: "popupSharedImages")
         }
     }
 
-    @Published var sharedImagePopupsLimit: Int {
+    @Published var sharedImagePopupsLimit: Int = 3 {
         didSet {
             UserDefaults.standard.set(sharedImagePopupsLimit, forKey: "sharedImagePopupsLimit")
         }
     }
 
-    @Published var popupSharedImagesOnLeft: Bool {
+    @Published var popupSharedImagesOnLeft: Bool = false {
         didSet {
             UserDefaults.standard.set(popupSharedImagesOnLeft, forKey: "popupSharedImagesOnLeft")
         }
     }
 
-    @Published var sendNowPlayingStatus: Bool {
+    @Published var sendNowPlayingStatus: Bool = false {
         didSet {
             UserDefaults.standard.set(sendNowPlayingStatus, forKey: "sendNowPlayingStatus")
         }
     }
 
-    @Published var useADBWhenPossible: Bool {
+    @Published var useADBWhenPossible: Bool = false {
         didSet {
             UserDefaults.standard.set(useADBWhenPossible, forKey: "useADBWhenPossible")
         }
@@ -773,22 +776,24 @@ class AppState: ObservableObject {
     @Published var isMirrorRequestPending: Bool = false
     @Published var mirrorError: String? = nil
 
-    @Published var dockSize: CGFloat {
+    @Published var dockSize: CGFloat = 48.0 {
         didSet {
             UserDefaults.standard.set(dockSize, forKey: "dockSize")
-    @Published var useNativeMirroringByDefault: Bool {
+        }
+    }
+    @Published var useNativeMirroringByDefault: Bool = false {
         didSet {
             UserDefaults.standard.set(useNativeMirroringByDefault, forKey: "useNativeMirroringByDefault")
         }
     }
 
-    @Published var useNativeDesktopMirroringByDefault: Bool {
+    @Published var useNativeDesktopMirroringByDefault: Bool = false {
         didSet {
             UserDefaults.standard.set(useNativeDesktopMirroringByDefault, forKey: "useNativeDesktopMirroringByDefault")
         }
     }
 
-    @Published var isFileAccessEnabled: Bool {
+    @Published var isFileAccessEnabled: Bool = false {
         didSet {
             if !isPlus && licenseCheck {
                 if isFileAccessEnabled {
@@ -809,31 +814,31 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var isCrashReportingEnabled: Bool {
+    @Published var isCrashReportingEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isCrashReportingEnabled, forKey: "isCrashReportingEnabled")
         }
     }
 
-    @Published var disableAllAIFeatures: Bool {
+    @Published var disableAllAIFeatures: Bool = false {
         didSet {
             UserDefaults.standard.set(disableAllAIFeatures, forKey: "disableAllAIFeatures")
         }
     }
 
-    @Published var showAIToolbarButton: Bool {
+    @Published var showAIToolbarButton: Bool = false {
         didSet {
             UserDefaults.standard.set(showAIToolbarButton, forKey: "showAIToolbarButton")
         }
     }
 
-    @Published var includeSilentInAIOption: Bool {
+    @Published var includeSilentInAIOption: Bool = false {
         didSet {
             UserDefaults.standard.set(includeSilentInAIOption, forKey: "includeSilentInAIOption")
         }
     }
 
-    @Published var enableMenubarAISummary: Bool {
+    @Published var enableMenubarAISummary: Bool = false {
         didSet {
             UserDefaults.standard.set(enableMenubarAISummary, forKey: "enableMenubarAISummary")
         }
@@ -870,7 +875,7 @@ class AppState: ObservableObject {
 
 
     // Toggle licensing
-    @Published var licenseCheck: Bool {
+    @Published var licenseCheck: Bool = false {
         didSet {
             UserDefaults.standard.set(licenseCheck, forKey: "licenseCheck")
             if !licenseCheck {
@@ -889,7 +894,7 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var isPlus: Bool {
+    @Published var isPlus: Bool = false {
         didSet {
             if !shouldSkipSave {
                 UserDefaults.standard.set(isPlus, forKey: "isPlus")
@@ -1187,7 +1192,6 @@ class AppState: ObservableObject {
             self.notifications.removeAll()
             self.status = nil
             self.currentDeviceWallpaperBase64 = nil
-            self.transfers = [:]
             
             // Reset mirror state
             self.isMirrorActive = false
@@ -1807,7 +1811,7 @@ class AppState: ObservableObject {
         }
     }
 
-    private func handleBLEStatusChange(_ status: BLECentralManager.BLEConnectionStatus) {
+    private func handleBLEStatusChange(_ status: BLEConnectionStatus) {
         if status == .authenticated {
             if self.device == nil {
                 updateVirtualDeviceForBLE()

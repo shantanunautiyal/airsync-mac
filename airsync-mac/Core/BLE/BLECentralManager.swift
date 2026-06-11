@@ -1,6 +1,13 @@
 import Foundation
 import CoreBluetooth
-import Combine
+internal import Combine
+
+enum BLEConnectionStatus: Equatable {
+    case disconnected
+    case scanning
+    case connected
+    case authenticated
+}
 
 class BLECentralManager: NSObject, ObservableObject {
     static let shared = BLECentralManager()
@@ -8,6 +15,19 @@ class BLECentralManager: NSObject, ObservableObject {
     private var centralManager: CBCentralManager!
     private var discoveredPeripheral: CBPeripheral?
     
+    var centralManagerStateDescription: String {
+        guard let central = centralManager else { return "uninitialized" }
+        switch central.state {
+        case .unknown: return "unknown"
+        case .resetting: return "resetting"
+        case .unsupported: return "unsupported"
+        case .unauthorized: return "unauthorized"
+        case .poweredOff: return "poweredOff"
+        case .poweredOn: return "poweredOn"
+        @unknown default: return "unknown"
+        }
+    }
+
     private var characteristics: [CBUUID: CBCharacteristic] = [:]
     private var chunkBuffers: [CBUUID: [Int: Data]] = [:]
     private var discoveredServiceCount = 0
@@ -33,12 +53,7 @@ class BLECentralManager: NSObject, ObservableObject {
         connectionStatus == .authenticated
     }
     
-    enum BLEConnectionStatus: Equatable {
-        case disconnected
-        case scanning
-        case connected
-        case authenticated
-    }
+    
     
     override init() {
         super.init()
@@ -62,26 +77,36 @@ class BLECentralManager: NSObject, ObservableObject {
         
         // Restart scan periodically to avoid stale states
         scanTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            // Skip restart cycle when already connected — nothing to rediscover
-            guard self.connectionStatus == .scanning else { return }
-            
-            // Prune stale devices older than 25 seconds
-            let now = Date()
-            let staleUUIDs = self.discoveredPeripherals.filter { now.timeIntervalSince($1.lastSeen) > 15.0 }.map { $0.key }
-            for uuid in staleUUIDs {
-                self.discoveredPeripherals.removeValue(forKey: uuid)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                // Skip restart cycle when already connected — nothing to rediscover
+                guard self.connectionStatus == .scanning else { return }
+                
+                // Prune stale devices older than 25 seconds
+                let now = Date()
+                let staleUUIDs = self.discoveredPeripherals.filter { now.timeIntervalSince($1.lastSeen) > 15.0 }.map { $0.key }
+                for uuid in staleUUIDs {
+                    self.discoveredPeripherals.removeValue(forKey: uuid)
+                }
+                
+                if self.centralManager.state == .poweredOn {
+                    self.centralManager.stopScan()
+                    self.centralManager.scanForPeripherals(withServices: [BLEConstants.serviceSystem], options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+                } else {
+                    print("[BLE] skip scheduled scan restart because Bluetooth is not powered on")
+                }
             }
-            
-            self.centralManager.stopScan()
-            self.centralManager.scanForPeripherals(withServices: [BLEConstants.serviceSystem], options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
         }
     }
     
     func stopScanning() {
         scanTimer?.invalidate()
         scanTimer = nil
-        centralManager.stopScan()
+        if centralManager.state == .poweredOn {
+            centralManager.stopScan()
+        } else {
+            print("[BLE] skip stopScan because Bluetooth is not powered on")
+        }
         if connectionStatus == .scanning {
             connectionStatus = .disconnected
         }
@@ -93,7 +118,11 @@ class BLECentralManager: NSObject, ObservableObject {
         isManuallyDisconnected = true
         
         if let peripheral = discoveredPeripheral {
-            centralManager.cancelPeripheralConnection(peripheral)
+            if centralManager.state == .poweredOn {
+                centralManager.cancelPeripheralConnection(peripheral)
+            } else {
+                print("[BLE] skip cancelPeripheralConnection because Bluetooth is not powered on")
+            }
         }
         connectionStatus = .disconnected
         connectingDeviceUUID = nil
@@ -148,6 +177,11 @@ class BLECentralManager: NSObject, ObservableObject {
         let peripheral = record.peripheral
         print("[BLE] Manual connection requested for \(peripheral.name ?? "Unknown")")
         
+        guard centralManager.state == .poweredOn else {
+            print("[BLE] Cannot connect manually because Bluetooth is not powered on")
+            return
+        }
+
         isManuallyDisconnected = false
         discoveredPeripheral = peripheral
         centralManager.stopScan()
@@ -162,25 +196,30 @@ class BLECentralManager: NSObject, ObservableObject {
         
         connectionTimer?.invalidate()
         connectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
-            print("[BLE] Manual connection timed out, cancelling...")
-            if let p = self.discoveredPeripheral {
-                self.centralManager.cancelPeripheralConnection(p)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                print("[BLE] Manual connection timed out, cancelling...")
+                if let p = self.discoveredPeripheral {
+                    self.centralManager.cancelPeripheralConnection(p)
+                }
+                self.discoveredPeripheral = nil
+                self.connectingDeviceUUID = nil
+                self.connectionStatus = .disconnected
+                self.characteristics.removeAll()
+                self.discoveredServiceCount = 0
             }
-            self.discoveredPeripheral = nil
-            self.connectingDeviceUUID = nil
-            self.connectionStatus = .disconnected
-            self.characteristics.removeAll()
-            self.discoveredServiceCount = 0
         }
     }
     
     private func resetWatchdog() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.watchdogTimer?.invalidate()
             self.watchdogTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: false) { [weak self] _ in
-                print("[BLE] Heartbeat timeout (25s), disconnecting...")
-                self?.disconnect()
+                DispatchQueue.main.async { [weak self] in
+                    print("[BLE] Heartbeat timeout (25s), disconnecting...")
+                    self?.disconnect()
+                }
             }
         }
     }
@@ -226,11 +265,19 @@ extension BLECentralManager: CBCentralManagerDelegate {
             }
             
             discoveredPeripheral = peripheral
-            centralManager.stopScan()
+            if centralManager.state == .poweredOn {
+                centralManager.stopScan()
+            } else {
+                print("[BLE] skip auto-connect stopScan because Bluetooth is not powered on")
+            }
             scanTimer?.invalidate()
             scanTimer = nil
             
             print("[BLE] Attempting auto-connect to \(name)...")
+            guard centralManager.state == .poweredOn else {
+                print("[BLE] Cannot auto-connect because Bluetooth is not powered on")
+                return
+            }
             centralManager.connect(peripheral, options: [
                 CBConnectPeripheralOptionNotifyOnDisconnectionKey: true
             ])
@@ -238,19 +285,25 @@ extension BLECentralManager: CBCentralManagerDelegate {
             // CoreBluetooth connect() has no timeout — it can hang forever with stale pairing data.
             connectionTimer?.invalidate()
             connectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { [weak self] _ in
-                guard let self = self else { return }
-                print("[BLE] Connection timed out, cancelling and retrying...")
-                if let p = self.discoveredPeripheral {
-                    self.centralManager.cancelPeripheralConnection(p)
-                }
-                self.discoveredPeripheral = nil
-                self.connectionStatus = .disconnected
-                self.characteristics.removeAll()
-                self.discoveredServiceCount = 0
-                
-                if AppState.shared.isBLEAutoConnectEnabled && !self.isManuallyDisconnected {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        self.startScanning()
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    print("[BLE] Connection timed out, cancelling and retrying...")
+                    if let p = self.discoveredPeripheral {
+                        if self.centralManager.state == .poweredOn {
+                            self.centralManager.cancelPeripheralConnection(p)
+                        } else {
+                            print("[BLE] skip cancelPeripheralConnection due to Bluetooth state")
+                        }
+                    }
+                    self.discoveredPeripheral = nil
+                    self.connectionStatus = .disconnected
+                    self.characteristics.removeAll()
+                    self.discoveredServiceCount = 0
+                    
+                    if AppState.shared.isBLEAutoConnectEnabled && !self.isManuallyDisconnected {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            self.startScanning()
+                        }
                     }
                 }
             }
