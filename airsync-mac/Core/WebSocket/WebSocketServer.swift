@@ -276,16 +276,30 @@ class WebSocketServer: ObservableObject {
             return
         }
 
-        DispatchQueue.main.async {
+        let setStarting = {
             AppState.shared.webSocketStatus = .starting
+        }
+        if Thread.isMainThread {
+            setStarting()
+        } else {
+            DispatchQueue.main.sync {
+                setStarting()
+            }
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             do {
                 guard port > 0 && port <= 65_535 else {
                     let msg = "[websocket] Invalid port \(port). Must be in 1...65535."
-                    DispatchQueue.main.async {
+                    let setFailed = {
                         AppState.shared.webSocketStatus = .failed(error: msg)
+                    }
+                    if Thread.isMainThread {
+                        setFailed()
+                    } else {
+                        DispatchQueue.main.sync {
+                            setFailed()
+                        }
                     }
                     print(msg)
                     return
@@ -294,12 +308,18 @@ class WebSocketServer: ObservableObject {
                 try self.server.start(in_port_t(port), forceIPv4: true, priority: .default)
                 let ip = self.getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
 
-                DispatchQueue.main.async {
+                let setStarted = {
                     self.localPort = port
                     self.localIPAddress = ip
                     AppState.shared.webSocketStatus = .started(port: port, ip: ip)
-
                     self.lastKnownIP = ip
+                }
+                if Thread.isMainThread {
+                    setStarted()
+                } else {
+                    DispatchQueue.main.sync {
+                        setStarted()
+                    }
                 }
                 print("[websocket] WebSocket server started at ws://\(ip ?? "unknown"):\(port)/socket)")
 
@@ -308,8 +328,15 @@ class WebSocketServer: ObservableObject {
                 
                 self.startNetworkMonitoring()
             } catch {
-                DispatchQueue.main.async {
+                let setFailed = {
                     AppState.shared.webSocketStatus = .failed(error: "\(error)")
+                }
+                if Thread.isMainThread {
+                    setFailed()
+                } else {
+                    DispatchQueue.main.sync {
+                        setFailed()
+                    }
                 }
                 print("[websocket] Failed to start WebSocket server: \(error)")
             }
@@ -334,17 +361,24 @@ class WebSocketServer: ObservableObject {
         isStoppingMirror = false
         
         // Clear mirror state immediately
-        DispatchQueue.main.async {
+        let updateState = {
             AppState.shared.isMirrorActive = false
             AppState.shared.latestMirrorFrame = nil
             AppState.shared.isMirroring = false
             AppState.shared.isMirrorRequestPending = false
             AppState.shared.webSocketStatus = .stopped
         }
+        if Thread.isMainThread {
+            updateState()
+        } else {
+            DispatchQueue.main.sync {
+                updateState()
+            }
+        }
         
         #if os(macOS)
         // Simple window cleanup
-        DispatchQueue.main.async { [weak self] in
+        let cleanupWindow = { [weak self] in
             guard let self = self else { return }
             if let window = self.mirrorWindow {
                 window.delegate = nil
@@ -352,6 +386,13 @@ class WebSocketServer: ObservableObject {
                 window.orderOut(nil)
             }
             self.mirrorWindow = nil
+        }
+        if Thread.isMainThread {
+            cleanupWindow()
+        } else {
+            DispatchQueue.main.sync {
+                cleanupWindow()
+            }
         }
         #endif
         
@@ -540,13 +581,10 @@ class WebSocketServer: ObservableObject {
                 if wasPrimary {
                     DispatchQueue.main.async {
                         AppState.shared.disconnectDevice()
-                        // Clear mirror state when last session disconnects
-                        AppState.shared.isMirrorActive = false
-                        AppState.shared.latestMirrorFrame = nil
                         
-                        // Close mirror window if open
-                        self.mirrorWindow?.close()
-                        self.mirrorWindow = nil
+                        // Stop mirroring and clean up state safely
+                        self.stopMirroring()
+                        
                         ADBConnector.disconnectADB()
                         AppState.shared.adbConnected = false
                         // Guard against cascading restarts from multiple disconnected callbacks
@@ -908,7 +946,7 @@ class WebSocketServer: ObservableObject {
             }
 
         case .appIcons:
-            if let dict = message.data.value as? [String: [String: Any]] {
+            if let dict = message.data.value as? [String: Any] {
                 print("[websocket] appIcons: incoming=\(dict.count)")
                 DispatchQueue.global(qos: .userInitiated).async {
                     let incomingPackages = Set(dict.keys)
@@ -917,8 +955,9 @@ class WebSocketServer: ObservableObject {
                     var toRemove: [String] = []
 
                     // Decode & write/update icons
-                    for (package, details) in dict {
-                        guard let name = details["name"] as? String,
+                    for (package, val) in dict {
+                        guard let details = val as? [String: Any],
+                              let name = details["name"] as? String,
                               let iconBase64 = details["icon"] as? String,
                               let systemApp = details["systemApp"] as? Bool,
                               let listening = details["listening"] as? Bool else { continue }
@@ -952,8 +991,17 @@ class WebSocketServer: ObservableObject {
 
                     DispatchQueue.main.async {
                         for (pkg, app) in updates {
-                            AppState.shared.androidApps[pkg] = app
-                            if let iconPath = app.iconUrl { AppState.shared.androidApps[pkg]?.iconUrl = iconPath }
+                            var appToSave = app
+                            if appToSave.iconUrl == nil {
+                                let fileURL = appIconsDirectory().appendingPathComponent("\(pkg).png")
+                                if let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+                                   let size = attrs[.size] as? UInt64, size > 0 {
+                                    appToSave.iconUrl = fileURL.path
+                                } else {
+                                    appToSave.iconUrl = AppState.shared.androidApps[pkg]?.iconUrl
+                                }
+                            }
+                            AppState.shared.androidApps[pkg] = appToSave
                         }
                         for pkg in toRemove {
                             if let iconPath = AppState.shared.androidApps[pkg]?.iconUrl {
@@ -1395,14 +1443,14 @@ class WebSocketServer: ObservableObject {
                 return
             }
             
-            // Check if we're actually mirroring
+            // Check if we're actually mirroring or trying to mirror
             let wasMirroring: Bool
             if Thread.isMainThread {
-                wasMirroring = AppState.shared.isMirroring || AppState.shared.isMirrorActive
+                wasMirroring = AppState.shared.isMirroring || AppState.shared.isMirrorActive || AppState.shared.isMirrorRequestPending
             } else {
                 var result = false
                 DispatchQueue.main.sync {
-                    result = AppState.shared.isMirroring || AppState.shared.isMirrorActive
+                    result = AppState.shared.isMirroring || AppState.shared.isMirrorActive || AppState.shared.isMirrorRequestPending
                 }
                 wasMirroring = result
             }
@@ -1450,6 +1498,23 @@ class WebSocketServer: ObservableObject {
                 let isActive = dict["isActive"] as? Bool ?? false
                 let statusMessage = dict["message"] as? String ?? ""
                 print("[mirror] 📊 Mirror status: active=\(isActive), message=\(statusMessage)")
+                if !isActive {
+                    // Reset mirroring states if we were starting or mirroring
+                    DispatchQueue.main.async {
+                        AppState.shared.isMirrorActive = false
+                        AppState.shared.latestMirrorFrame = nil
+                        AppState.shared.isMirroring = false
+                        AppState.shared.isMirrorRequestPending = false
+                        #if os(macOS)
+                        if let window = self.mirrorWindow {
+                            window.delegate = nil
+                            self.mirrorWindowDelegate = nil
+                            window.orderOut(nil)
+                        }
+                        self.mirrorWindow = nil
+                        #endif
+                    }
+                }
             }
 
         case .mirrorFrame:
@@ -1457,6 +1522,7 @@ class WebSocketServer: ObservableObject {
                 let base64Payload = (dict["image"] as? String) ?? (dict["frame"] as? String)
                 let format = (dict["format"] as? String)?.lowercased()
                 let isConfig = (dict["isConfig"] as? Bool) ?? false
+                let timestamp = dict["timestamp"] as? Int64 ?? 0
 
                 guard let base64 = base64Payload, let data = Data(base64Encoded: base64) else {
                     print("[websocket] mirrorFrame failed to decode base64 payload")
@@ -1464,7 +1530,7 @@ class WebSocketServer: ObservableObject {
                 }
 
                 // Use unified decoder for all formats - no H.264 fallback
-                unifiedDecoder.decode(frameData: data, format: format, isConfig: isConfig)
+                unifiedDecoder.decode(frameData: data, format: format, isConfig: isConfig, timestamp: timestamp)
             }
 
         case .remoteConnectResponse:
@@ -1907,6 +1973,81 @@ class WebSocketServer: ObservableObject {
         case .callAudioControl:
             print("[websocket] Received callAudioControl from Android (ignored on Mac)")
             
+        case .remoteControl:
+            if let dict = message.data.value as? [String: Any],
+               let action = dict["action"] as? String {
+                print("[websocket] ⌨️ Received remote control action: \(action)")
+                switch action {
+                case "lock_screen":
+                    MacRemoteManager.shared.lockScreen()
+                case "screensaver":
+                    MacRemoteManager.shared.startScreensaver()
+                case "brightness_up":
+                    MacRemoteManager.shared.increaseBrightness()
+                case "brightness_down":
+                    MacRemoteManager.shared.decreaseBrightness()
+                case "vol_up":
+                    MacRemoteManager.shared.increaseVolume()
+                case "vol_down":
+                    MacRemoteManager.shared.decreaseVolume()
+                case "vol_mute":
+                    MacRemoteManager.shared.toggleMute()
+                case "vol_set":
+                    let volume = dict["volume"] as? Int ?? dict["value"] as? Int ?? 0
+                    MacRemoteManager.shared.setVolume(volume)
+                case "arrow_up", "up":
+                    MacRemoteManager.shared.simulateKey(.upArrow)
+                case "arrow_down", "down":
+                    MacRemoteManager.shared.simulateKey(.downArrow)
+                case "arrow_left", "left":
+                    MacRemoteManager.shared.simulateKey(.leftArrow)
+                case "arrow_right", "right":
+                    MacRemoteManager.shared.simulateKey(.rightArrow)
+                case "space":
+                    MacRemoteManager.shared.simulateKey(.space)
+                case "enter":
+                    MacRemoteManager.shared.simulateKey(.enter)
+                case "escape":
+                    MacRemoteManager.shared.simulateKey(.escape)
+                case "media_play_pause":
+                    MacRemoteManager.shared.simulateMediaKey(.playPause)
+                case "media_next":
+                    MacRemoteManager.shared.simulateMediaKey(.next)
+                case "media_prev":
+                    MacRemoteManager.shared.simulateMediaKey(.previous)
+                case "keypress":
+                    if let keyCode = dict["keyCode"] as? Int ?? dict["code"] as? Int {
+                        let modifiers = dict["modifiers"] as? [String] ?? []
+                        MacRemoteManager.shared.simulateKeyCode(keyCode, modifiers: modifiers)
+                    }
+                case "type":
+                    if let text = dict["text"] as? String {
+                        let modifiers = dict["modifiers"] as? [String] ?? []
+                        MacRemoteManager.shared.simulateText(text, modifiers: modifiers)
+                    }
+                case "mouse_move":
+                    let dx = dict["dx"] as? CGFloat ?? 0
+                    let dy = dict["dy"] as? CGFloat ?? 0
+                    MacRemoteManager.shared.simulateMouseRelativeMove(dx: dx, dy: dy)
+                case "mouse_click":
+                    let buttonStr = dict["button"] as? String ?? "left"
+                    let isDown = dict["isDown"] as? Bool ?? true
+                    let button: CGMouseButton
+                    switch buttonStr.lowercased() {
+                    case "right": button = .right
+                    case "center", "middle": button = .center
+                    default: button = .left
+                    }
+                    MacRemoteManager.shared.simulateMouseClick(button: button, isDown: isDown)
+                case "mouse_scroll":
+                    let dx = dict["dx"] as? CGFloat ?? 0
+                    let dy = dict["dy"] as? Double ?? 0
+                    MacRemoteManager.shared.simulateMouseScroll(dx: dx, dy: dy)
+                default:
+                    print("[websocket] Warning: unhandled remote control action: \(action)")
+                }
+            }
+            
         default:
             print("[websocket] Warning: unhandled message type: \(message.type)")
             return
@@ -2261,8 +2402,15 @@ class WebSocketServer: ObservableObject {
         let exactDeviceName = exactDeviceNameRaw.isEmpty ? categoryType : exactDeviceNameRaw
         let isPlusSubscription = AppState.shared.isPlus
 
-        // Saved app packages
-        let savedAppPackages = Array(AppState.shared.androidApps.keys)
+        // Saved app packages (only those that actually have their icon cached on disk and are not empty)
+        let savedAppPackages = Array(AppState.shared.androidApps.keys.filter { package in
+            let fileURL = appIconsDirectory().appendingPathComponent("\(package).png")
+            guard let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+                  let size = attrs[.size] as? UInt64, size > 0 else {
+                return false
+            }
+            return true
+        })
 
         // Base macInfo model (for forward compatibility / decoding symmetry)
         let macInfo = MacInfo(
@@ -2701,6 +2849,7 @@ class WebSocketServer: ObservableObject {
         if combinedOptions["maxWidth"] == nil { combinedOptions["maxWidth"] = 720 }  // Lower resolution for speed
         if combinedOptions["quality"] == nil { combinedOptions["quality"] = 0.7 }  // Good balance
         if combinedOptions["bitrateKbps"] == nil { combinedOptions["bitrateKbps"] = 3000 }  // 3 Mbps default
+        if combinedOptions["useRawFrames"] == nil { combinedOptions["useRawFrames"] = !AppState.shared.mirrorUseH264 }
         
         // Enable auto-approve by default for seamless mirroring
         if combinedOptions["autoApprove"] == nil { combinedOptions["autoApprove"] = true }
@@ -2811,6 +2960,7 @@ class WebSocketServer: ObservableObject {
             backing: .buffered,
             defer: false
         )
+        window.isReleasedWhenClosed = false
         window.title = "AirSync Mirror - Remote Control"
         window.aspectRatio = NSSize(width: 9, height: 19.5)
         window.minSize = NSSize(width: 300, height: 300 * aspectRatio)
@@ -3499,6 +3649,7 @@ class WebSocketServer: ObservableObject {
         if mergedOptions["maxWidth"] == nil { mergedOptions["maxWidth"] = AppState.shared.mirrorMaxWidth }
         if mergedOptions["quality"] == nil { mergedOptions["quality"] = AppState.shared.mirrorQuality }
         if mergedOptions["bitrate"] == nil { mergedOptions["bitrate"] = AppState.shared.mirrorBitrate }
+        if mergedOptions["useRawFrames"] == nil { mergedOptions["useRawFrames"] = !AppState.shared.mirrorUseH264 }
 
         print("[mirror] 📤 Sending mirror request with options: fps=\(mergedOptions["fps"] ?? 0), maxWidth=\(mergedOptions["maxWidth"] ?? 0)")
         self.sendMirrorRequest(action: "start", mode: mode, package: package, options: mergedOptions)
@@ -3773,6 +3924,12 @@ private class MirrorWindowDelegate: NSObject, NSWindowDelegate {
             return false
         }
     }
+    
+    func windowWillClose(_ notification: Foundation.Notification) {
+        guard let server = self.server else { return }
+        server.mirrorWindow = nil
+        server.mirrorWindowDelegate = nil
+    }
 }
 #endif
 
@@ -3825,6 +3982,7 @@ extension WebSocketServer {
                 print("[websocket] Session \(sessionId) is stale. Performing hard reset and discovery restart.")
                 DispatchQueue.main.async {
                     AppState.shared.disconnectDevice()
+                    self.stopMirroring()
                     ADBConnector.disconnectADB()
                     AppState.shared.adbConnected = false
                     

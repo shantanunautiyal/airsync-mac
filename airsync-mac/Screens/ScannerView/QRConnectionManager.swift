@@ -19,6 +19,8 @@ class QRConnectionManager: ObservableObject {
     @Published var copyStatus: String?
     @Published var showConfirmReset = false
     
+    @Published var isAuthenticating = false
+    
     private var unlockTimer: Timer?
     
     func generateQRAsync() {
@@ -63,11 +65,15 @@ class QRConnectionManager: ObservableObject {
         var error: NSError?
         
         if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            DispatchQueue.main.async {
+                self.isAuthenticating = true
+            }
             let reason = "Authenticate to reveal connection credentials"
             context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { [weak self] success, authenticationError in
                 guard let self = self else { return }
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
+                    self.isAuthenticating = false
                     if success {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             self.isUnlocked = true

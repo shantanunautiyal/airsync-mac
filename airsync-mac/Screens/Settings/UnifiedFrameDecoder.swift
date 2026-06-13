@@ -128,7 +128,8 @@ final class UnifiedFrameDecoder: NSObject {
     private func decodeJPEG(_ data: Data) {
         // Use CGImageSource for faster decoding with optimized options
         let options: [CFString: Any] = [
-            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCache: true,
+            kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceShouldAllowFloat: false
         ]
         
@@ -142,25 +143,9 @@ final class UnifiedFrameDecoder: NSObject {
         deliverFrame(nsImage)
     }
     
-    /// Deliver frame with smart throttling
+    /// Deliver frame without throttling to ensure low latency and smooth rendering
     private func deliverFrame(_ image: NSImage) {
-        let now = Date()
-        let timeSinceLastFrame = now.timeIntervalSince(lastFrameDisplayTime)
-        
-        // Smart throttling: allow frames through if enough time has passed
-        // or if we haven't shown a frame recently (prevent stuck frames)
-        if timeSinceLastFrame < minFrameInterval {
-            // Too fast, drop this frame
-            droppedFrames += 1
-            
-            // But store it as pending in case we need it
-            frameLock.lock()
-            pendingFrame = image
-            frameLock.unlock()
-            return
-        }
-        
-        lastFrameDisplayTime = now
+        lastFrameDisplayTime = Date()
         
         // Deliver on main thread without blocking decode queue
         DispatchQueue.main.async { [weak self] in

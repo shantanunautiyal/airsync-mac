@@ -9,6 +9,10 @@ struct BLEChunkUtil {
         guard maxPayloadSize > 0 else { return [] }
         
         let totalChunks = Int(ceil(Double(data.count) / Double(maxPayloadSize)))
+        guard totalChunks <= 65535 else {
+            print("[BLE] Payload is too large to chunk (\(totalChunks) chunks). Max allowed is 65535.")
+            return []
+        }
         var chunks: [Data] = []
         
         for i in 0..<totalChunks {

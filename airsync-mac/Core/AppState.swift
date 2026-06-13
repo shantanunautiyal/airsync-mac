@@ -193,13 +193,19 @@ class AppState: ObservableObject {
         if self.mirrorFPS == 0 { self.mirrorFPS = 60 }
         
         self.mirrorMaxWidth = UserDefaults.standard.integer(forKey: "mirrorMaxWidth")
-        if self.mirrorMaxWidth == 0 { self.mirrorMaxWidth = 1920 }
+        if self.mirrorMaxWidth == 0 { self.mirrorMaxWidth = 1080 }
         
         self.mirrorQuality = UserDefaults.standard.integer(forKey: "mirrorQuality")
         if self.mirrorQuality == 0 { self.mirrorQuality = 85 }
         
         self.mirrorBitrate = UserDefaults.standard.integer(forKey: "mirrorBitrate")
         if self.mirrorBitrate == 0 { self.mirrorBitrate = 8000000 }
+
+        if UserDefaults.standard.object(forKey: "mirrorUseH264") == nil {
+            self.mirrorUseH264 = true
+        } else {
+            self.mirrorUseH264 = UserDefaults.standard.bool(forKey: "mirrorUseH264")
+        }
 
         loadAppsFromDisk()
         loadPinnedApps()
@@ -566,7 +572,7 @@ class AppState: ObservableObject {
         }
     }
     
-    @Published var mirrorMaxWidth: Int = 1920 {
+    @Published var mirrorMaxWidth: Int = 1080 {
         didSet {
             UserDefaults.standard.set(mirrorMaxWidth, forKey: "mirrorMaxWidth")
         }
@@ -581,6 +587,12 @@ class AppState: ObservableObject {
     @Published var mirrorBitrate: Int = 8000000 {
         didSet {
             UserDefaults.standard.set(mirrorBitrate, forKey: "mirrorBitrate")
+        }
+    }
+
+    @Published var mirrorUseH264: Bool = true {
+        didSet {
+            UserDefaults.standard.set(mirrorUseH264, forKey: "mirrorUseH264")
         }
     }
 

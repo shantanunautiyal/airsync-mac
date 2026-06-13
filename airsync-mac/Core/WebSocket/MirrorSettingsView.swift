@@ -19,6 +19,7 @@ struct MirrorSettingsView: View {
     @AppStorage("mirror.bitrateKbps") private var bitrateKbps: Int = 12000
 
     @AppStorage("mirror.stayOnTop") private var stayOnTop: Bool = false
+    @AppStorage("mirrorUseH264") private var useH264: Bool = true
     @AppStorage("mirror.stayAwake") private var stayAwake: Bool = false
     @AppStorage("mirror.blankDisplay") private var blankDisplay: Bool = false
     @AppStorage("mirror.noAudio") private var noAudio: Bool = false
@@ -121,6 +122,7 @@ struct MirrorSettingsView: View {
             Toggle("Continue app after closing", isOn: $continueApp)
             Toggle("Direct keyboard input", isOn: $directKeyboard)
             Toggle("Apps & Desktop mode shared resolution", isOn: $sharedResolution)
+            Toggle("Use H.264 Video Coding (Recommended)", isOn: $useH264)
 
             // Launch position
             HStack {
@@ -239,6 +241,7 @@ struct MirrorSettingsView: View {
                 Toggle("Continue app after closing", isOn: $continueApp)
                 Toggle("Direct keyboard input", isOn: $directKeyboard)
                 Toggle("Apps & Desktop mode shared resolution", isOn: $sharedResolution)
+                Toggle("Use H.264 Video Coding (Recommended)", isOn: $useH264)
 
                 HStack {
                     Text("Launch position (x, y)")
@@ -295,6 +298,7 @@ struct MirrorSettingsView: View {
             "maxWidth": maxWidth
         ]
         if bitrateKbps > 0 { options["bitrateKbps"] = bitrateKbps }
+        options["useRawFrames"] = !useH264
         if stayOnTop { options["stayOnTop"] = true }
         if stayAwake { options["stayAwake"] = true }
         if blankDisplay { options["blankDisplay"] = true }

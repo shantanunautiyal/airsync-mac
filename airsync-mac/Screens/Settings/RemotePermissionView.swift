@@ -24,7 +24,7 @@ struct RemotePermissionView: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("To allow AirSync to simulate keystrokes (arrows, media keys) and control volume, you need to grant Accessibility permissions in System Settings.")
+            Text("To allow AirSync to simulate keystrokes (arrows, media keys) and control volume, you must enable it under **Privacy & Security > Accessibility** in System Settings.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -40,6 +40,22 @@ struct RemotePermissionView: View {
                 } else {
                     MacRemoteManager.shared.requestAccessibilityPermission()
                 }
+            }
+            
+            if !isTrusted {
+                VStack(spacing: 8) {
+                    Text("⚠️ Note: Enable under **Accessibility**, not 'Remote Control' or 'Input Monitoring'.")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.orange)
+                    
+                    Text("If it is already enabled in Accessibility but not recognized, select AirSync and click the '—' (minus) button to remove it, then toggle it again when prompted.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .multilineTextAlignment(.center)
+                .padding(.top, 10)
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(30)

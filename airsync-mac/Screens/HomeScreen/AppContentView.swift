@@ -115,9 +115,6 @@ struct AppContentView: View {
                                 }
                             }
                         }
-                case .transfers:
-                    Text("Transfers")
-                        .transition(.blurReplace)
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)

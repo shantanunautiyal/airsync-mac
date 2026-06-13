@@ -173,37 +173,33 @@ final class H264Decoder: NSObject {
             }
             print("[H264Decoder] 📊 Detected profile: \(profileName)")
             
-            // VideoToolbox on Apple Silicon prefers Main/High profile
-            // Baseline profile (0x42) often causes kVTParameterErr (-12712)
             if profile == 0x42 {
                 print("[H264Decoder] ⚠️ Baseline profile detected - VideoToolbox may reject this")
                 print("[H264Decoder] 💡 Android encoder should use Main (0x4D) or High (0x64) profile")
             }
         }
         
-        let parameterSets = [sps, pps]
-        var parameterSetPointers: [UnsafePointer<UInt8>] = []
-        var parameterSetSizes: [Int] = []
-        
-        // Hold references to the data
-        parameterSets.forEach { data in
-            data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
-                if let baseAddress = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-                    parameterSetPointers.append(baseAddress)
-                    parameterSetSizes.append(data.count)
+        var formatDesc: CMFormatDescription?
+        let status = sps.withUnsafeBytes { spsBytes -> OSStatus in
+            pps.withUnsafeBytes { ppsBytes -> OSStatus in
+                guard let spsPointer = spsBytes.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                      let ppsPointer = ppsBytes.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    return -1 // Internal error
                 }
+                
+                let parameterSetPointers = [spsPointer, ppsPointer]
+                let parameterSetSizes = [sps.count, pps.count]
+                
+                return CMVideoFormatDescriptionCreateFromH264ParameterSets(
+                    allocator: kCFAllocatorDefault,
+                    parameterSetCount: 2,
+                    parameterSetPointers: parameterSetPointers,
+                    parameterSetSizes: parameterSetSizes,
+                    nalUnitHeaderLength: 4,
+                    formatDescriptionOut: &formatDesc
+                )
             }
         }
-        
-        var formatDesc: CMFormatDescription?
-        let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(
-            allocator: kCFAllocatorDefault,
-            parameterSetCount: 2,
-            parameterSetPointers: parameterSetPointers,
-            parameterSetSizes: parameterSetSizes,
-            nalUnitHeaderLength: 4,
-            formatDescriptionOut: &formatDesc
-        )
         
         if status == noErr, let formatDesc = formatDesc {
             self.formatDescription = formatDesc
@@ -234,8 +230,8 @@ final class H264Decoder: NSObject {
             kCVPixelBufferMetalCompatibilityKey: true
         ] as CFDictionary
         
-        // Force hardware acceleration
-        let decoderSpecification = [
+        // First try: require hardware accelerated decoder
+        let specWithHW = [
             kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder: true,
             kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder: true
         ] as CFDictionary
@@ -246,19 +242,35 @@ final class H264Decoder: NSObject {
         ] as CFDictionary
         
         var session: VTDecompressionSession?
-        let status = VTDecompressionSessionCreate(
+        var status = VTDecompressionSessionCreate(
             allocator: kCFAllocatorDefault,
             formatDescription: formatDescription,
-            decoderSpecification: decoderSpecification,
+            decoderSpecification: specWithHW,
             imageBufferAttributes: decoderParameters,
             outputCallback: nil,
             decompressionSessionOut: &session
         )
         
+        if status != noErr {
+            print("[H264Decoder] ⚠️ Failed to create hardware decompression session (\(status)), trying with hardware-acceleration enabled but not required...")
+            let specFallback = [
+                kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder: true
+            ] as CFDictionary
+            
+            status = VTDecompressionSessionCreate(
+                allocator: kCFAllocatorDefault,
+                formatDescription: formatDescription,
+                decoderSpecification: specFallback,
+                imageBufferAttributes: decoderParameters,
+                outputCallback: nil,
+                decompressionSessionOut: &session
+            )
+        }
+        
         if status == noErr, let session = session {
             VTSessionSetProperties(session, propertyDictionary: decompressionProperties)
             self.decompressionSession = session
-            print("[H264Decoder] ⚡ Created hardware decompression session")
+            print("[H264Decoder] ⚡ Created decompression session")
         } else {
             print("[H264Decoder] ❌ Failed to create decompression session: \(status)")
         }

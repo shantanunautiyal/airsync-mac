@@ -189,6 +189,9 @@ class MenuBarManager: NSObject {
             
             // Monitor clicks outside to close (both globally and locally within current app)
             eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+                if QRConnectionManager.shared.isAuthenticating {
+                    return
+                }
                 if let eventLocation = NSEvent.mouseLocation as NSPoint?,
                    let panelFrame = self?.menubarPanel?.frame,
                    !NSMouseInRect(eventLocation, panelFrame, false) {
@@ -200,6 +203,9 @@ class MenuBarManager: NSObject {
                 }
             }
             localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+                if QRConnectionManager.shared.isAuthenticating {
+                    return event
+                }
                 if let eventLocation = NSEvent.mouseLocation as NSPoint?,
                    let panelFrame = self?.menubarPanel?.frame,
                    !NSMouseInRect(eventLocation, panelFrame, false) {

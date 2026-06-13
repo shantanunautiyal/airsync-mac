@@ -86,21 +86,50 @@ struct TopSegmentView: View {
                         )
                     }
                     
-                    if appState.adbConnected && (appState.isPlus || !appState.licenseCheck) {
+                    if (appState.device != nil || appState.adbConnected) && (appState.isPlus || !appState.licenseCheck) {
                         GlassButtonView(
-                            label: "Mirror",
-                            systemImage: "apps.iphone",
+                            label: appState.isMirroring ? "Stop Mirroring" : (appState.isMirrorRequestPending ? "Starting..." : "Mirror"),
+                            systemImage: appState.isMirroring ? "stop.circle" : "apps.iphone",
                             iconOnly: true,
+                            primary: !appState.isMirroring,
                             circleSize: toolButtonSize,
+                            isLoading: appState.isMirrorRequestPending,
                             action: {
-                                if appState.useNativeMirroringByDefault {
-                                    appState.isNativeMirroring = true
-                                } else {
-                                    ADBConnector.startScrcpy(
-                                        ip: appState.device?.ipAddress ?? "",
-                                        port: appState.adbPort,
-                                        deviceName: appState.device?.name ?? "My Phone"
-                                    )
+                                if appState.isMirroring {
+                                    WebSocketServer.shared.stopMirroring()
+                                    print("[menubar] Requested stop mirroring")
+                                } else if !appState.isMirrorRequestPending {
+                                    let adbEnabled = appState.adbEnabled && appState.adbConnected
+                                    let hasADB = ADBConnector.findExecutable(named: "adb", fallbackPaths: ADBConnector.possibleADBPaths) != nil
+                                    let hasScrcpy = ADBConnector.findExecutable(named: "scrcpy", fallbackPaths: ADBConnector.possibleScrcpyPaths) != nil
+
+                                    if adbEnabled && hasADB && hasScrcpy {
+                                        if appState.useNativeMirroringByDefault {
+                                            appState.isNativeMirroring = true
+                                        } else {
+                                            guard let device = appState.device else { return }
+                                            ADBConnector.startScrcpy(
+                                                ip: device.ipAddress,
+                                                port: appState.adbPort,
+                                                deviceName: device.name
+                                            )
+                                        }
+                                    } else {
+                                        // Request WebSocket mirroring
+                                        WebSocketServer.shared.sendMirrorRequest(
+                                            action: "start",
+                                            mode: "device",
+                                            package: nil,
+                                            options: [
+                                                "transport": "websocket",
+                                                "fps": appState.mirrorFPS,
+                                                "quality": appState.mirrorQuality,
+                                                "maxWidth": appState.mirrorMaxWidth,
+                                                "autoApprove": true
+                                            ]
+                                        )
+                                        print("[menubar] Requested WebSocket mirroring (device mode)")
+                                    }
                                 }
                             }
                         )
@@ -113,10 +142,12 @@ struct TopSegmentView: View {
                                         deviceName: appState.device?.name ?? "My Phone"
                                     )
                                 }
+                                .disabled(!appState.adbConnected)
                             } else {
                                 Button("Android Mirror") {
                                     appState.isNativeMirroring = true
                                 }
+                                .disabled(!appState.adbConnected)
                             }
 
                             Divider()
@@ -125,6 +156,7 @@ struct TopSegmentView: View {
                                 Button("Native Desktop") {
                                     appState.isNativeDesktopMirroring = true
                                 }
+                                .disabled(!appState.adbConnected)
                                 Button("scrcpy Desktop") {
                                     ADBConnector.startScrcpy(
                                         ip: appState.device?.ipAddress ?? "",
@@ -133,6 +165,7 @@ struct TopSegmentView: View {
                                         desktop: true
                                     )
                                 }
+                                .disabled(!appState.adbConnected)
                             } else {
                                 Button("Desktop Mode") {
                                     ADBConnector.startScrcpy(
@@ -142,12 +175,13 @@ struct TopSegmentView: View {
                                         desktop: true
                                     )
                                 }
+                                .disabled(!appState.adbConnected)
                                 Button("Native Desktop") {
                                     appState.isNativeDesktopMirroring = true
                                 }
+                                .disabled(!appState.adbConnected)
                             }
                         }
-
                     }
                     
                     
