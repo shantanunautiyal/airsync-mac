@@ -8,14 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		9AF199F92EAD0C7200599860 /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199F72EAD0C6E00599860 /* CoreMediaIO.framework */; };
-		9AF199FA2EAD0C7200599860 /* CoreMediaIO.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199F72EAD0C6E00599860 /* CoreMediaIO.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9AF199FF2EAD0D1200599860 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FB2EAD0D0700599860 /* VideoToolbox.framework */; };
-		9AF19A002EAD0D1200599860 /* VideoToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FB2EAD0D0700599860 /* VideoToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9AF19A012EAD0D1400599860 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FD2EAD0D0F00599860 /* AVFoundation.framework */; };
-		9AF19A022EAD0D1400599860 /* AVFoundation.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF199FD2EAD0D0F00599860 /* AVFoundation.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9AF19A042EAD0D1E00599860 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AF19A032EAD0D1E00599860 /* AppKit.framework */; };
 		9AFC81BC2EAD0BDB005FAE5B /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AFC81BA2EAD0B91005FAE5B /* CoreMedia.framework */; };
-		9AFC81BD2EAD0BDB005FAE5B /* CoreMedia.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AFC81BA2EAD0B91005FAE5B /* CoreMedia.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B94971602F62509A00F59BC9 /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = B949715F2F62509A00F59BC9 /* BigInt */; };
 		B94971632F6250DE00F59BC9 /* ASN1 in Frameworks */ = {isa = PBXBuildFile; productRef = B94971622F6250DE00F59BC9 /* ASN1 */; };
 		B94971662F62514500F59BC9 /* SwiftECC in Frameworks */ = {isa = PBXBuildFile; productRef = B94971652F62514500F59BC9 /* SwiftECC */; };
@@ -39,10 +35,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9AF19A022EAD0D1400599860 /* AVFoundation.framework in Embed Frameworks */,
-				9AF199FA2EAD0C7200599860 /* CoreMediaIO.framework in Embed Frameworks */,
-				9AFC81BD2EAD0BDB005FAE5B /* CoreMedia.framework in Embed Frameworks */,
-				9AF19A002EAD0D1200599860 /* VideoToolbox.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 1;
