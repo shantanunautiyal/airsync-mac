@@ -74,15 +74,18 @@ struct HealthView: View {
             
             // Health Data Content
             ScrollView {
-                if let summary = manager.healthSummary {
-                    let summaryDateStr = formatDate(summary.date)
-                    let selectedDateStr = formatDate(selectedDate)
-                    let datesMatch = isSameDay(summary.date, selectedDate)
-                    let _ = print("[health-view] 📅 Date comparison: summary=\(summaryDateStr), selected=\(selectedDateStr), match=\(datesMatch)")
-                    
-                    if datesMatch {
-                        let _ = print("[health-view] 📊 Rendering health data: steps=\(summary.steps ?? 0)")
-                        LazyVGrid(columns: [
+                // Look up health data from date-keyed cache for the selected date.
+                // Fall back to the single healthSummary if it matches, to handle the initial load.
+                let cachedSummary = manager.cachedHealthSummary(for: selectedDate)
+                let fallbackSummary: HealthSummary? = {
+                    if let hs = manager.healthSummary, isSameDay(hs.date, selectedDate) { return hs }
+                    return nil
+                }()
+                let summary: HealthSummary? = cachedSummary ?? fallbackSummary
+                
+                if let summary = summary {
+                    let _ = print("[health-view] 📊 Rendering health data for \(formatDate(selectedDate)): steps=\(summary.steps ?? 0)")
+                    LazyVGrid(columns: [
                         GridItem(.flexible(), spacing: 16),
                         GridItem(.flexible(), spacing: 16)
                     ], spacing: 16) {
@@ -259,92 +262,6 @@ struct HealthView: View {
                         }
                         }
                         .padding()
-                    } else {
-                        // Dates don't match - show warning with data
-                        VStack(spacing: 16) {
-                            // Warning banner
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                                Text("Android sent data for \(summaryDateStr) instead of \(selectedDateStr)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .background(Color.orange.opacity(0.1))
-                            .cornerRadius(8)
-                            
-                            // Show the data anyway (for debugging)
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 16),
-                                GridItem(.flexible(), spacing: 16)
-                            ], spacing: 16) {
-                                // Steps - always show
-                                HealthMetricCard(
-                                    icon: "figure.walk",
-                                    title: "Steps",
-                                    value: summary.steps != nil ? "\(summary.steps!)" : "0",
-                                    subtitle: "of 10,000",
-                                    progress: summary.stepsProgress,
-                                    color: .blue
-                                )
-                                
-                                // Calories - always show
-                                HealthMetricCard(
-                                    icon: "flame.fill",
-                                    title: "Calories",
-                                    value: summary.calories != nil ? "\(summary.calories!)" : "0",
-                                    subtitle: "kcal",
-                                    progress: summary.caloriesProgress,
-                                    color: .orange
-                                )
-                                
-                                // Distance - always show
-                                HealthMetricCard(
-                                    icon: "location.fill",
-                                    title: "Distance",
-                                    value: summary.distance != nil ? String(format: "%.1f", summary.distance!) : "0.0",
-                                    subtitle: "km",
-                                    progress: nil,
-                                    color: .green
-                                )
-                                
-                                // Heart Rate - always show
-                                HealthMetricCard(
-                                    icon: "heart.fill",
-                                    title: "Heart Rate",
-                                    value: summary.heartRateAvg != nil ? "\(summary.heartRateAvg!)" : "--",
-                                    subtitle: "bpm",
-                                    progress: nil,
-                                    color: .red
-                                )
-                                
-                                // Sleep - always show
-                                let sleepHours2 = (summary.sleepDuration ?? 0) / 60
-                                let sleepMinutes2 = (summary.sleepDuration ?? 0) % 60
-                                let sleepProgress2 = summary.sleepDuration != nil ? Double(summary.sleepDuration!) / 480.0 : 0
-                                HealthMetricCard(
-                                    icon: "bed.double.fill",
-                                    title: "Sleep",
-                                    value: summary.sleepDuration != nil ? "\(sleepHours2)h \(sleepMinutes2)m" : "--",
-                                    subtitle: "of 8h",
-                                    progress: sleepProgress2,
-                                    color: .purple
-                                )
-                                
-                                // Active Minutes - always show
-                                HealthMetricCard(
-                                    icon: "figure.run",
-                                    title: "Active",
-                                    value: summary.activeMinutes != nil ? "\(summary.activeMinutes!)" : "0",
-                                    subtitle: "minutes",
-                                    progress: nil,
-                                    color: .cyan
-                                )
-                            }
-                            .padding()
-                        }
-                    }
                 } else {
                     let _ = print("[health-view] ⚠️ No health summary data available for \(formatDate(selectedDate))")
                     VStack(spacing: 16) {

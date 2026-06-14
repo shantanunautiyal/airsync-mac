@@ -457,11 +457,19 @@ class LiveNotificationManager: ObservableObject {
         saveHealthCacheToDisk()
         
         DispatchQueue.main.async {
-            print("[live-notif] 📊 Updating healthSummary on main thread")
+            print("[live-notif] 📊 Updating healthSummary on main thread for dateKey: \(dateKey)")
+            // Always update the published property - the view will use
+            // cachedHealthSummary(for:) to get data for the selected date
             self.healthSummary = summary
             print("[live-notif] 📊 Health summary updated, objectWillChange triggered")
             self.showHealthUpdateIfNeeded(summary)
         }
+    }
+    
+    /// Get cached health summary for a specific date (used by views for date-keyed lookup)
+    func cachedHealthSummary(for date: Date) -> HealthSummary? {
+        let dateKey = dateKeyFromDate(date)
+        return healthCache[dateKey]
     }
     
     /// Get cached health data for a date, or request from Android if not cached

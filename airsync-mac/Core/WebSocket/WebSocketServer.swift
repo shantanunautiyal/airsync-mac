@@ -2245,51 +2245,94 @@ class WebSocketServer: ObservableObject {
             }
 
         case .healthSummary:
-            print("[websocket] 📊 Received healthSummary message")
+            print("[websocket] 📊 Received healthSummary message (flexible handler)")
             print("[websocket] 📊 Health data dict: \(message.data)")
             
-            // Try to parse date as Int64, Int, or Double
+            let dict = message.data
+            
+            // Helper function to safely parse optional Int (handles NSNull and 0 as nil for certain fields)
+            func parseOptionalInt(_ key: String, treatZeroAsNil: Bool = false) -> Int? {
+                guard let value = dict[key] else { return nil }
+                if value is NSNull { return nil }
+                if let intVal = value as? Int {
+                    return (treatZeroAsNil && intVal == 0) ? nil : intVal
+                }
+                if let doubleVal = value as? Double {
+                    guard doubleVal.isFinite else { return nil }
+                    let intVal = Int(doubleVal)
+                    return (treatZeroAsNil && intVal == 0) ? nil : intVal
+                }
+                if let numVal = value as? NSNumber {
+                    let intVal = numVal.intValue
+                    return (treatZeroAsNil && intVal == 0) ? nil : intVal
+                }
+                return nil
+            }
+            
+            // Helper function to safely parse optional Double (handles NSNull, NaN, Infinity)
+            func parseOptionalDouble(_ key: String) -> Double? {
+                guard let value = dict[key] else { return nil }
+                if value is NSNull { return nil }
+                var result: Double? = nil
+                if let doubleVal = value as? Double { result = doubleVal }
+                else if let intVal = value as? Int { result = Double(intVal) }
+                else if let numVal = value as? NSNumber { result = numVal.doubleValue }
+                // Guard against NaN and Infinity
+                if let r = result, !r.isFinite { return nil }
+                return result
+            }
+            
+            // Try to parse date as Int64, Int, Double, or NSNumber
             let dateMs: Int64
-            if let date64 = message.data["date"] as? Int64 {
+            if let date64 = dict["date"] as? Int64 {
                 dateMs = date64
-            } else if let dateInt = message.data["date"] as? Int {
+            } else if let dateInt = dict["date"] as? Int {
                 dateMs = Int64(dateInt)
-            } else if let dateDouble = message.data["date"] as? Double {
+            } else if let dateDouble = dict["date"] as? Double {
                 dateMs = Int64(dateDouble)
+            } else if let dateNum = dict["date"] as? NSNumber {
+                dateMs = dateNum.int64Value
             } else {
-                print("[websocket] ❌ Failed to parse date from health summary - type: \(type(of: message.data["date"]))")
+                print("[websocket] ❌ Failed to parse date from health summary - type: \(type(of: dict["date"]))")
                 break
             }
             
-            print("[websocket] 📊 Parsing health summary with date: \(dateMs)")
+            // Validate date is reasonable (not in distant past or future)
+            let dateSeconds = Double(dateMs) / 1000.0
+            let parsedDate = Date(timeIntervalSince1970: dateSeconds)
+            let now = Date()
+            let oneYearAgo = now.addingTimeInterval(-365 * 24 * 60 * 60)
+            let oneWeekFromNow = now.addingTimeInterval(7 * 24 * 60 * 60)
             
-            // Filter out 0 values for heart rate (treat as nil)
-            let heartRateAvg = message.data["heartRateAvg"] as? Int
-            let heartRateMin = message.data["heartRateMin"] as? Int
-            let heartRateMax = message.data["heartRateMax"] as? Int
+            guard parsedDate > oneYearAgo && parsedDate < oneWeekFromNow else {
+                print("[websocket] ❌ Health summary date out of range: \(parsedDate)")
+                break
+            }
+            
+            print("[websocket] 📊 Parsing health summary with date: \(dateMs) (\(parsedDate))")
             
             let summary = HealthSummary(
-                date: Date(timeIntervalSince1970: Double(dateMs) / 1000.0),
-                steps: message.data["steps"] as? Int,
-                distance: message.data["distance"] as? Double,
-                calories: message.data["calories"] as? Int,
-                activeMinutes: message.data["activeMinutes"] as? Int,
-                heartRateAvg: (heartRateAvg == 0) ? nil : heartRateAvg,
-                heartRateMin: (heartRateMin == 0) ? nil : heartRateMin,
-                heartRateMax: (heartRateMax == 0) ? nil : heartRateMax,
-                sleepDuration: message.data["sleepDuration"] as? Int,
-                floorsClimbed: message.data["floorsClimbed"] as? Int,
-                weight: message.data["weight"] as? Double,
-                bloodPressureSystolic: message.data["bloodPressureSystolic"] as? Int,
-                bloodPressureDiastolic: message.data["bloodPressureDiastolic"] as? Int,
-                oxygenSaturation: message.data["oxygenSaturation"] as? Double,
-                restingHeartRate: message.data["restingHeartRate"] as? Int,
-                vo2Max: message.data["vo2Max"] as? Double,
-                bodyTemperature: message.data["bodyTemperature"] as? Double,
-                bloodGlucose: message.data["bloodGlucose"] as? Double,
-                hydration: message.data["hydration"] as? Double
+                date: parsedDate,
+                steps: parseOptionalInt("steps"),
+                distance: parseOptionalDouble("distance"),
+                calories: parseOptionalInt("calories"),
+                activeMinutes: parseOptionalInt("activeMinutes"),
+                heartRateAvg: parseOptionalInt("heartRateAvg", treatZeroAsNil: true),
+                heartRateMin: parseOptionalInt("heartRateMin", treatZeroAsNil: true),
+                heartRateMax: parseOptionalInt("heartRateMax", treatZeroAsNil: true),
+                sleepDuration: parseOptionalInt("sleepDuration"),
+                floorsClimbed: parseOptionalInt("floorsClimbed"),
+                weight: parseOptionalDouble("weight"),
+                bloodPressureSystolic: parseOptionalInt("bloodPressureSystolic", treatZeroAsNil: true),
+                bloodPressureDiastolic: parseOptionalInt("bloodPressureDiastolic", treatZeroAsNil: true),
+                oxygenSaturation: parseOptionalDouble("oxygenSaturation"),
+                restingHeartRate: parseOptionalInt("restingHeartRate", treatZeroAsNil: true),
+                vo2Max: parseOptionalDouble("vo2Max"),
+                bodyTemperature: parseOptionalDouble("bodyTemperature"),
+                bloodGlucose: parseOptionalDouble("bloodGlucose"),
+                hydration: parseOptionalDouble("hydration")
             )
-            print("[websocket] 📊 Created HealthSummary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(summary.distance ?? 0)")
+            print("[websocket] 📊 Created HealthSummary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(String(format: "%.2f", summary.distance ?? 0))")
             LiveNotificationManager.shared.handleHealthSummary(summary)
             print("[websocket] 📊 Health summary sent to LiveNotificationManager")
 
