@@ -2,7 +2,7 @@
 //  SmsDetailView.swift
 //  airsync-mac
 //
-//  SMS conversation detail view with chat interface
+//  Liquid glass SMS conversation detail view
 //
 
 import SwiftUI
@@ -22,39 +22,7 @@ struct SmsDetailView: View {
     
     // Determine if this conversation supports sending messages
     private var isReadOnlyConversation: Bool {
-        // Common patterns for read-only conversations:
-        // 1. Short codes (5-6 digits)
-        // 2. Service numbers (starting with specific patterns)
-        // 3. Notification-only senders
-        
-        let address = thread.address
-        
-        // Check for short codes (typically 5-6 digits)
-        if address.count <= 6 && address.allSatisfy({ $0.isNumber }) {
-            return true
-        }
-        
-        // Check for common service prefixes
-        let servicePrefixes = ["12345", "54321", "88888", "99999", "00000"]
-        if servicePrefixes.contains(where: { address.hasPrefix($0) }) {
-            return true
-        }
-        
-        // Check for notification keywords in contact name or recent messages
-        let notificationKeywords = ["noreply", "no-reply", "donotreply", "notification", "alert", "system", "automated"]
-        let displayName = thread.displayName.lowercased()
-        if notificationKeywords.contains(where: { displayName.contains($0) }) {
-            return true
-        }
-        
-        // Check recent messages for automated patterns
-        let snippet = thread.snippet.lowercased()
-        let automatedPatterns = ["do not reply", "automated message", "this is an automated", "unsubscribe"]
-        if automatedPatterns.contains(where: { snippet.contains($0) }) {
-            return true
-        }
-        
-        return false
+        SmsReadOnlyDetector.isReadOnly(address: thread.address, displayName: thread.displayName, snippet: thread.snippet)
     }
     
     var body: some View {
@@ -62,13 +30,10 @@ struct SmsDetailView: View {
             // Header
             headerView
             
-            Divider()
-            
             // Messages List
             messagesView
             
             // Input Area (if sending is supported) or Read-only indicator
-            Divider()
             if canSendMessages {
                 inputView
             } else {
@@ -90,29 +55,33 @@ struct SmsDetailView: View {
                 dismiss()
             }) {
                 Image(systemName: "chevron.left")
-                    .font(.title3)
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.primary)
+                    .frame(width: 32, height: 32)
+                    .background(Color.primary.opacity(0.06), in: Circle())
             }
             .buttonStyle(.plain)
             .help("Back to messages")
             
-            // Contact Avatar
+            // Glass-backed Contact Avatar
             ZStack {
                 Circle()
-                    .fill(Color.blue)
+                    .fill(avatarColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                
+                Circle()
+                    .stroke(avatarColor.opacity(0.2), lineWidth: 1.5)
                     .frame(width: 40, height: 40)
                 
                 Text(thread.displayName.prefix(1).uppercased())
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(avatarColor)
             }
             
             // Contact Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(thread.displayName)
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 15, weight: .semibold))
                 
                 Text(thread.address)
                     .font(.caption)
@@ -125,19 +94,23 @@ struct SmsDetailView: View {
             Text("\(messages.count) messages")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .glassBoxIfAvailable(radius: 10)
             
             // Refresh Button
             Button(action: loadMessages) {
                 Image(systemName: "arrow.clockwise")
-                    .font(.title3)
+                    .font(.system(size: 15))
                     .rotationEffect(.degrees(isLoading ? 360 : 0))
                     .animation(isLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isLoading)
             }
             .buttonStyle(.plain)
             .help("Refresh messages")
         }
-        .padding()
-        .background(.background.opacity(0.5))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .glassBoxIfAvailable(radius: 0)
     }
     
     // MARK: - Messages View
@@ -166,7 +139,7 @@ struct SmsDetailView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
                 } else {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: 6) {
                         ForEach(messages) { message in
                             MessageBubble(message: message, thread: thread)
                                 .id(message.id)
@@ -190,28 +163,37 @@ struct SmsDetailView: View {
     
     private var inputView: some View {
         HStack(spacing: 12) {
-            // Text Input
+            // Glass text input
             TextField("Type a message...", text: $newMessage, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
                 .lineLimit(1...4)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .glassBoxIfAvailable(radius: 20)
                 .onSubmit {
                     sendMessage()
                 }
             
-            // Send Button
+            // Glass send button
             Button(action: sendMessage) {
                 Image(systemName: "paperplane.fill")
-                    .font(.title3)
+                    .font(.system(size: 16))
                     .foregroundColor(.white)
-                    .frame(width: 36, height: 36)
-                    .background(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
+                    .frame(width: 38, height: 38)
+                    .background(
+                        newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? Color.gray.opacity(0.5)
+                        : Color.blue
+                    )
                     .clipShape(Circle())
+                    .shadow(color: Color.blue.opacity(newMessage.isEmpty ? 0 : 0.3), radius: 8, y: 2)
             }
             .buttonStyle(.plain)
             .disabled(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
-        .padding()
-        .background(.background.opacity(0.5))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .glassBoxIfAvailable(radius: 0)
     }
     
     // MARK: - Read-Only Indicator
@@ -235,8 +217,17 @@ struct SmsDetailView: View {
             
             Spacer()
         }
-        .padding()
-        .background(.background.opacity(0.3))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .glassBoxIfAvailable(radius: 0)
+    }
+    
+    // MARK: - Avatar Color
+    
+    private var avatarColor: Color {
+        let colors: [Color] = [.blue, .purple, .orange, .teal, .pink, .indigo, .mint]
+        let hash = abs(thread.displayName.hashValue)
+        return colors[hash % colors.count]
     }
     
     // MARK: - Helper Methods
@@ -300,20 +291,32 @@ struct MessageBubble: View {
             }
             
             VStack(alignment: message.isSent ? .trailing : .leading, spacing: 4) {
-                // Message Content
+                // Glass message bubble
                 Text(message.body)
                     .font(.body)
                     .foregroundColor(message.isSent ? .white : .primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(
-                        message.isSent 
-                        ? Color.blue
-                        : Color.gray.opacity(0.2)
+                        Group {
+                            if message.isSent {
+                                // Sent: blue-tinted glass
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.blue.opacity(0.85)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            } else {
+                                // Received: glass effect
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(Color.primary.opacity(0.06))
+                            }
+                        }
                     )
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: 18)
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
                 
                 // Timestamp
                 Text(message.date, style: .time)

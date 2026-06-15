@@ -2,7 +2,7 @@
 //  ModernMessagesView.swift
 //  airsync-mac
 //
-//  Modern glassmorphic messages view
+//  Liquid glass messages view
 //
 
 import SwiftUI
@@ -26,13 +26,15 @@ struct MessagesView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Search Bar
-            HStack {
+            // Glass Search Bar
+            HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
+                    .font(.system(size: 14))
                 
                 TextField("Search messages...", text: $searchText)
                     .textFieldStyle(.plain)
+                    .font(.system(size: 14))
                 
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
@@ -42,10 +44,11 @@ struct MessagesView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding()
-            .background(.background.opacity(0.5))
-            
-            Divider()
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .glassBoxIfAvailable(radius: 12)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
             
             // Messages List
             ScrollView {
@@ -70,18 +73,22 @@ struct MessagesView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(40)
+                        .glassBoxIfAvailable(radius: 16)
                         .padding()
                     }
                 } else {
-                    LazyVStack(spacing: 0) {
+                    LazyVStack(spacing: 6) {
                         ForEach(filteredThreads) { thread in
                             NavigationLink(destination: SmsDetailView(thread: thread)) {
                                 MessageThreadRow(thread: thread, searchText: searchText)
                             }
                             .buttonStyle(.plain)
-                            Divider()
                         }
                     }
+                    .padding(.horizontal)
+                    .padding(.vertical, 4)
                 }
             }
         }
@@ -115,16 +122,19 @@ struct MessageThreadRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar
+            // Glass-backed avatar
             ZStack {
                 Circle()
-                    .fill(Color.blue)
-                    .frame(width: 44, height: 44)
+                    .fill(avatarColor.opacity(0.15))
+                    .frame(width: 46, height: 46)
+                
+                Circle()
+                    .stroke(avatarColor.opacity(0.2), lineWidth: 1.5)
+                    .frame(width: 46, height: 46)
                 
                 Text(thread.displayName.prefix(1).uppercased())
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundColor(avatarColor)
             }
             
             // Content
@@ -133,14 +143,14 @@ struct MessageThreadRow: View {
                     HighlightedText(
                         text: thread.displayName,
                         searchText: searchText,
-                        font: .headline,
+                        font: .system(size: 14, weight: thread.hasUnread ? .semibold : .medium),
                         weight: thread.hasUnread ? .semibold : .regular
                     )
                     
                     Spacer()
                     
                     Text(thread.date, style: .time)
-                        .font(.subheadline)
+                        .font(.system(size: 12))
                         .foregroundColor(.secondary)
                 }
                 
@@ -161,34 +171,32 @@ struct MessageThreadRow: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else if thread.unreadCount > 0 {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 20, height: 20)
-                            
-                            Text("\(thread.unreadCount)")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
+                        Text("\(thread.unreadCount)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(minWidth: 22, minHeight: 22)
+                            .background(Color.blue, in: Circle())
                     }
                 }
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .background(
             Group {
-                if isHovered {
-                    Color.primary.opacity(0.05)
-                } else if thread.hasUnread {
-                    Color.blue.opacity(0.05)
-                } else {
-                    Color.clear
+                if isHovered || thread.hasUnread {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(
+                            isHovered
+                            ? Color.primary.opacity(0.04)
+                            : Color.blue.opacity(0.04)
+                        )
                 }
             }
         )
-        .contentShape(Rectangle()) // Make entire card clickable
+        .glassBoxIfAvailable(radius: 14)
+        .contentShape(Rectangle())
+        .scaleEffect(isHovered ? 1.005 : 1.0)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isHovered = hovering
@@ -196,36 +204,15 @@ struct MessageThreadRow: View {
         }
     }
     
+    private var avatarColor: Color {
+        let colors: [Color] = [.blue, .purple, .orange, .teal, .pink, .indigo, .mint]
+        let hash = abs(thread.displayName.hashValue)
+        return colors[hash % colors.count]
+    }
+    
     // Helper function to determine if thread is read-only
     private func isReadOnlyThread(_ thread: SmsThread) -> Bool {
-        let address = thread.address
-        
-        // Check for short codes (typically 5-6 digits)
-        if address.count <= 6 && address.allSatisfy({ $0.isNumber }) {
-            return true
-        }
-        
-        // Check for common service prefixes
-        let servicePrefixes = ["12345", "54321", "88888", "99999", "00000"]
-        if servicePrefixes.contains(where: { address.hasPrefix($0) }) {
-            return true
-        }
-        
-        // Check for notification keywords in contact name or recent messages
-        let notificationKeywords = ["noreply", "no-reply", "donotreply", "notification", "alert", "system", "automated"]
-        let displayName = thread.displayName.lowercased()
-        if notificationKeywords.contains(where: { displayName.contains($0) }) {
-            return true
-        }
-        
-        // Check recent messages for automated patterns
-        let snippet = thread.snippet.lowercased()
-        let automatedPatterns = ["do not reply", "automated message", "this is an automated", "unsubscribe"]
-        if automatedPatterns.contains(where: { snippet.contains($0) }) {
-            return true
-        }
-        
-        return false
+        SmsReadOnlyDetector.isReadOnly(address: thread.address, displayName: thread.displayName, snippet: thread.snippet)
     }
 }
 
