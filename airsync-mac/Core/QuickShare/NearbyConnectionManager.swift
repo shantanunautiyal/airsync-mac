@@ -189,7 +189,7 @@ public protocol ShareExtensionDelegate:AnyObject{
 }
 
 @MainActor
-public class NearbyConnectionManager : NSObject, NetServiceDelegate, InboundNearbyConnectionDelegate, OutboundNearbyConnectionDelegate{
+public class NearbyConnectionManager : NSObject, NetServiceDelegate, @preconcurrency InboundNearbyConnectionDelegate, @preconcurrency OutboundNearbyConnectionDelegate{
 	
 	private var tcpListener:NWListener;
 	public let endpointID:[UInt8]=generateEndpointID()

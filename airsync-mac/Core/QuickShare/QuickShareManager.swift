@@ -15,7 +15,7 @@ struct QuickShareTransferInfo {
 }
 
 @MainActor
-public class QuickShareManager: NSObject, ObservableObject, MainAppDelegate, ShareExtensionDelegate {
+public class QuickShareManager: NSObject, ObservableObject, @preconcurrency MainAppDelegate, @preconcurrency ShareExtensionDelegate {
     public static let shared = QuickShareManager()
     @Published public var isEnabled: Bool = UserDefaults.standard.bool(forKey: "quickShareEnabled") {
         didSet {

@@ -507,10 +507,23 @@ class WebSocketServer: ObservableObject {
                     if !isMirrorFrameRaw {
                         print("[websocket] [raw] incoming text length=\(text.count)")
                     }
-                    // Step 1: Decrypt the message
+                    // Step 1: Decrypt the message (with fallback to raw text)
                     let decryptedText: String
                     if let key = self.symmetricKey {
-                        decryptedText = decryptMessage(text, using: key) ?? ""
+                        if let decrypted = decryptMessage(text, using: key) {
+                            decryptedText = decrypted
+                        } else {
+                            // Decryption failed — try raw text as fallback
+                            // (Android may send unencrypted handshake/device messages)
+                            let snippet = text.prefix(60)
+                            if text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") {
+                                print("[websocket] [decrypt] Decryption failed, raw text looks like JSON — using as-is (snippet: \(snippet))")
+                                decryptedText = text
+                            } else {
+                                print("[websocket] [decrypt] Decryption failed and raw text is not JSON (snippet: \(snippet))")
+                                decryptedText = ""
+                            }
+                        }
                     } else {
                         decryptedText = text
                     }

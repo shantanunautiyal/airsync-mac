@@ -27,13 +27,24 @@ func encryptMessage(_ message: String, using key: SymmetricKey) -> String? {
 }
 
 func decryptMessage(_ base64: String, using key: SymmetricKey) -> String? {
-    guard let combinedData = Data(base64Encoded: base64) else { return nil }
+    guard let combinedData = Data(base64Encoded: base64) else {
+        // Try with options for padding tolerance
+        guard let combinedData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) else {
+            print("[crypto-util] Base64 decode failed (len=\(base64.count), prefix=\(base64.prefix(20))...)")
+            return nil
+        }
+        return decryptAESGCM(combinedData, using: key)
+    }
+    return decryptAESGCM(combinedData, using: key)
+}
+
+private func decryptAESGCM(_ combinedData: Data, using key: SymmetricKey) -> String? {
     do {
         let sealedBox = try AES.GCM.SealedBox(combined: combinedData)
         let decrypted = try AES.GCM.open(sealedBox, using: key)
         return String(data: decrypted, encoding: .utf8)
     } catch {
-        print("[crypto-util] Decryption failed: \(error)")
+        print("[crypto-util] AES-GCM decryption failed (dataLen=\(combinedData.count)): \(error)")
         return nil
     }
 }

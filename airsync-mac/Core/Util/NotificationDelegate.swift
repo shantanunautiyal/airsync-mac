@@ -11,7 +11,7 @@ import AppKit
 internal import Combine
 
 @MainActor
-class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+class NotificationDelegate: NSObject, @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {

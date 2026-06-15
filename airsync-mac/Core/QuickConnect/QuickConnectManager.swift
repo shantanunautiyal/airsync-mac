@@ -10,7 +10,7 @@ import Darwin
 internal import Combine
 
 /// Manages quick reconnection functionality for previously connected devices
-class QuickConnectManager: ObservableObject {
+class QuickConnectManager: ObservableObject, @unchecked Sendable {
     static let shared = QuickConnectManager()
     
     // Android wake-up ports
@@ -244,8 +244,8 @@ class QuickConnectManager: ObservableObject {
         
         guard let finalIP = currentIP, let finalPort = currentPort else {
             print("[quick-connect] Cannot wake up device - no current connection info available after waiting")
-            DispatchQueue.main.async {
-                self.connectingDeviceID = nil
+            DispatchQueue.main.async { [weak self] in
+                self?.connectingDeviceID = nil
             }
             return
         }
@@ -269,8 +269,8 @@ class QuickConnectManager: ObservableObject {
         await sendHTTPWakeUpRequest(to: device, message: wakeUpMessage)
         
         // Clear progress after short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.connectingDeviceID = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.connectingDeviceID = nil
         }
     }
     

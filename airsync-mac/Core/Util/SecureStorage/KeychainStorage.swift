@@ -54,13 +54,12 @@ enum KeychainStorage {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecReturnAttributes as String: true,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitAll
         ]
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        if status == errSecSuccess, let items = result as? [[String: Any]] {
+        if status == errSecSuccess, let items = result as? [Data] {
             print("[Keychain] Preloaded \(items.count) item(s)")
         } else if status == errSecItemNotFound {
             print("[Keychain] No items to preload")
