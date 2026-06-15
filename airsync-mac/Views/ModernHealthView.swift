@@ -2,7 +2,7 @@
 //  ModernHealthView.swift
 //  airsync-mac
 //
-//  Modern glassmorphic health view
+//  Premium health view with activity rings and gradient cards
 //
 
 import SwiftUI
@@ -11,12 +11,12 @@ struct HealthView: View {
     @ObservedObject private var manager = LiveNotificationManager.shared
     @State private var selectedDate = Date()
     @State private var isLoadingData = false
+    @State private var animateRings = false
     
     var body: some View {
         VStack(spacing: 0) {
             // Date Picker Header
             HStack(spacing: 12) {
-                // Previous Day Button
                 Button(action: { changeDate(by: -1) }) {
                     Image(systemName: "chevron.left")
                         .font(.title3)
@@ -24,7 +24,6 @@ struct HealthView: View {
                 .buttonStyle(.plain)
                 .help("Previous Day")
                 
-                // Date Picker
                 DatePicker(
                     "",
                     selection: $selectedDate,
@@ -37,7 +36,6 @@ struct HealthView: View {
                     requestHealthData(for: newDate)
                 }
                 
-                // Next Day Button (disabled if today)
                 Button(action: { changeDate(by: 1) }) {
                     Image(systemName: "chevron.right")
                         .font(.title3)
@@ -49,15 +47,11 @@ struct HealthView: View {
                 
                 Spacer()
                 
-                // Today Button
                 if !Calendar.current.isDateInToday(selectedDate) {
-                    Button("Today") {
-                        selectedDate = Date()
-                    }
-                    .buttonStyle(.borderedProminent)
+                    Button("Today") { selectedDate = Date() }
+                        .buttonStyle(.borderedProminent)
                 }
                 
-                // Refresh Button
                 Button(action: { requestHealthData(for: selectedDate) }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.title3)
@@ -74,8 +68,6 @@ struct HealthView: View {
             
             // Health Data Content
             ScrollView {
-                // Look up health data from date-keyed cache for the selected date.
-                // Fall back to the single healthSummary if it matches, to handle the initial load.
                 let cachedSummary = manager.cachedHealthSummary(for: selectedDate)
                 let fallbackSummary: HealthSummary? = {
                     if let hs = manager.healthSummary, isSameDay(hs.date, selectedDate) { return hs }
@@ -84,186 +76,107 @@ struct HealthView: View {
                 let summary: HealthSummary? = cachedSummary ?? fallbackSummary
                 
                 if let summary = summary {
-                    let _ = print("[health-view] 📊 Rendering health data for \(formatDate(selectedDate)): steps=\(summary.steps ?? 0)")
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 16),
-                        GridItem(.flexible(), spacing: 16)
-                    ], spacing: 16) {
-                        // Steps - always show
-                        HealthMetricCard(
-                            icon: "figure.walk",
-                            title: "Steps",
-                            value: summary.steps != nil ? "\(summary.steps!)" : "0",
-                            subtitle: "of 10,000",
-                            progress: summary.stepsProgress,
-                            color: .blue
-                        )
+                    VStack(spacing: 20) {
+                        // Activity Rings Card
+                        ActivityRingsCard(summary: summary, animate: animateRings)
+                            .onAppear { withAnimation(.easeOut(duration: 1.2)) { animateRings = true } }
                         
-                        // Calories - always show
-                        HealthMetricCard(
-                            icon: "flame.fill",
-                            title: "Calories",
-                            value: summary.calories != nil ? "\(summary.calories!)" : "0",
-                            subtitle: "kcal",
-                            progress: summary.caloriesProgress,
-                            color: .orange
-                        )
-                        
-                        // Distance - always show
-                        HealthMetricCard(
-                            icon: "location.fill",
-                            title: "Distance",
-                            value: summary.distance != nil ? String(format: "%.1f", summary.distance!) : "0.0",
-                            subtitle: "km",
-                            progress: nil,
-                            color: .green
-                        )
-                        
-                        // Heart Rate - always show
-                        HealthMetricCard(
-                            icon: "heart.fill",
-                            title: "Heart Rate",
-                            value: summary.heartRateAvg != nil ? "\(summary.heartRateAvg!)" : "--",
-                            subtitle: "bpm",
-                            progress: nil,
-                            color: .red
-                        )
-                        
-                        // Sleep - always show
-                        let sleepHours = (summary.sleepDuration ?? 0) / 60
-                        let sleepMinutes = (summary.sleepDuration ?? 0) % 60
-                        let sleepProgress = summary.sleepDuration != nil ? Double(summary.sleepDuration!) / 480.0 : 0
-                        HealthMetricCard(
-                            icon: "bed.double.fill",
-                            title: "Sleep",
-                            value: summary.sleepDuration != nil ? "\(sleepHours)h \(sleepMinutes)m" : "--",
-                            subtitle: "of 8h",
-                            progress: sleepProgress,
-                            color: .purple
-                        )
-                        
-                        // Active Minutes - always show
-                        HealthMetricCard(
-                            icon: "figure.run",
-                            title: "Active",
-                            value: summary.activeMinutes != nil ? "\(summary.activeMinutes!)" : "0",
-                            subtitle: "minutes",
-                            progress: nil,
-                            color: .cyan
-                        )
-                        
-                        // Floors - always show
-                        HealthMetricCard(
-                            icon: "stairs",
-                            title: "Floors",
-                            value: summary.floorsClimbed != nil ? "\(summary.floorsClimbed!)" : "0",
-                            subtitle: "climbed",
-                            progress: nil,
-                            color: .brown
-                        )
-                        
-                        // Weight - show if available
-                        if let weight = summary.weight {
-                            HealthMetricCard(
-                                icon: "scalemass.fill",
-                                title: "Weight",
-                                value: String(format: "%.1f", weight),
-                                subtitle: "kg",
-                                progress: nil,
-                                color: .indigo
+                        // Metric Cards Grid
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 14),
+                            GridItem(.flexible(), spacing: 14)
+                        ], spacing: 14) {
+                            // Heart Rate
+                            GradientMetricCard(
+                                icon: "heart.fill",
+                                title: "Heart Rate",
+                                value: summary.heartRateAvg != nil ? "\(summary.heartRateAvg!)" : "--",
+                                unit: "bpm",
+                                detail: heartRateRange(summary),
+                                gradient: LinearGradient(colors: [Color(hex: "E53935"), Color(hex: "FF7043")], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
-                        }
-                        
-                        // Blood Pressure - show if available
-                        if let systolic = summary.bloodPressureSystolic,
-                           let diastolic = summary.bloodPressureDiastolic {
-                            HealthMetricCard(
-                                icon: "heart.circle.fill",
-                                title: "Blood Pressure",
-                                value: "\(systolic)/\(diastolic)",
-                                subtitle: "mmHg",
-                                progress: nil,
-                                color: .red
+                            
+                            // Sleep
+                            GradientMetricCard(
+                                icon: "bed.double.fill",
+                                title: "Sleep",
+                                value: sleepValue(summary),
+                                unit: sleepUnit(summary),
+                                detail: nil,
+                                gradient: LinearGradient(colors: [Color(hex: "7E57C2"), Color(hex: "B388FF")], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
-                        }
-                        
-                        // Oxygen - show if available
-                        if let oxygen = summary.oxygenSaturation, oxygen > 0 {
-                            let oxygenProgress = oxygen.isFinite ? oxygen / 100.0 : 0
-                            HealthMetricCard(
-                                icon: "lungs.fill",
-                                title: "Oxygen",
-                                value: String(format: "%.1f%%", oxygen),
-                                subtitle: "SpO2",
-                                progress: oxygenProgress,
-                                color: .mint
+                            
+                            // Distance
+                            GradientMetricCard(
+                                icon: "location.fill",
+                                title: "Distance",
+                                value: summary.distance != nil ? String(format: "%.2f", summary.distance!) : "--",
+                                unit: "km",
+                                detail: nil,
+                                gradient: LinearGradient(colors: [Color(hex: "43A047"), Color(hex: "66BB6A")], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
-                        }
-                        
-                        // Resting HR - show if available
-                        if let restingHR = summary.restingHeartRate {
-                            HealthMetricCard(
-                                icon: "heart.text.square.fill",
-                                title: "Resting HR",
-                                value: "\(restingHR)",
-                                subtitle: "bpm",
-                                progress: nil,
-                                color: .pink
+                            
+                            // Floors
+                            GradientMetricCard(
+                                icon: "stairs",
+                                title: "Floors",
+                                value: summary.floorsClimbed != nil ? "\(summary.floorsClimbed!)" : "--",
+                                unit: "climbed",
+                                detail: nil,
+                                gradient: LinearGradient(colors: [Color(hex: "8D6E63"), Color(hex: "BCAAA4")], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
-                        }
-                        
-                        // VO2 Max - show if available
-                        if let vo2 = summary.vo2Max, vo2 > 0 {
-                            HealthMetricCard(
-                                icon: "figure.strengthtraining.traditional",
-                                title: "VO2 Max",
-                                value: String(format: "%.1f", vo2),
-                                subtitle: "ml/kg/min",
-                                progress: nil,
-                                color: .teal
-                            )
-                        }
-                        
-                        // Temperature - show if available
-                        if let temp = summary.bodyTemperature, temp > 0 {
-                            HealthMetricCard(
-                                icon: "thermometer.medium",
-                                title: "Temperature",
-                                value: String(format: "%.1f°C", temp),
-                                subtitle: "body temp",
-                                progress: nil,
-                                color: .yellow
-                            )
-                        }
-                        
-                        // Blood Glucose - show if available
-                        if let glucose = summary.bloodGlucose, glucose > 0 {
-                            HealthMetricCard(
-                                icon: "drop.fill",
-                                title: "Blood Glucose",
-                                value: String(format: "%.1f", glucose),
-                                subtitle: "mg/dL",
-                                progress: nil,
-                                color: .purple
-                            )
-                        }
-                        
-                        // Hydration - show if available
-                        if let hydration = summary.hydration, hydration > 0 {
-                            let hydrationProgress = hydration.isFinite ? hydration / 3.0 : 0
-                            HealthMetricCard(
+                            
+                            // Hydration
+                            GradientMetricCard(
                                 icon: "drop.circle.fill",
                                 title: "Hydration",
-                                value: String(format: "%.1f", hydration),
-                                subtitle: "liters",
-                                progress: hydrationProgress,
-                                color: .blue
+                                value: summary.hydration != nil ? String(format: "%.1f", summary.hydration!) : "--",
+                                unit: "L",
+                                detail: nil,
+                                gradient: LinearGradient(colors: [Color(hex: "039BE5"), Color(hex: "4FC3F7")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            
+                            // Weight
+                            GradientMetricCard(
+                                icon: "scalemass.fill",
+                                title: "Weight",
+                                value: summary.weight != nil ? String(format: "%.1f", summary.weight!) : "--",
+                                unit: "kg",
+                                detail: nil,
+                                gradient: LinearGradient(colors: [Color(hex: "5C6BC0"), Color(hex: "9FA8DA")], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
                         }
+                        
+                        // Vitals Section
+                        if hasVitals(summary) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Vitals")
+                                    .font(.headline)
+                                    .padding(.top, 4)
+                                
+                                if let rhr = summary.restingHeartRate {
+                                    VitalRow(icon: "heart.text.square.fill", label: "Resting HR", value: "\(rhr) bpm", color: .pink)
+                                }
+                                if let sys = summary.bloodPressureSystolic, let dia = summary.bloodPressureDiastolic {
+                                    VitalRow(icon: "heart.circle.fill", label: "Blood Pressure", value: "\(sys)/\(dia) mmHg", color: .red)
+                                }
+                                if let o2 = summary.oxygenSaturation, o2 > 0 {
+                                    VitalRow(icon: "lungs.fill", label: "SpO2", value: String(format: "%.1f%%", o2), color: .mint)
+                                }
+                                if let temp = summary.bodyTemperature, temp > 0 {
+                                    VitalRow(icon: "thermometer.medium", label: "Temperature", value: String(format: "%.1f°C", temp), color: .orange)
+                                }
+                                if let glu = summary.bloodGlucose, glu > 0 {
+                                    VitalRow(icon: "drop.fill", label: "Glucose", value: String(format: "%.1f mg/dL", glu), color: .purple)
+                                }
+                                if let vo2 = summary.vo2Max, vo2 > 0 {
+                                    VitalRow(icon: "figure.strengthtraining.traditional", label: "VO2 Max", value: String(format: "%.1f", vo2), color: .teal)
+                                }
+                            }
                         }
-                        .padding()
+                    }
+                    .padding()
                 } else {
-                    let _ = print("[health-view] ⚠️ No health summary data available for \(formatDate(selectedDate))")
                     VStack(spacing: 16) {
                         if isLoadingData {
                             ProgressView()
@@ -272,70 +185,11 @@ struct HealthView: View {
                             Text("Loading health data...")
                                 .foregroundColor(.secondary)
                         } else {
-                            // Show placeholder cards with zero data
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 16),
-                                GridItem(.flexible(), spacing: 16)
-                            ], spacing: 16) {
-                                // Basic metrics with zero values
-                                HealthMetricCard(
-                                    icon: "figure.walk",
-                                    title: "Steps",
-                                    value: "0",
-                                    subtitle: "of 10,000",
-                                    progress: 0,
-                                    color: .blue
-                                )
-                                
-                                HealthMetricCard(
-                                    icon: "flame.fill",
-                                    title: "Calories",
-                                    value: "0",
-                                    subtitle: "kcal",
-                                    progress: 0,
-                                    color: .orange
-                                )
-                                
-                                HealthMetricCard(
-                                    icon: "location.fill",
-                                    title: "Distance",
-                                    value: "0.0",
-                                    subtitle: "km",
-                                    progress: nil,
-                                    color: .green
-                                )
-                                
-                                HealthMetricCard(
-                                    icon: "heart.fill",
-                                    title: "Heart Rate",
-                                    value: "--",
-                                    subtitle: "bpm",
-                                    progress: nil,
-                                    color: .red
-                                )
-                                
-                                HealthMetricCard(
-                                    icon: "bed.double.fill",
-                                    title: "Sleep",
-                                    value: "--",
-                                    subtitle: "hours",
-                                    progress: nil,
-                                    color: .purple
-                                )
-                                
-                                HealthMetricCard(
-                                    icon: "figure.run",
-                                    title: "Active",
-                                    value: "0",
-                                    subtitle: "minutes",
-                                    progress: nil,
-                                    color: .cyan
-                                )
-                            }
-                            .padding()
+                            // Placeholder rings
+                            ActivityRingsCard(summary: nil, animate: false)
+                                .padding(.horizontal)
                             
-                            // Info message
-                            Text("No health data available for \(formatDate(selectedDate))")
+                            Text("No health data for \(formatDate(selectedDate))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .padding()
@@ -344,18 +198,16 @@ struct HealthView: View {
                     .padding()
                 }
                 
-                // Bottom spacer to prevent content from being hidden by DockTabBar
                 Spacer(minLength: 100)
             }
         }
         .onAppear {
-            print("[health-view] 📱 View appeared, requesting health summary for today")
             selectedDate = Date()
             requestHealthData(for: selectedDate)
         }
     }
     
-    // MARK: - Helper Methods
+    // MARK: - Helpers
     
     private func changeDate(by days: Int) {
         if let newDate = Calendar.current.date(byAdding: .day, value: days, to: selectedDate) {
@@ -364,15 +216,12 @@ struct HealthView: View {
     }
     
     private func requestHealthData(for date: Date) {
-        print("[health-view] 📅 Requesting health data for: \(formatDate(date))")
         isLoadingData = true
-        
-        // First check cache - this will also trigger a request if needed
+        animateRings = false
         _ = manager.getHealthSummary(for: date)
-        
-        // Stop loading indicator after 3 seconds or when data arrives
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.isLoadingData = false
+            withAnimation(.easeOut(duration: 1.2)) { self.animateRings = true }
         }
     }
     
@@ -383,84 +232,217 @@ struct HealthView: View {
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+    
+    private func sleepValue(_ s: HealthSummary) -> String {
+        guard let dur = s.sleepDuration, dur > 0 else { return "--" }
+        return "\(dur / 60)h \(dur % 60)m"
+    }
+    
+    private func sleepUnit(_ s: HealthSummary) -> String {
+        guard let dur = s.sleepDuration, dur > 0 else { return "hours" }
+        return "of 8h"
+    }
+    
+    private func heartRateRange(_ s: HealthSummary) -> String? {
+        guard let min = s.heartRateMin, let max = s.heartRateMax, min > 0 && max > 0 else { return nil }
+        return "\(min)–\(max)"
+    }
+    
+    private func hasVitals(_ s: HealthSummary) -> Bool {
+        s.restingHeartRate != nil ||
+        (s.bloodPressureSystolic != nil && s.bloodPressureDiastolic != nil) ||
+        (s.oxygenSaturation != nil && (s.oxygenSaturation ?? 0) > 0) ||
+        (s.bodyTemperature != nil && (s.bodyTemperature ?? 0) > 0) ||
+        (s.bloodGlucose != nil && (s.bloodGlucose ?? 0) > 0) ||
+        (s.vo2Max != nil && (s.vo2Max ?? 0) > 0)
     }
 }
 
-struct HealthMetricCard: View {
-    let icon: String
-    let title: String
-    let value: String
-    let subtitle: String
-    let progress: Double?
-    let color: Color
+// MARK: - Activity Rings Card
+
+struct ActivityRingsCard: View {
+    let summary: HealthSummary?
+    let animate: Bool
     
-    // Safe progress value that guards against NaN and Infinity
-    private var safeProgress: Double? {
-        guard let p = progress else { return nil }
-        guard p.isFinite else { return 0 }
-        return min(max(p, 0), 1.0)
+    private var stepsProgress: Double {
+        guard let s = summary?.steps, s > 0 else { return 0 }
+        return min(Double(s) / 10000.0, 1.0)
+    }
+    
+    private var caloriesProgress: Double {
+        guard let c = summary?.calories, c > 0 else { return 0 }
+        return min(Double(c) / 500.0, 1.0)
+    }
+    
+    private var activeProgress: Double {
+        guard let a = summary?.activeMinutes, a > 0 else { return 0 }
+        return min(Double(a) / 60.0, 1.0)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack {
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.2))
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(color)
-                }
-                
-                Spacer()
+        HStack(spacing: 24) {
+            // Concentric rings
+            ZStack {
+                ActivityRing(progress: animate ? stepsProgress : 0, color: Color(hex: "4FC3F7"), lineWidth: 14, size: 130)
+                ActivityRing(progress: animate ? caloriesProgress : 0, color: Color(hex: "FF7043"), lineWidth: 14, size: 98)
+                ActivityRing(progress: animate ? activeProgress : 0, color: Color(hex: "66BB6A"), lineWidth: 14, size: 66)
+            }
+            .frame(width: 140, height: 140)
+            
+            // Legends
+            VStack(alignment: .leading, spacing: 14) {
+                RingLegend(color: Color(hex: "4FC3F7"), label: "Steps", value: summary?.steps != nil ? "\(summary!.steps!)" : "--", target: "10,000")
+                RingLegend(color: Color(hex: "FF7043"), label: "Calories", value: summary?.calories != nil ? "\(summary!.calories!)" : "--", target: "500 kcal")
+                RingLegend(color: Color(hex: "66BB6A"), label: "Active", value: summary?.activeMinutes != nil ? "\(summary!.activeMinutes!)" : "--", target: "60 min")
             }
             
-            // Value
-            VStack(alignment: .leading, spacing: 4) {
+            Spacer()
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.background.opacity(0.4))
+        )
+    }
+}
+
+struct ActivityRing: View {
+    let progress: Double
+    let color: Color
+    let lineWidth: CGFloat
+    let size: CGFloat
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(color.opacity(0.15), lineWidth: lineWidth)
+            
+            Circle()
+                .trim(from: 0, to: CGFloat(progress))
+                .stroke(
+                    AngularGradient(
+                        gradient: Gradient(colors: [color, color.opacity(0.6), color]),
+                        center: .center,
+                        startAngle: .degrees(0),
+                        endAngle: .degrees(360)
+                    ),
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .animation(.easeOut(duration: 1.2), value: progress)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+struct RingLegend: View {
+    let color: Color
+    let label: String
+    let value: String
+    let target: String
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+            
+            VStack(alignment: .leading, spacing: 1) {
                 Text(value)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .font(.system(.title3, design: .rounded, weight: .bold))
                 
-                Text(subtitle)
+                Text("\(label) / \(target)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+        }
+    }
+}
+
+// MARK: - Gradient Metric Card
+
+struct GradientMetricCard: View {
+    let icon: String
+    let title: String
+    let value: String
+    let unit: String
+    let detail: String?
+    let gradient: LinearGradient
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Icon
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.white.opacity(0.9))
             
-            // Progress bar
-            if let progress = safeProgress {
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(color.opacity(0.2))
-                            .frame(height: 6)
-                        
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(
-                                LinearGradient(
-                                    colors: [color, color.opacity(0.7)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: max(0, geometry.size.width * CGFloat(progress)), height: 6)
-                    }
+            Spacer()
+            
+            // Value
+            VStack(alignment: .leading, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                
+                Text(unit)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.8))
+                
+                if let detail = detail {
+                    Text(detail)
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.6))
                 }
-                .frame(height: 6)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .frame(height: 140)
+        .background(gradient, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .bottomTrailing) {
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.5))
+                .padding(14)
+        }
+    }
+}
+
+// MARK: - Vital Row
+
+struct VitalRow: View {
+    let icon: String
+    let label: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 32, height: 32)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(color)
             }
             
-            // Title
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
+            Text(label)
+                .font(.body)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.system(.body, design: .rounded, weight: .semibold))
         }
-        .padding()
-        .frame(height: 160)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(.background.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
     }
 }
+
+
+
