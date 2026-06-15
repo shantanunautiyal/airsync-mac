@@ -47,4 +47,25 @@ enum KeychainStorage {
         query[kSecAttrAccount as String] = key
         return query
     }
+
+    /// Bulk-read all Keychain items for this service up front so that macOS
+    /// shows a single password prompt instead of one per key.
+    static func preload() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecReturnAttributes as String: true,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll
+        ]
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecSuccess, let items = result as? [[String: Any]] {
+            print("[Keychain] Preloaded \(items.count) item(s)")
+        } else if status == errSecItemNotFound {
+            print("[Keychain] No items to preload")
+        } else {
+            print("[Keychain] Preload returned status \(status)")
+        }
+    }
 }

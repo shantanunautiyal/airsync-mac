@@ -399,6 +399,87 @@ class WebSocketServer: ObservableObject {
         stopNetworkMonitoring()
     }
 
+    // MARK: - AirBridge Relay Support
+
+    /// Returns true if there is at least one active local (LAN) WebSocket session.
+    func hasActiveLocalSession() -> Bool {
+        lock.lock()
+        let hasSession = !activeSessions.isEmpty
+        lock.unlock()
+        return hasSession
+    }
+
+    /// Sends the current transport status to the peer via the active session.
+    func sendPeerTransportStatus(_ transport: String) {
+        let message = """
+        {"type":"peerTransport","data":{"transport":"\(transport)"}}
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    /// Sends a transport offer to the peer, indicating the Mac is available via the given reason.
+    func sendTransportOffer(reason: String) {
+        let message = """
+        {"type":"transportOffer","data":{"reason":"\(reason)"}}
+        """
+        sendToFirstAvailable(message: message)
+    }
+
+    /// Handles a message relayed from the AirBridge relay server (from Android via the relay).
+    /// Processes it as if it came from a direct LAN connection.
+    func handleRelayedMessage(_ text: String) {
+        // Decrypt if needed
+        let decryptedText: String
+        if let key = self.symmetricKey {
+            decryptedText = decryptMessage(text, using: key) ?? ""
+        } else {
+            decryptedText = text
+        }
+
+        guard !decryptedText.isEmpty else {
+            print("[airbridge] Empty relayed message after decryption")
+            return
+        }
+
+        // Check for pong
+        if decryptedText.contains("\"type\":\"pong\"") {
+            AirBridgeClient.shared.processPong()
+            return
+        }
+
+        // Parse and handle as a regular message
+        if let data = decryptedText.data(using: .utf8) {
+            do {
+                guard let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    return
+                }
+                guard let typeString = jsonObject["type"] as? String,
+                      let messageType = MessageType(rawValue: typeString) else {
+                    return
+                }
+
+                let messageData = jsonObject["data"] as? [String: Any] ?? [:]
+                let message = FlexibleMessage(type: messageType, data: messageData)
+                DispatchQueue.main.async { [weak self] in
+                    self?.handleFlexibleMessage(message)
+                }
+            } catch {
+                print("[airbridge] Relayed message JSON decode failed: \(error)")
+            }
+        }
+    }
+
+    /// Safely restarts the WebSocket server with an optional delay.
+    func requestRestart(reason: String, delay: TimeInterval = 0.5, port: UInt16? = nil) {
+        let targetPort = port ?? self.localPort ?? Defaults.serverPort
+        print("[websocket] Restart requested: \(reason) (delay=\(delay)s, port=\(targetPort))")
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            self?.stop()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self?.start(port: targetPort)
+            }
+        }
+    }
 
 
     func sendDisconnectRequest() {

@@ -37,6 +37,11 @@ class AppState: ObservableObject {
         case wired
     }
 
+    enum PeerTransportHint: String {
+        case unknown
+        case wifi
+        case relay
+    }
     private var clipboardCancellable: AnyCancellable?
     private var lastClipboardValue: String? = nil
     private var shouldSkipSave = false
@@ -47,6 +52,9 @@ class AppState: ObservableObject {
     @Published var isOS26: Bool = true
 
     init() {
+        // Load all Keychain items up front before any subsystem tries to read individual keys and triggers multiple prompts.
+        KeychainStorage.preload()
+
         self.deviceAdbSerials = UserDefaults.standard.dictionary(forKey: "deviceAdbSerials") as? [String: String] ?? [:]
         self.selectedWiredSerial = UserDefaults.standard.string(forKey: "selectedWiredSerial")
 
@@ -139,6 +147,8 @@ class AppState: ObservableObject {
         self.includeSilentInAIOption = UserDefaults.standard.bool(forKey: "includeSilentInAIOption")
         self.enableMenubarAISummary = UserDefaults.standard.bool(forKey: "enableMenubarAISummary")
 
+        self.airBridgeEnabled = UserDefaults.standard.bool(forKey: "airBridgeEnabled")
+
         let savedAdapterName = UserDefaults.standard.string(forKey: "selectedNetworkAdapterName")
         let validatedAdapter = AppState.validateAndGetNetworkAdapter(savedName: savedAdapterName)
         self.selectedNetworkAdapterName = validatedAdapter
@@ -214,6 +224,11 @@ class AppState: ObservableObject {
         // Ensure dock icon visibility is applied on launch
         updateDockIconVisibility()
         updateAutoStart()
+
+        // Auto-connect to AirBridge relay if previously enabled
+        if airBridgeEnabled {
+            AirBridgeClient.shared.connect()
+        }
 
         // Reset mirroring state on launch to prevent auto-opening if it was open during last session
         self.isNativeMirroring = false
@@ -434,6 +449,31 @@ class AppState: ObservableObject {
         guard let ip = device?.ipAddress, ip != "BLE" else { return false }
         // Tailscale IPs usually start with 100.
         return !ip.hasPrefix("100.")
+    }
+
+    @Published var peerTransportHint: PeerTransportHint = .unknown
+
+    // Effective transport for UI/actions: explicit peer hint overrides stale local-session state.
+    var isEffectivelyLocalTransport: Bool {
+        switch peerTransportHint {
+        case .relay: return false
+        case .wifi: return true
+        case .unknown: return isConnectedOverLocalNetwork
+        }
+    }
+
+    func updatePeerTransportHint(_ transport: String?) {
+        let next: PeerTransportHint
+        switch transport?.lowercased() {
+        case "wifi": next = .wifi
+        case "relay": next = .relay
+        default: next = .unknown
+        }
+        if Thread.isMainThread {
+            peerTransportHint = next
+        } else {
+            DispatchQueue.main.async { self.peerTransportHint = next }
+        }
     }
 
     // Audio player for ringtone
@@ -750,6 +790,19 @@ class AppState: ObservableObject {
     @Published var quickShareEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(quickShareEnabled, forKey: "quickShareEnabled")
+        }
+    }
+
+    @Published var airBridgeEnabled: Bool = false {
+        didSet {
+            UserDefaults.standard.set(airBridgeEnabled, forKey: "airBridgeEnabled")
+            // Connection is managed explicitly:
+            // Onboarding: connects after "Continue"
+            // Settings: connects on "Save & Reconnect"
+            // We only auto-disconnect here when the user turns AirBridge off.
+            if !airBridgeEnabled {
+                AirBridgeClient.shared.disconnect()
+            }
         }
     }
 
