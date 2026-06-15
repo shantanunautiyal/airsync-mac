@@ -109,8 +109,17 @@ struct SettingsSidebarView: View {
             .padding(.vertical, 8)
             .contentShape(Rectangle())
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isSelected ? Color.accentColor.opacity(0.35) : (isHovered ? Color.secondary.opacity(0.08) : Color.clear))
+                Group {
+                    if isSelected {
+                        // Selected: accent tint behind glass
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.accentColor.opacity(0.15))
+                    } else if isHovered {
+                        // Hover: plain subtle fill, no glass
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.primary.opacity(0.06))
+                    }
+                }
             )
         }
         .buttonStyle(PlainButtonStyle())

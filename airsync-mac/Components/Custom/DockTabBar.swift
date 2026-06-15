@@ -49,28 +49,28 @@ private struct DockTabItem: View {
     let dockItemSize: CGFloat
 
     private let selectedScale: CGFloat = 1.15
-    private let hoverScale: CGFloat = 1.05
+    private let hoverScale: CGFloat = 1.08
 
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
             Image(systemName: tab.icon)
-                .font(.system(size: dockItemSize * 0.4, weight: .semibold))
+                .font(.system(size: dockItemSize * 0.4, weight: isSelected ? .bold : .semibold))
                 .foregroundColor(isSelected ? .accentColor : .secondary)
                 .frame(width: dockItemSize, height: dockItemSize)
                 .background(
                     Group {
                         if isSelected {
-                            RoundedRectangle(cornerRadius: dockItemSize * 0.3)
+                            Capsule()
                                 .fill(Color.accentColor.opacity(0.15))
                         } else if isHovering {
-                            RoundedRectangle(cornerRadius: dockItemSize * 0.3)
-                                .fill(Color.gray.opacity(0.1))
+                            Capsule()
+                                .fill(Color.gray.opacity(0.08))
                         }
                     }
                 )
-                .contentShape(Circle())
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .help(LocalizedStringKey(tab.rawValue))
