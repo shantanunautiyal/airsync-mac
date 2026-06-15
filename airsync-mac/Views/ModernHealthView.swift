@@ -2,7 +2,7 @@
 //  ModernHealthView.swift
 //  airsync-mac
 //
-//  Premium health view with activity rings and gradient cards
+//  Liquid glass health view with activity rings and gradient cards
 //
 
 import SwiftUI
@@ -15,11 +15,13 @@ struct HealthView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Date Picker Header
+            // Glass Date Picker Header
             HStack(spacing: 12) {
                 Button(action: { changeDate(by: -1) }) {
                     Image(systemName: "chevron.left")
-                        .font(.title3)
+                        .font(.system(size: 14, weight: .medium))
+                        .frame(width: 30, height: 30)
+                        .background(Color.primary.opacity(0.06), in: Circle())
                 }
                 .buttonStyle(.plain)
                 .help("Previous Day")
@@ -38,7 +40,9 @@ struct HealthView: View {
                 
                 Button(action: { changeDate(by: 1) }) {
                     Image(systemName: "chevron.right")
-                        .font(.title3)
+                        .font(.system(size: 14, weight: .medium))
+                        .frame(width: 30, height: 30)
+                        .background(Color.primary.opacity(0.06), in: Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(Calendar.current.isDateInToday(selectedDate))
@@ -50,21 +54,21 @@ struct HealthView: View {
                 if !Calendar.current.isDateInToday(selectedDate) {
                     Button("Today") { selectedDate = Date() }
                         .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
                 }
                 
                 Button(action: { requestHealthData(for: selectedDate) }) {
                     Image(systemName: "arrow.clockwise")
-                        .font(.title3)
+                        .font(.system(size: 14))
                         .rotationEffect(.degrees(isLoadingData ? 360 : 0))
                         .animation(isLoadingData ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isLoadingData)
                 }
                 .buttonStyle(.plain)
                 .help("Refresh")
             }
-            .padding()
-            .background(.background.opacity(0.5))
-            
-            Divider()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .glassBoxIfAvailable(radius: 0)
             
             // Health Data Content
             ScrollView {
@@ -76,74 +80,80 @@ struct HealthView: View {
                 let summary: HealthSummary? = cachedSummary ?? fallbackSummary
                 
                 if let summary = summary {
-                    VStack(spacing: 20) {
+                    VStack(spacing: 18) {
                         // Activity Rings Card
                         ActivityRingsCard(summary: summary, animate: animateRings)
                             .onAppear { withAnimation(.easeOut(duration: 1.2)) { animateRings = true } }
                         
                         // Metric Cards Grid
                         LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 14),
-                            GridItem(.flexible(), spacing: 14)
-                        ], spacing: 14) {
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ], spacing: 12) {
                             // Heart Rate
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "heart.fill",
                                 title: "Heart Rate",
                                 value: summary.heartRateAvg != nil ? "\(summary.heartRateAvg!)" : "--",
                                 unit: "bpm",
                                 detail: heartRateRange(summary),
-                                gradient: LinearGradient(colors: [Color(hex: "E53935"), Color(hex: "FF7043")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "E53935"),
+                                gradientColors: [Color(hex: "E53935"), Color(hex: "FF7043")]
                             )
                             
                             // Sleep
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "bed.double.fill",
                                 title: "Sleep",
                                 value: sleepValue(summary),
                                 unit: sleepUnit(summary),
                                 detail: nil,
-                                gradient: LinearGradient(colors: [Color(hex: "7E57C2"), Color(hex: "B388FF")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "7E57C2"),
+                                gradientColors: [Color(hex: "7E57C2"), Color(hex: "B388FF")]
                             )
                             
                             // Distance
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "location.fill",
                                 title: "Distance",
                                 value: summary.distance != nil ? String(format: "%.2f", summary.distance!) : "--",
                                 unit: "km",
                                 detail: nil,
-                                gradient: LinearGradient(colors: [Color(hex: "43A047"), Color(hex: "66BB6A")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "43A047"),
+                                gradientColors: [Color(hex: "43A047"), Color(hex: "66BB6A")]
                             )
                             
                             // Floors
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "stairs",
                                 title: "Floors",
                                 value: summary.floorsClimbed != nil ? "\(summary.floorsClimbed!)" : "--",
                                 unit: "climbed",
                                 detail: nil,
-                                gradient: LinearGradient(colors: [Color(hex: "8D6E63"), Color(hex: "BCAAA4")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "8D6E63"),
+                                gradientColors: [Color(hex: "8D6E63"), Color(hex: "BCAAA4")]
                             )
                             
                             // Hydration
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "drop.circle.fill",
                                 title: "Hydration",
                                 value: summary.hydration != nil ? String(format: "%.1f", summary.hydration!) : "--",
                                 unit: "L",
                                 detail: nil,
-                                gradient: LinearGradient(colors: [Color(hex: "039BE5"), Color(hex: "4FC3F7")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "039BE5"),
+                                gradientColors: [Color(hex: "039BE5"), Color(hex: "4FC3F7")]
                             )
                             
                             // Weight
-                            GradientMetricCard(
+                            GlassMetricCard(
                                 icon: "scalemass.fill",
                                 title: "Weight",
                                 value: summary.weight != nil ? String(format: "%.1f", summary.weight!) : "--",
                                 unit: "kg",
                                 detail: nil,
-                                gradient: LinearGradient(colors: [Color(hex: "5C6BC0"), Color(hex: "9FA8DA")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                accentColor: Color(hex: "5C6BC0"),
+                                gradientColors: [Color(hex: "5C6BC0"), Color(hex: "9FA8DA")]
                             )
                         }
                         
@@ -155,22 +165,22 @@ struct HealthView: View {
                                     .padding(.top, 4)
                                 
                                 if let rhr = summary.restingHeartRate {
-                                    VitalRow(icon: "heart.text.square.fill", label: "Resting HR", value: "\(rhr) bpm", color: .pink)
+                                    GlassVitalRow(icon: "heart.text.square.fill", label: "Resting HR", value: "\(rhr) bpm", color: .pink)
                                 }
                                 if let sys = summary.bloodPressureSystolic, let dia = summary.bloodPressureDiastolic {
-                                    VitalRow(icon: "heart.circle.fill", label: "Blood Pressure", value: "\(sys)/\(dia) mmHg", color: .red)
+                                    GlassVitalRow(icon: "heart.circle.fill", label: "Blood Pressure", value: "\(sys)/\(dia) mmHg", color: .red)
                                 }
                                 if let o2 = summary.oxygenSaturation, o2 > 0 {
-                                    VitalRow(icon: "lungs.fill", label: "SpO2", value: String(format: "%.1f%%", o2), color: .mint)
+                                    GlassVitalRow(icon: "lungs.fill", label: "SpO2", value: String(format: "%.1f%%", o2), color: .mint)
                                 }
                                 if let temp = summary.bodyTemperature, temp > 0 {
-                                    VitalRow(icon: "thermometer.medium", label: "Temperature", value: String(format: "%.1f°C", temp), color: .orange)
+                                    GlassVitalRow(icon: "thermometer.medium", label: "Temperature", value: String(format: "%.1f°C", temp), color: .orange)
                                 }
                                 if let glu = summary.bloodGlucose, glu > 0 {
-                                    VitalRow(icon: "drop.fill", label: "Glucose", value: String(format: "%.1f mg/dL", glu), color: .purple)
+                                    GlassVitalRow(icon: "drop.fill", label: "Glucose", value: String(format: "%.1f mg/dL", glu), color: .purple)
                                 }
                                 if let vo2 = summary.vo2Max, vo2 > 0 {
-                                    VitalRow(icon: "figure.strengthtraining.traditional", label: "VO2 Max", value: String(format: "%.1f", vo2), color: .teal)
+                                    GlassVitalRow(icon: "figure.strengthtraining.traditional", label: "VO2 Max", value: String(format: "%.1f", vo2), color: .teal)
                                 }
                             }
                         }
@@ -187,7 +197,6 @@ struct HealthView: View {
                         } else {
                             // Placeholder rings
                             ActivityRingsCard(summary: nil, animate: false)
-                                .padding(.horizontal)
                             
                             Text("No health data for \(formatDate(selectedDate))")
                                 .font(.caption)
@@ -260,7 +269,7 @@ struct HealthView: View {
     }
 }
 
-// MARK: - Activity Rings Card
+// MARK: - Activity Rings Card (Glass)
 
 struct ActivityRingsCard: View {
     let summary: HealthSummary?
@@ -301,10 +310,7 @@ struct ActivityRingsCard: View {
             Spacer()
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.background.opacity(0.4))
-        )
+        .glassBoxIfAvailable(radius: 20)
     }
 }
 
@@ -317,7 +323,7 @@ struct ActivityRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(color.opacity(0.15), lineWidth: lineWidth)
+                .stroke(color.opacity(0.12), lineWidth: lineWidth)
             
             Circle()
                 .trim(from: 0, to: CGFloat(progress))
@@ -361,22 +367,31 @@ struct RingLegend: View {
     }
 }
 
-// MARK: - Gradient Metric Card
+// MARK: - Glass Metric Card
 
-struct GradientMetricCard: View {
+struct GlassMetricCard: View {
     let icon: String
     let title: String
     let value: String
     let unit: String
     let detail: String?
-    let gradient: LinearGradient
+    let accentColor: Color
+    let gradientColors: [Color]
+    
+    @State private var isHovered = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Icon
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.white.opacity(0.9))
+            // Icon with tinted glass background
+            ZStack {
+                Circle()
+                    .fill(accentColor.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(accentColor)
+            }
             
             Spacer()
             
@@ -384,46 +399,65 @@ struct GradientMetricCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 
                 Text(unit)
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.secondary)
                 
                 if let detail = detail {
                     Text(detail)
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.secondary)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .frame(height: 140)
-        .background(gradient, in: RoundedRectangle(cornerRadius: 16))
+        .background(
+            // Subtle gradient tint behind glass
+            LinearGradient(
+                colors: gradientColors.map { $0.opacity(0.08) },
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .glassBoxIfAvailable(radius: 16)
         .overlay(alignment: .bottomTrailing) {
             Text(title)
                 .font(.caption2)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(.secondary)
                 .padding(14)
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(accentColor.opacity(isHovered ? 0.2 : 0.08), lineWidth: 1)
+        )
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .shadow(color: accentColor.opacity(isHovered ? 0.12 : 0), radius: 12, y: 4)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) { isHovered = hovering }
         }
     }
 }
 
-// MARK: - Vital Row
+// MARK: - Glass Vital Row
 
-struct VitalRow: View {
+struct GlassVitalRow: View {
     let icon: String
     let label: String
     let value: String
     let color: Color
     
+    @State private var isHovered = false
+    
     var body: some View {
         HStack {
             ZStack {
                 Circle()
-                    .fill(color.opacity(0.15))
-                    .frame(width: 32, height: 32)
+                    .fill(color.opacity(0.12))
+                    .frame(width: 34, height: 34)
                 
                 Image(systemName: icon)
                     .font(.system(size: 14))
@@ -440,9 +474,10 @@ struct VitalRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.background.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .glassBoxIfAvailable(radius: 12)
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) { isHovered = hovering }
+        }
     }
 }
-
-
-
