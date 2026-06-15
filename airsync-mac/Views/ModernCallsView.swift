@@ -2,7 +2,7 @@
 //  ModernCallsView.swift
 //  airsync-mac
 //
-//  Modern glassmorphic calls view
+//  Liquid glass calls view
 //
 
 import SwiftUI
@@ -11,6 +11,7 @@ internal import Combine
 struct CallsView: View {
     @ObservedObject private var manager = LiveNotificationManager.shared
     @State private var showDialer = false
+    @State private var appearedItems: Set<String> = []
     
     var body: some View {
         ScrollView {
@@ -29,9 +30,13 @@ struct CallsView: View {
                         message: "Call logs will appear here"
                     )
                 } else {
-                    LazyVStack(spacing: 12) {
-                        ForEach(manager.callLogs) { log in
+                    LazyVStack(spacing: 10) {
+                        ForEach(Array(manager.callLogs.enumerated()), id: \.element.id) { index, log in
                             CallLogCard(log: log)
+                                .staggeredEntrance(index: index, isVisible: appearedItems.contains(log.id))
+                                .onAppear {
+                                    _ = withAnimation { appearedItems.insert(log.id) }
+                                }
                         }
                     }
                 }
@@ -59,19 +64,30 @@ struct CallsView: View {
 struct ActiveCallCard: View {
     let call: LiveCallNotification
     @State private var currentTime = Date()
+    @State private var isPulsing = false
     
     var body: some View {
         HStack(spacing: 16) {
-            // Icon
+            // Pulsing green ring icon
             ZStack {
+                // Outer pulse ring
                 Circle()
-                    .fill(Color.green.opacity(0.2))
+                    .stroke(Color.green.opacity(0.3), lineWidth: 2)
+                    .frame(width: 56, height: 56)
+                    .scaleEffect(isPulsing ? 1.3 : 1.0)
+                    .opacity(isPulsing ? 0 : 0.6)
+                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false), value: isPulsing)
+                
+                // Icon circle
+                Circle()
+                    .fill(Color.green.opacity(0.15))
                     .frame(width: 50, height: 50)
                 
                 Image(systemName: "phone.fill")
                     .font(.title2)
                     .foregroundColor(.green)
             }
+            .onAppear { isPulsing = true }
             
             // Info
             VStack(alignment: .leading, spacing: 4) {
@@ -87,8 +103,7 @@ struct ActiveCallCard: View {
             // Duration
             if call.state == .accepted || call.state == .offhook {
                 Text(formatDuration(call.duration))
-                    .font(.title3)
-                    .fontWeight(.semibold)
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
                     .monospacedDigit()
                     .foregroundColor(.green)
                     .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
@@ -96,11 +111,11 @@ struct ActiveCallCard: View {
                     }
             }
         }
-        .padding()
-        .background(.background.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .padding(16)
+        .glassBoxIfAvailable(radius: 16)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.green.opacity(0.25), lineWidth: 1)
         )
     }
     
@@ -113,24 +128,25 @@ struct ActiveCallCard: View {
 
 struct CallLogCard: View {
     let log: CallLogEntry
+    @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Icon
+        HStack(spacing: 14) {
+            // Glass icon circle
             ZStack {
                 Circle()
-                    .fill(iconColor.opacity(0.2))
+                    .fill(iconColor.opacity(0.12))
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: log.typeIcon)
-                    .font(.title3)
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundColor(iconColor)
             }
             
             // Info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(log.displayName)
-                    .font(.headline)
+                    .font(.system(size: 14, weight: .semibold))
                 Text(log.number)
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -139,17 +155,23 @@ struct CallLogCard: View {
             Spacer()
             
             // Time & Duration
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 3) {
                 Text(log.date, style: .time)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
                 Text(log.durationFormatted)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
-        .padding()
-        .background(.background.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .glassBoxIfAvailable(radius: 14)
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .shadow(color: .black.opacity(isHovered ? 0.08 : 0), radius: 8, y: 4)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) { isHovered = hovering }
+        }
     }
     
     private var iconColor: Color {
@@ -171,7 +193,7 @@ struct EmptyStateCard: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.gray.opacity(0.1))
+                    .fill(Color.secondary.opacity(0.08))
                     .frame(width: 80, height: 80)
                 
                 Image(systemName: icon)
@@ -190,6 +212,6 @@ struct EmptyStateCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(40)
-        .background(.background.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .glassBoxIfAvailable(radius: 16)
     }
 }
