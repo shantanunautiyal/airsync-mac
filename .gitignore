@@ -76,3 +76,6 @@ AGENTS.md
 docs/plans/
 build.log
 *.trace
+
+# Xcode Archives/Builds
+AirSync 2026-*/
