@@ -12,20 +12,6 @@ internal import Combine
 import UserNotifications
 import AVFoundation
 
-// MARK: - Call Notification Mode
-enum CallNotificationMode: String, CaseIterable {
-    case popup = "popup"
-    case notification = "notification"
-    case none = "none"
-    
-    var displayName: String {
-        switch self {
-        case .popup: return "Popup"
-        case .notification: return "Notification"
-        case .none: return "None"
-        }
-    }
-}
 
 class AppState: ObservableObject {
     static let shared = AppState()
@@ -141,11 +127,15 @@ class AppState: ObservableObject {
         self.useNativeDesktopMirroringByDefault = UserDefaults.standard.bool(forKey: "useNativeDesktopMirroringByDefault")
         self.isMusicCardHidden = UserDefaults.standard.bool(forKey: "isMusicCardHidden")
         
-        self.isCrashReportingEnabled = UserDefaults.standard.object(forKey: "isCrashReportingEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isCrashReportingEnabled")
         self.disableAllAIFeatures = UserDefaults.standard.bool(forKey: "disableAllAIFeatures")
         self.showAIToolbarButton = UserDefaults.standard.object(forKey: "showAIToolbarButton") == nil ? true : UserDefaults.standard.bool(forKey: "showAIToolbarButton")
         self.includeSilentInAIOption = UserDefaults.standard.bool(forKey: "includeSilentInAIOption")
         self.enableMenubarAISummary = UserDefaults.standard.bool(forKey: "enableMenubarAISummary")
+        self.autoMenubarSummary = UserDefaults.standard.bool(forKey: "autoMenubarSummary")
+        self.alwaysKillAdbBeforeConnect = UserDefaults.standard.bool(forKey: "alwaysKillAdbBeforeConnect")
+
+        let savedCrashReportingMode = UserDefaults.standard.string(forKey: "crashReportingMode") ?? CrashReportingMode.manual.rawValue
+        self.crashReportingMode = CrashReportingMode(rawValue: savedCrashReportingMode) ?? .manual
 
         self.airBridgeEnabled = UserDefaults.standard.bool(forKey: "airBridgeEnabled")
 
@@ -407,6 +397,7 @@ class AppState: ObservableObject {
     }
     @Published var adbConnecting: Bool = false
     @Published var manualAdbConnectionPending: Bool = false
+    @Published var userInitiatedAdbConnect: Bool = false
     @Published var currentDeviceWallpaperBase64: String? = nil
     @Published var isMenubarWindowOpen: Bool = false
     @Published var adbConnectionMode: ADBConnectionMode? = nil
@@ -583,10 +574,12 @@ class AppState: ObservableObject {
     var recentNotifyingPackages: [String] {
         var packages: [String] = []
         for notif in notifications {
-            if !packages.contains(notif.package) {
-                packages.append(notif.package)
-                if packages.count == 3 {
-                    break
+            if notif.priority != "silent" {
+                if !packages.contains(notif.package) {
+                    packages.append(notif.package)
+                    if packages.count == 3 {
+                        break
+                    }
                 }
             }
         }
@@ -915,6 +908,24 @@ class AppState: ObservableObject {
     @Published var enableMenubarAISummary: Bool = false {
         didSet {
             UserDefaults.standard.set(enableMenubarAISummary, forKey: "enableMenubarAISummary")
+        }
+    }
+    
+    @Published var autoMenubarSummary: Bool = false {
+        didSet {
+            UserDefaults.standard.set(autoMenubarSummary, forKey: "autoMenubarSummary")
+        }
+    }
+
+    @Published var crashReportingMode: CrashReportingMode = .manual {
+        didSet {
+            UserDefaults.standard.set(crashReportingMode.rawValue, forKey: "crashReportingMode")
+        }
+    }
+
+    @Published var alwaysKillAdbBeforeConnect: Bool = false {
+        didSet {
+            UserDefaults.standard.set(alwaysKillAdbBeforeConnect, forKey: "alwaysKillAdbBeforeConnect")
         }
     }
 

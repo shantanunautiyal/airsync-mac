@@ -15,113 +15,144 @@ struct AppContentView: View {
     @State private var showDisconnectAlert = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ZStack {
-                switch AppState.shared.selectedTab {
-                case .notifications:
-                    NotificationView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            if appState.notifications.count > 0 || appState.callEvents.count > 0 {
-                                ToolbarItem(placement: .primaryAction) {
-                                    Button {
-                                        notificationStacks.toggle()
-                                    } label: {
-                                        Label("Toggle Notification Stacks", systemImage: notificationStacks ? "mail" : "mail.stack")
-                                    }
-                                    .help(notificationStacks ? "Switch to stacked view" : "Switch to expanded view")
-                                }
-                                ToolbarItem(placement: .primaryAction) {
-                                    Button {
-                                        appState.clearNotifications()
-                                    } label: {
-                                        Label("Clear", systemImage: "wind")
-                                    }
-                                    .help("Clear all notifications")
-                                    .keyboardShortcut(.delete, modifiers: .command)
-                                    .badge(appState.notifications.count + appState.callEvents.count)
+        TabView(selection: $appState.selectedTab) {
+            // QR Scanner Tab (only when device is NOT connected)
+            if appState.device == nil {
+                ScannerView()
+                    .tabItem {
+                        Image(systemName: "iphone.motion")
+                    }
+                    .tag(TabIdentifier.qr)
+                    .toolbar {
+                        ToolbarItemGroup {
+                            Button("Help", systemImage: "questionmark.circle") {
+                                showHelpSheet = true
+                            }
+                            .help("Feedback and How to?")
+
+                            Button("Refresh", systemImage: "repeat") {
+                                WebSocketServer.shared.stop()
+                                WebSocketServer.shared.start()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    appState.shouldRefreshQR = true
                                 }
                             }
+                            .help("Refresh server")
                         }
-
-                case .apps:
-                    AppsView()
-                        .transition(.blurReplace)
-
-                case .calls:
-                    CallsView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Refresh", systemImage: "arrow.clockwise") {
-                                    _ = LiveNotificationManager.shared.getCallLogs(forceRefresh: true)
-                                }
-                                .help("Refresh call logs")
-                            }
-                        }
-
-                case .messages:
-                    MessagesView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Refresh", systemImage: "arrow.clockwise") {
-                                    _ = LiveNotificationManager.shared.getSmsThreads(forceRefresh: true)
-                                }
-                                .help("Refresh messages")
-                            }
-                        }
-
-                case .health:
-                    HealthView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Refresh", systemImage: "arrow.clockwise") {
-                                    WebSocketServer.shared.requestHealthSummary()
-                                }
-                                .help("Refresh health data")
-                            }
-                        }
-
-                case .settings:
-                    SettingsView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .automatic) {
-                                Button("Help", systemImage: "questionmark.circle") {
-                                    showHelpSheet = true
-                                }
-                                .help("Feedback and How to?")
-                            }
-                        }
-
-                case .qr:
-                    ScannerView()
-                        .transition(.blurReplace)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .automatic) {
-                                Button("Help", systemImage: "questionmark.circle") {
-                                    showHelpSheet = true
-                                }
-                                .help("Feedback and How to?")
-
-                                Button("Refresh", systemImage: "repeat") {
-                                    WebSocketServer.shared.stop()
-                                    WebSocketServer.shared.start()
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        appState.shouldRefreshQR = true
-                                    }
-                                }
-                            }
-                        }
-                }
+                    }
             }
-            .animation(.easeInOut(duration: 0.35), value: AppState.shared.selectedTab)
-            .frame(minWidth: 550)
 
-            DockTabBar()
-                .zIndex(1)
+            // Tabs visible when device is connected
+            if appState.device != nil {
+                NotificationView()
+                    .tabItem {
+                        Image(systemName: "bell.badge")
+                    }
+                    .tag(TabIdentifier.notifications)
+                    .toolbar {
+                        if appState.notifications.count > 0 || appState.callEvents.count > 0 {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    notificationStacks.toggle()
+                                } label: {
+                                    Label("Toggle Notification Stacks", systemImage: notificationStacks ? "mail" : "mail.stack")
+                                }
+                                .help(notificationStacks ? "Switch to stacked view" : "Switch to expanded view")
+                            }
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    appState.clearNotifications()
+                                } label: {
+                                    Label("Clear", systemImage: "wind")
+                                }
+                                .help("Clear all notifications")
+                                .keyboardShortcut(.delete, modifiers: .command)
+                                .badge(appState.notifications.count + appState.callEvents.count)
+                            }
+                        }
+                    }
+
+                AppsView()
+                    .tabItem {
+                        Image(systemName: "app")
+                    }
+                    .tag(TabIdentifier.apps)
+
+                CallsView()
+                    .tabItem {
+                        Image(systemName: "phone")
+                    }
+                    .tag(TabIdentifier.calls)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Refresh", systemImage: "arrow.clockwise") {
+                                _ = LiveNotificationManager.shared.getCallLogs(forceRefresh: true)
+                            }
+                            .help("Refresh call logs")
+                        }
+                    }
+
+                MessagesView()
+                    .tabItem {
+                        Image(systemName: "message")
+                    }
+                    .tag(TabIdentifier.messages)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Refresh", systemImage: "arrow.clockwise") {
+                                _ = LiveNotificationManager.shared.getSmsThreads(forceRefresh: true)
+                            }
+                            .help("Refresh messages")
+                        }
+                    }
+
+                HealthView()
+                    .tabItem {
+                        Image(systemName: "heart")
+                    }
+                    .tag(TabIdentifier.health)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Refresh", systemImage: "arrow.clockwise") {
+                                WebSocketServer.shared.requestHealthSummary()
+                            }
+                            .help("Refresh health data")
+                        }
+                    }
+            }
+
+            // Settings Tab
+            SettingsView()
+                .tabItem {
+                    Image(systemName: "gear")
+                }
+                .tag(TabIdentifier.settings)
+                .toolbar {
+                    ToolbarItemGroup {
+                        Button("Help", systemImage: "questionmark.circle") {
+                            showHelpSheet = true
+                        }
+                        .help("Feedback and How to?")
+
+                        Button {
+                            showAboutSheet = true
+                        } label: {
+                            Label("About", systemImage: "info")
+                        }
+                        .help("View app information and version details")
+                    }
+
+                    if appState.device != nil {
+                        ToolbarItemGroup {
+                            Button {
+                                showDisconnectAlert = true
+                            } label: {
+                                Label("Disconnect", systemImage: "iphone.slash")
+                            }
+                            .help("Disconnect Device")
+                        }
+                    }
+                }
         }
         .background(
             Group {
@@ -144,6 +175,7 @@ struct AppContentView: View {
                 .allowsHitTesting(false)
             }
         )
+        .tabViewStyle(.automatic)
         .frame(minWidth: 550, minHeight: 510)
         .onAppear {
             if appState.device == nil {

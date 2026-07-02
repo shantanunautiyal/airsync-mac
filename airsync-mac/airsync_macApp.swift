@@ -165,10 +165,37 @@ struct airsync_macApp: App {
                     Text("Help")
                 })
                 .keyboardShortcut("/")
-
-                Button("Simulate crash") {
-                    fatalError("Sentry Test Crash")
+                
+                Divider()
+                
+                Menu("Report an Issue") {
+                    Button("Email") {
+                        if let url = URL(string: "mailto:mail@sameerasw.com?subject=AirSync%20Issue%20Report") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    Button("GitHub") {
+                        if let url = URL(string: "https://github.com/sameerasw/airsync-mac/issues/new") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
                 }
+                
+                if CrashManager.shared.hasReports() {
+                    Menu("Last Crash Report") {
+                        Button("Copy Log") {
+                            CrashManager.shared.copyLastReport()
+                        }
+                        Button("Save Log...") {
+                            CrashManager.shared.saveLastReport()
+                        }
+                    }
+                }
+                
+                Button("Simulate Crash") {
+                    fatalError("Simulated Crash for Testing KSCrash")
+                }
+                .keyboardShortcut("c", modifiers: [.option, .command])
             }
             // Mirror menu: launch full device mirror or specific apps via scrcpy
             CommandMenu("Mirror") {

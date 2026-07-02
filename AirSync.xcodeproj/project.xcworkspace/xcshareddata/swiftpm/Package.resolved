@@ -1,5 +1,5 @@
 {
-  "originHash" : "9b1f3dffe3d5d157b095f07db4e2d9210163526ed338b285c8ae0b3b2dcfff8b",
+  "originHash" : "41897de538730832eed4fc72535da663981e93fdb2fdbbab62ad0984e1f42078",
   "pins" : [
     {
       "identity" : "asn1",
@@ -29,6 +29,15 @@
       }
     },
     {
+      "identity" : "kscrash",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kstenerud/KSCrash.git",
+      "state" : {
+        "revision" : "95a8895d75f3c22aa9ad9f2a15d2fbd97b0a55e2",
+        "version" : "2.5.1"
+      }
+    },
+    {
       "identity" : "lottie-spm",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/airbnb/lottie-spm.git",
@@ -53,15 +62,6 @@
       "state" : {
         "revision" : "177d4091f7fcce1efc22de2a5fcdb671bd103101",
         "version" : "26.10.0"
-      }
-    },
-    {
-      "identity" : "sentry-cocoa",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/getsentry/sentry-cocoa.git",
-      "state" : {
-        "revision" : "2c420d31d0c31b525fa9e7c552ef0fc9d924befc",
-        "version" : "9.17.1"
       }
     },
     {
