@@ -110,6 +110,7 @@ class AppState: ObservableObject {
         self.menubarNotificationStyle = UserDefaults.standard.string(forKey: "menubarNotificationStyle") ?? "both"
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
+        self.isOtpAutofillEnabled = UserDefaults.standard.object(forKey: "isOtpAutofillEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isOtpAutofillEnabled")
         self.autoStartAtLogin = UserDefaults.standard.bool(forKey: "autoStartAtLogin")
         self.keepRunningAfterQuit = UserDefaults.standard.bool(forKey: "keepRunningAfterQuit")
         self.shortcutScopes = UserDefaults.standard.dictionary(forKey: "shortcutScopes") as? [String: String] ?? [:]
@@ -453,6 +454,12 @@ class AppState: ObservableObject {
             } else {
                 stopClipboardMonitoring()
             }
+        }
+    }
+    /// Copies detected OTP / 2FA codes from Android notifications to the Mac clipboard.
+    @Published var isOtpAutofillEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isOtpAutofillEnabled, forKey: "isOtpAutofillEnabled")
         }
     }
     @Published var shouldRefreshQR: Bool = false
@@ -1536,6 +1543,10 @@ class AppState: ObservableObject {
                 }
             }
             let isAppSilentOnMac = UserDefaults.standard.appSilentNotifications[notif.package] ?? false
+            if contentChanged && self.isOtpAutofillEnabled,
+               let code = OtpCodeExtractor.extract(from: notif.title, body: notif.body) {
+                self.copyVerificationCodeToClipboard(code)
+            }
             if notif.priority != "silent" && !isAppSilentOnMac && contentChanged {
                 var appIcon: NSImage? = nil
                 if let iconPath = self.androidApps[notif.package]?.iconUrl {
@@ -1552,6 +1563,15 @@ class AppState: ObservableObject {
                 )
             }
         }
+    }
+
+    /// Copies a detected verification code to the Mac clipboard (local only,
+    /// never synced back to Android) so it can be pasted into the Mac app or site.
+    private func copyVerificationCodeToClipboard(_ code: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(code, forType: .string)
+        print("[otp] Verification code copied to clipboard")
     }
 
     func postNativeNotification(
