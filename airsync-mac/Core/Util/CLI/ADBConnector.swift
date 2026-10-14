@@ -17,10 +17,14 @@ struct WiredADBDevice: Hashable, Identifiable {
 struct ADBConnector {
 
     // Potential fallback paths
-    static let possibleADBPaths = [
-        "/opt/homebrew/bin/adb",  // Apple Silicon Homebrew
-        "/usr/local/bin/adb"      // Intel Homebrew
-    ]
+    static let possibleADBPaths: [String] = {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return [
+            "\(home)/Library/Android/sdk/platform-tools/adb",
+            "/opt/homebrew/bin/adb",
+            "/usr/local/bin/adb"
+        ]
+    }()
     static let possibleScrcpyPaths = [
         "/opt/scrcpy/scrcpy",
         "/opt/homebrew/bin/scrcpy",
@@ -71,7 +75,6 @@ struct ADBConnector {
         let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return output
     }
-    
     // Check if binary is available in PATH
     static func isExecutableAvailable(_ name: String) -> Bool {
         let data = getExecutablePath(name)
@@ -109,10 +112,10 @@ struct ADBConnector {
                 
                 var devices: [WiredADBDevice] = []
                 for line in lines {
-                    if line.contains("device") && line.contains("usb:") {
-                        let parts = line.split(separator: " ").filter { !$0.isEmpty }
-                        if !parts.isEmpty {
-                            let serial = String(parts[0])
+                    let parts = line.split(separator: " ").filter { !$0.isEmpty }
+                    if parts.count >= 2 && parts[1] == "device" {
+                        let serial = String(parts[0])
+                        if !serial.contains(":") {
                             var model = "Unknown Device"
                             for part in parts {
                                 if part.hasPrefix("model:") {
@@ -231,14 +234,11 @@ struct ADBConnector {
         }
     }
 
-    // Discover ADB ports via mDNS
     private static func discoverADBPorts(adbPath: String, ip: String, completion: @escaping ([UInt16]) -> Void) {
-        logBinaryDetection("Running mDNS discovery: \(adbPath) mdns services")
-        
         runADBCommand(adbPath: adbPath, arguments: ["mdns", "services"], completion: { output in
-            let lines = output.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: .newlines)
+            let lines = output.components(separatedBy: .newlines)
             var ports: [UInt16] = []
-
+            
             for line in lines {
                 if line.contains(ip) {
                     let parts = line.split(separator: ":")
@@ -253,53 +253,91 @@ struct ADBConnector {
                     }
                 }
             }
-            
             completion(ports)
         })
     }
 
     private static func proceedWithConnection(adbPath: String, ip: String, portsToTry: [UInt16]) {
         logBinaryDetection("Proceeding with ADB connection attempts to \(ip)...")
-        
+
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
             attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: 0, reportedIP: ip)
         }
     }
 
-    private static func attemptConnectionToNextPort(adbPath: String, ip: String, portsToTry: [UInt16], currentIndex: Int, reportedIP: String? = nil) {
+    private static let adbFailureSuggestions: [String] = [
+        "Pair your device using either the \"Pair with ADB QR\" button or via the command line (adb pair)",
+        "Ensure your Android device has Wireless Debugging enabled",
+        "Reconnect to the exact same Wi-Fi network as your Mac"
+    ]
+
+    private static let adbFailureReasonsByOutput: [(match: String, reason: String)] = [
+        ("failed to authenticate", "Your Mac isn't authorized to debug this device yet — it needs to be paired again."),
+        ("unauthorized", "Your Mac isn't authorized to debug this device yet — it needs to be paired again."),
+        ("connection refused", "The device refused the connection. This usually means it hasn't been paired with this Mac (via \"adb pair\") since Wireless Debugging was last turned on."),
+        ("no route to host", "Your Mac can't reach the device on the network — check they're both on the same Wi-Fi."),
+        ("network is unreachable", "Your Mac can't reach the device on the network — check they're both on the same Wi-Fi."),
+        ("timed out", "The connection attempt timed out — check that both devices are on the same Wi-Fi network and Wireless Debugging is still on.")
+    ]
+
+    private static func diagnosis(for outputs: [String]) -> String? {
+        for output in outputs {
+            for entry in adbFailureReasonsByOutput where output.contains(entry.match) {
+                return entry.reason
+            }
+        }
+        return nil
+    }
+
+    private static func buildADBFailureAlertText(failureOutputs: [String]) -> String {
+        var sections: [String] = []
+
+        if let diagnosis = diagnosis(for: failureOutputs) {
+            sections.append("What happened:\n\(diagnosis)")
+        }
+
+        let suggestionsList = adbFailureSuggestions.map { "• \($0)" }.joined(separator: "\n")
+        sections.append("Suggestions:\n\(suggestionsList)")
+
+        return sections.joined(separator: "\n\n")
+    }
+
+    private static func attemptConnectionToNextPort(adbPath: String, ip: String, portsToTry: [UInt16], currentIndex: Int, reportedIP: String? = nil, failureOutputs: [String] = []) {
         if currentIndex >= portsToTry.count {
             if let reportedIP = reportedIP, reportedIP != ip {
                 logBinaryDetection("Failed to connect on discovered IP \(ip), attempting fallback to reported IP \(reportedIP)...")
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
-                    attemptConnectionToNextPort(adbPath: adbPath, ip: reportedIP, portsToTry: portsToTry, currentIndex: 0, reportedIP: nil)
+                    attemptConnectionToNextPort(adbPath: adbPath, ip: reportedIP, portsToTry: portsToTry, currentIndex: 0, reportedIP: nil, failureOutputs: failureOutputs)
                 }
                 return
             }
-            
+
             DispatchQueue.main.async {
                 AppState.shared.adbConnected = false
                 logBinaryDetection("(∩︵∩) ADB connection failed on all ports.")
-                AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nFailed to connect to device on any available port."
+                let rawOutputSummary = failureOutputs.isEmpty ? "Failed to connect to device on any available port." : failureOutputs.joined(separator: "\n")
+                AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\n" + rawOutputSummary
                 AppState.shared.adbConnecting = false
-                
+
                 if !AppState.shared.suppressAdbFailureAlerts {
                     let alert = NSAlert()
                     alert.alertStyle = .warning
-                    alert.addButton(withTitle: "Don't warn me again")
                     alert.addButton(withTitle: "OK")
+                    alert.addButton(withTitle: "Pair with ADB QR")
+                    alert.addButton(withTitle: "Don't warn me again")
                     alert.messageText = "Failed to connect to ADB."
-                    alert.informativeText = "Suggestions:\n• Ensure your Android device is in Wireless debugging mode\n• Try toggling Wireless Debugging off and on again\n• Reconnect to the same Wi-Fi as your Mac"
-                    
+                    alert.informativeText = buildADBFailureAlertText(failureOutputs: failureOutputs)
+
                     presentAlertAsynchronously(alert) { response in
-                        if response == .alertFirstButtonReturn {
+                        if response == .alertSecondButtonReturn {
+                            AppState.shared.showADBPairingSheet = true
+                        } else if response == .alertThirdButtonReturn {
                             AppState.shared.suppressAdbFailureAlerts = true
                         }
                     }
                 }
             }
-            connectionLock.lock()
             clearConnectionFlag()
-            connectionLock.unlock()
             return
         }
 
@@ -320,25 +358,12 @@ struct ADBConnector {
                     AppState.shared.adbConnectionResult = trimmedOutput
                     logBinaryDetection("(/^▽^)/ ADB connection successful to \(fullAddress)")
                     AppState.shared.adbConnecting = false
-                    connectionLock.lock()
                     clearConnectionFlag()
-                    connectionLock.unlock()
-                } else if trimmedOutput.contains("protocol fault") || trimmedOutput.contains("connection reset by peer") {
-                    // Connection exists elsewhere, show error and try next port
-                    AppState.shared.adbConnected = false
-                    logBinaryDetection("(T＿T) Port \(currentPort): ADB connection failed due to existing connection.")
-                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nPort \(currentPort): Connection failed - another ADB instance already using the device."
-                    // Try next port after a short delay instead of giving up
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP)
-                    }
                 } else {
-                    // This port didn't work, try the next one
-                    logBinaryDetection("Port \(currentPort): Connection failed, trying next port...")
-                    AppState.shared.adbConnectionResult = (AppState.shared.adbConnectionResult ?? "") + "\nAttempt on port \(currentPort): Failed - \(trimmedOutput)"
-                    // Try next port after a short delay
+                    logBinaryDetection("Port \(currentPort) failed, trying next...")
+                    let updatedFailureOutputs = failureOutputs + ["\(fullAddress): \(trimmedOutput)"]
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
-                        attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP)
+                        attemptConnectionToNextPort(adbPath: adbPath, ip: ip, portsToTry: portsToTry, currentIndex: currentIndex + 1, reportedIP: reportedIP, failureOutputs: updatedFailureOutputs)
                     }
                 }
             }
@@ -459,10 +484,8 @@ struct ADBConnector {
                 let serialToUse: String?
                 if let mapped = mappedSerial, devices.contains(where: { $0.serial == mapped }) {
                     serialToUse = mapped
-                } else if mappedSerial == nil {
-                    serialToUse = devices.first?.serial
                 } else {
-                    serialToUse = nil
+                    serialToUse = devices.first?.serial
                 }
                 
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -523,7 +546,15 @@ struct ADBConnector {
                         DispatchQueue.main.async {
                             AppState.shared.adbConnectionResult = "scrcpy exited:\n" + output
                             if process.terminationStatus != 0 {
-                                presentScrcpyAlert(title: "Mirroring Ended With Errors", informative: "See ADB Console for details.")
+                                let lower = output.lowercased()
+                                if lower.contains("unauthorized") || lower.contains("auth") || lower.contains("pair") {
+                                    presentScrcpyPairingAlert(
+                                        title: "Device Not Paired",
+                                        informative: "Your Android device is not paired or authorized with this Mac. Please pair the device first using either the ADB QR Code or the command line (adb pair)."
+                                    )
+                                } else {
+                                    presentScrcpyAlert(title: "Mirroring Ended With Errors", informative: "See ADB Console for details.")
+                                }
                             }
                         }
                     }
@@ -540,7 +571,6 @@ struct ADBConnector {
         }
     }
 
-    // MARK: - ADB File Transfer
     static func pull(remotePath: String, completion: ((Bool) -> Void)? = nil) {
         DispatchQueue.main.async {
             let panel = NSOpenPanel()
@@ -562,10 +592,8 @@ struct ADBConnector {
                         let serialToUse: String?
                         if let mapped = mappedSerial, devices.contains(where: { $0.serial == mapped }) {
                             serialToUse = mapped
-                        } else if mappedSerial == nil {
-                            serialToUse = devices.first?.serial
                         } else {
-                            serialToUse = nil
+                            serialToUse = devices.first?.serial
                         }
                         
                         DispatchQueue.global(qos: .userInitiated).async {
@@ -582,7 +610,7 @@ struct ADBConnector {
                                 args.insert(contentsOf: ["-s", fullAddress], at: 0)
                             }
                             
-                            runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
+                            runADBCommand(adbPath: adbPath, arguments: args) { output in
                                 let success = !output.contains("error") && !output.contains("failed")
                                 DispatchQueue.main.async {
                                     AppState.shared.isADBTransferring = false
@@ -590,12 +618,70 @@ struct ADBConnector {
                                     if success { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: destiny) }
                                     completion?(success)
                                 }
-                            })
+                            }
                         }
                     }
                 } else {
                     completion?(false)
                 }
+            }
+        }
+    }
+
+    static func summonScreenshot(completion: @escaping (Data?) -> Void) {
+        let wiredAdbEnabled = AppState.shared.wiredAdbEnabled
+        let fullAddress = "\(AppState.shared.adbConnectedIP):\(AppState.shared.adbPort)"
+        let mappedSerial = AppState.shared.selectedWiredSerial ?? (AppState.shared.device?.deviceId).flatMap { AppState.shared.deviceAdbSerials[$0] }
+
+        getWiredDevices { devices in
+            let serialToUse: String?
+            if let mapped = mappedSerial, devices.contains(where: { $0.serial == mapped }) {
+                serialToUse = mapped
+            } else {
+                serialToUse = devices.first?.serial
+            }
+
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let adbPath = findExecutable(named: "adb", fallbackPaths: possibleADBPaths) else {
+                    completion(nil)
+                    return
+                }
+
+                var args = ["exec-out", "screencap", "-p"]
+                if wiredAdbEnabled, let serial = serialToUse {
+                    args.insert(contentsOf: ["-s", serial], at: 0)
+                } else {
+                    args.insert(contentsOf: ["-s", fullAddress], at: 0)
+                }
+
+                let task = Process()
+                task.executableURL = URL(fileURLWithPath: adbPath)
+                task.arguments = args
+
+                let outPipe = Pipe()
+                task.standardOutput = outPipe
+                task.standardError = Pipe() // discard stderr so it doesn't mix into the PNG stream
+
+                do {
+                    try task.run()
+                } catch {
+                    logBinaryDetection("Summon screenshot failed to launch adb: \(error.localizedDescription)")
+                    completion(nil)
+                    return
+                }
+
+                let data = outPipe.fileHandleForReading.readDataToEndOfFile()
+                task.waitUntilExit()
+
+                // A valid PNG starts with this 8-byte signature; adb error text wouldn't.
+                let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+                guard data.count > pngSignature.count, Array(data.prefix(pngSignature.count)) == pngSignature else {
+                    logBinaryDetection("Summon screenshot did not return valid PNG data (\(data.count) bytes)")
+                    completion(nil)
+                    return
+                }
+
+                completion(data)
             }
         }
     }
@@ -613,10 +699,8 @@ struct ADBConnector {
                 let serialToUse: String?
                 if let mapped = mappedSerial, devices.contains(where: { $0.serial == mapped }) {
                     serialToUse = mapped
-                } else if mappedSerial == nil {
-                    serialToUse = devices.first?.serial
                 } else {
-                    serialToUse = nil
+                    serialToUse = devices.first?.serial
                 }
                 
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -633,14 +717,14 @@ struct ADBConnector {
                         args.insert(contentsOf: ["-s", fullAddress], at: 0)
                     }
                     
-                    runADBCommand(adbPath: adbPath, arguments: args, completion: { output in
+                    runADBCommand(adbPath: adbPath, arguments: args) { output in
                         let success = !output.contains("error") && !output.contains("failed")
                         DispatchQueue.main.async {
                             AppState.shared.isADBTransferring = false
                             AppState.shared.adbTransferringFilePath = nil
                             completion?(success)
                         }
-                    })
+                    }
                 }
             }
         }
@@ -670,5 +754,20 @@ private extension ADBConnector {
         alert.informativeText = informative + "\n\nCheck the ADB Console in Settings for detailed logs."
         alert.addButton(withTitle: "OK")
         presentAlertAsynchronously(alert)
+    }
+
+    static func presentScrcpyPairingAlert(title: String, informative: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = informative + "\n\nCheck the ADB Console in Settings for detailed logs."
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Pair with ADB QR")
+        
+        presentAlertAsynchronously(alert) { response in
+            if response == .alertSecondButtonReturn {
+                AppState.shared.showADBPairingSheet = true
+            }
+        }
     }
 }

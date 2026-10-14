@@ -121,7 +121,7 @@ class ScrcpyServerManager: NSObject {
             "-s", serial,
             "shell",
             "CLASSPATH=\(serverRemotePath)",
-            "app_process", "/", "com.genymobile.scrcpy.Server", "4.0"
+            "app_process", "/", "com.genymobile.scrcpy.Server", "4.1"
         ] + serverArgs
         
         self.adbProcess = process
@@ -225,10 +225,8 @@ class ScrcpyServerManager: NSObject {
             let serialToUse: String?
             if let mapped = mappedSerial, devices.contains(where: { $0.serial == mapped }) {
                 serialToUse = mapped
-            } else if mappedSerial == nil {
-                serialToUse = devices.first?.serial
             } else {
-                serialToUse = nil
+                serialToUse = devices.first?.serial
             }
             
             let finalSerial: String?

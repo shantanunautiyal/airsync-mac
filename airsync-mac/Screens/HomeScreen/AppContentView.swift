@@ -193,12 +193,15 @@ struct AppContentView: View {
         .sheet(isPresented: $appState.showFileBrowser) {
             FileBrowserView(onClose: { appState.showFileBrowser = false })
         }
+        .sheet(isPresented: $appState.showADBPairingSheet) {
+            ADBPairingSheetView()
+        }
         .alert(isPresented: $showDisconnectAlert) {
             Alert(
                 title: Text("Disconnect Device"),
                 message: Text("Are you sure you want to disconnect from \(appState.device?.name ?? "this device")?"),
                 primaryButton: .destructive(Text("Disconnect")) {
-                    appState.disconnectDevice()
+                    appState.disconnectDevice(manual: true)
                 },
                 secondaryButton: .cancel()
             )

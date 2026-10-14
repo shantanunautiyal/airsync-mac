@@ -1,5 +1,5 @@
 import Foundation
-internal import Combine
+import Combine
 import Network
 
 class DiscoveryManager: ObservableObject {
@@ -21,10 +21,165 @@ class DiscoveryManager: ObservableObject {
         setupBonjourBrowser()
         setupUdpDiscoveryObserver()
         setupNetworkMonitor()
+        DispatchQueue.main.async { [weak self] in
+            self?.setupDeviceConnectionObserver()
+        }
+    }
+    
+    @Published var availableWifiDeviceForCurrentBLE: DiscoveredDevice? = nil
+    private var wifiAutoSwitchTimer: Timer?
+    private var wifiStabilityDisconnectBleTimer: Timer?
+    private var lastDeviceReconnectAttemptAt: Date?
+    private static let lastDeviceReconnectCooldown: TimeInterval = 15.0
+
+    private func setupDeviceConnectionObserver() {
+        AppState.shared.$device
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] device in
+                guard let self = self else { return }
+                if let device = device {
+                    let isBLE = device.isBLE
+                    if !isBLE {
+                        if self.isRunning {
+                            print("[DiscoveryManager] Wi-Fi device connected. Stopping discovery and advertising.")
+                            self.stop()
+                        }
+                        // If auto-switch is enabled and BLE is active, wait 5s to ensure Wi-Fi is stable before disconnecting BLE
+                        if AppState.shared.isAutoSwitchWithBLEEnabled && BLECentralManager.shared.isAuthenticated {
+                            print("[DiscoveryManager] Connected to Wi-Fi while BLE is active. Starting 5s stability timer before disconnecting BLE...")
+                            self.wifiStabilityDisconnectBleTimer?.invalidate()
+                            self.wifiStabilityDisconnectBleTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+                                if AppState.shared.device?.isRegularConnection == true && BLECentralManager.shared.isAuthenticated {
+                                    print("[DiscoveryManager] Wi-Fi connection stayed stable for 5s! Disconnecting BLE connection...")
+                                    BLECentralManager.shared.disconnect()
+                                }
+                            }
+                        }
+                    } else {
+                        self.wifiStabilityDisconnectBleTimer?.invalidate()
+                        self.wifiStabilityDisconnectBleTimer = nil
+                        if !self.isRunning {
+                            print("[DiscoveryManager] BLE device connected. Keeping discovery active for Wi-Fi switch.")
+                            self.start()
+                        }
+                    }
+                } else {
+                    self.wifiStabilityDisconnectBleTimer?.invalidate()
+                    self.wifiStabilityDisconnectBleTimer = nil
+                    if !self.isRunning {
+                        print("[DiscoveryManager] No device connected. Resuming discovery and advertising.")
+                        self.start()
+                    }
+                }
+                self.updateAvailableWifiDevice()
+            }
+            .store(in: &cancellables)
+    }
+    
+    func updateAvailableWifiDevice() {
+        guard let detected = evaluateAvailableWifiDeviceForCurrentBLE(),
+              let bestIP = detected.ips.first(where: { $0 != "Bluetooth LE" && $0 != "Nearby" && !$0.isEmpty }) else {
+            self.availableWifiDeviceForCurrentBLE = nil
+            if wifiAutoSwitchTimer != nil {
+                wifiAutoSwitchTimer?.invalidate()
+                wifiAutoSwitchTimer = nil
+            }
+            return
+        }
+
+        // Verify TCP reachability over Wi-Fi socket before exposing to UI or auto-switching
+        verifyIPReachability(ip: bestIP, port: detected.port) { [weak self] isReachable in
+            guard let self = self else { return }
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                guard isReachable else {
+                    print("[DiscoveryManager] Discovered Wi-Fi device (\(detected.name)) is NOT reachable over TCP at \(bestIP):\(detected.port). Ignoring stale mDNS record.")
+                    self.availableWifiDeviceForCurrentBLE = nil
+                    if self.wifiAutoSwitchTimer != nil {
+                        self.wifiAutoSwitchTimer?.invalidate()
+                        self.wifiAutoSwitchTimer = nil
+                    }
+                    return
+                }
+
+                self.availableWifiDeviceForCurrentBLE = detected
+
+                if AppState.shared.isAutoSwitchWithBLEEnabled {
+                    if self.wifiAutoSwitchTimer == nil {
+                        print("[DiscoveryManager] Auto-switch enabled: Verified Wi-Fi endpoint (\(detected.name) at \(bestIP)). Starting 5s stability timer...")
+                        self.wifiAutoSwitchTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+                            guard let self = self else { return }
+                            self.wifiAutoSwitchTimer = nil
+                            
+                            guard let targetDevice = self.evaluateAvailableWifiDeviceForCurrentBLE(),
+                                  let targetIP = targetDevice.ips.first(where: { $0 != "Bluetooth LE" && $0 != "Nearby" && !$0.isEmpty }) else {
+                                print("[DiscoveryManager] Wi-Fi device lost before 5s auto-switch. Cancelling switch.")
+                                return
+                            }
+
+                            self.verifyIPReachability(ip: targetIP, port: targetDevice.port) { isStillReachable in
+                                guard isStillReachable else {
+                                    print("[DiscoveryManager] Wi-Fi device socket closed before auto-switch. Cancelling switch.")
+                                    return
+                                }
+                                print("[DiscoveryManager] Wi-Fi device verified reachable for 5s! Triggering auto-switch to Wi-Fi...")
+                                QuickConnectManager.shared.connect(to: targetDevice)
+                            }
+                        }
+                    }
+                } else {
+                    if self.wifiAutoSwitchTimer != nil {
+                        self.wifiAutoSwitchTimer?.invalidate()
+                        self.wifiAutoSwitchTimer = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    private func evaluateAvailableWifiDeviceForCurrentBLE() -> DiscoveredDevice? {
+        let isBLEConnected = BLECentralManager.shared.isAuthenticated ||
+            (AppState.shared.device?.isBLE == true)
+            
+        guard isBLEConnected else { return nil }
+        
+        let currentName = AppState.shared.device?.name ?? BLECentralManager.shared.connectedDeviceName ?? ""
+        let currentId = AppState.shared.device?.deviceId ?? ""
+        
+        return discoveredDevices.first { discovered in
+            let wifiIps = discovered.ips.filter { $0 != "Bluetooth LE" && $0 != "Nearby" && !$0.isEmpty }
+            guard !wifiIps.isEmpty else { return false }
+            
+            if !currentId.isEmpty && !discovered.deviceId.isEmpty && currentId == discovered.deviceId {
+                return true
+            }
+            
+            if !currentName.isEmpty {
+                let clean1 = cleanName(currentName)
+                let clean2 = cleanName(discovered.name)
+                if !clean1.isEmpty && !clean2.isEmpty && (clean1 == clean2 || clean1.contains(clean2) || clean2.contains(clean1)) {
+                    return true
+                }
+            }
+            
+            return false
+        }
+    }
+    
+    private func cleanName(_ name: String) -> String {
+        return name
+            .replacingOccurrences(of: "AirSync-", with: "")
+            .replacingOccurrences(of: "’", with: "'")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
     }
     
     func start() {
         guard !isRunning else { return }
+        if AppState.shared.connectionMode == .nearby {
+            print("[Discovery] Connection mode is Nearby only. Skipping DiscoveryManager start.")
+            return
+        }
         isRunning = true
         
         print("[Discovery] Starting DiscoveryManager")
@@ -116,9 +271,46 @@ class DiscoveryManager: ObservableObject {
         }
         
         self.discoveredDevices = Array(merged.values)
+        self.updateAvailableWifiDevice()
+        self.attemptAutoReconnectToLastDevice()
+    }
+
+    private func attemptAutoReconnectToLastDevice() {
+        guard AppState.shared.device == nil else { return }
+        guard !UserDefaults.standard.isManuallyDisconnected else { return }
+
+        guard let lastDevice = QuickConnectManager.shared.getLastConnectedDevice(), !lastDevice.isBLE else { return }
+
+        guard let candidate = discoveredDevices.first(where: { discovered in
+            let wifiIps = discovered.ips.filter { $0 != "Bluetooth LE" && $0 != "Nearby" && !$0.isEmpty }
+            guard !wifiIps.isEmpty else { return false }
+
+            if !lastDevice.deviceId.isEmpty && !discovered.deviceId.isEmpty {
+                return lastDevice.deviceId == discovered.deviceId
+            }
+
+            let clean1 = cleanName(lastDevice.name)
+            let clean2 = cleanName(discovered.name)
+            return !clean1.isEmpty && !clean2.isEmpty && clean1 == clean2
+        }), let bestIP = candidate.ips.first(where: { $0 != "Bluetooth LE" && $0 != "Nearby" && !$0.isEmpty }) else { return }
+
+        if let lastAttempt = lastDeviceReconnectAttemptAt,
+           Date().timeIntervalSince(lastAttempt) < Self.lastDeviceReconnectCooldown {
+            return
+        }
+
+        verifyIPReachability(ip: bestIP, port: candidate.port) { [weak self] isReachable in
+            guard let self = self, isReachable else { return }
+            DispatchQueue.main.async {
+                guard AppState.shared.device == nil, !UserDefaults.standard.isManuallyDisconnected else { return }
+                print("[DiscoveryManager] Last connected device '\(candidate.name)' reappeared on the network. Auto-reconnecting...")
+                self.lastDeviceReconnectAttemptAt = Date()
+                QuickConnectManager.shared.connect(to: candidate)
+            }
+        }
     }
     
-    private func isIPOnLocalNetwork(_ targetIP: String) -> Bool {
+    func isIPOnLocalNetwork(_ targetIP: String) -> Bool {
         if targetIP == "Bluetooth LE" || targetIP == "Nearby" {
             return true
         }
@@ -152,6 +344,7 @@ class DiscoveryManager: ObservableObject {
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self = self else { return }
+            guard self.isRunning else { return }
             print("[DiscoveryManager] Network path update: \(path.status)")
             
             DispatchQueue.main.async {
@@ -161,10 +354,8 @@ class DiscoveryManager: ObservableObject {
                 self.mergeAndPublish()
                 
                 // Restart Bonjour browser to trigger fresh searches on the new interface
-                if self.isRunning {
-                    self.bonjourBrowser.stop()
-                    self.bonjourBrowser.start()
-                }
+                self.bonjourBrowser.stop()
+                self.bonjourBrowser.start()
             }
         }
         self.networkMonitor = monitor
@@ -173,10 +364,10 @@ class DiscoveryManager: ObservableObject {
     
     private func startReachabilityTimer() {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.reachabilityTimer?.invalidate()
-            self.reachabilityTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            self?.reachabilityTimer?.invalidate()
+            self?.reachabilityTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
                 self?.checkMdnsDevicesReachability()
+                self?.attemptAutoReconnectToLastDevice()
             }
         }
     }
@@ -220,15 +411,10 @@ class DiscoveryManager: ObservableObject {
                     
                     if checkedCount == total {
                         if !reachable {
-                            print("[Discovery] Device \(name) (\(deviceId)) is not reachable on any IP. Removing and restarting Bonjour browser.")
+                            print("[Discovery] Device \(name) (\(deviceId)) is not reachable on any IP. Removing device.")
                             DispatchQueue.main.async {
                                 self.mdnsDevices.removeValue(forKey: deviceId)
                                 self.mergeAndPublish()
-                                
-                                if self.isRunning {
-                                    self.bonjourBrowser.stop()
-                                    self.bonjourBrowser.start()
-                                }
                             }
                         }
                     }

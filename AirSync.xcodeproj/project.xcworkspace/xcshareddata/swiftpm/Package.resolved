@@ -1,5 +1,5 @@
 {
-  "originHash" : "41897de538730832eed4fc72535da663981e93fdb2fdbbab62ad0984e1f42078",
+  "originHash" : "2b101a5caff54d2c7baccd31092cdbeb87e52128356c60973962d57dc61e0353",
   "pins" : [
     {
       "identity" : "asn1",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/leif-ibsen/BigInt",
       "state" : {
-        "revision" : "c2f49bee454760e433bafff17bfdc5b96f75d7c8",
-        "version" : "1.23.0"
+        "revision" : "8c6f93aa37504b7b1ba3954335b5548a19fbbd82",
+        "version" : "1.22.0"
       }
     },
     {
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "95ba89b494aaff5f3cd2933c03b9a890323dbf2c",
         "version" : "1.13.0"
+      }
+    },
+    {
+      "identity" : "keyboardshortcuts",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/KeyboardShortcuts",
+      "state" : {
+        "revision" : "1aef85578fdd4f9eaeeb8d53b7b4fc31bf08fe27",
+        "version" : "2.4.0"
       }
     },
     {
@@ -42,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/airbnb/lottie-spm.git",
       "state" : {
-        "revision" : "69faaefa7721fba9e434a52c16adf4329c9084db",
-        "version" : "4.6.0"
+        "revision" : "04f2fd18cc9404a0a0917265a449002674f24ec9",
+        "version" : "4.5.2"
       }
     },
     {
@@ -78,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-protobuf.git",
       "state" : {
-        "revision" : "f6506eaa86ed2e01cb0ae14a75035b7fdbf0918f",
-        "version" : "1.38.0"
+        "revision" : "86970144a0b86068c81ff48ee29b3f97cae0b879",
+        "version" : "1.36.0"
       }
     },
     {

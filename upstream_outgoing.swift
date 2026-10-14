@@ -21,6 +21,11 @@ extension WebSocketServer {
 
     @discardableResult
     func sendToFirstAvailable(message: String) -> Bool {
+        return sendDataToFirstAvailable(Data(message.utf8))
+    }
+
+    @discardableResult
+    func sendDataToFirstAvailable(_ data: Data) -> Bool {
         lock.lock()
         defer { lock.unlock() }
         guard let pId = primarySessionID,
@@ -29,9 +34,9 @@ extension WebSocketServer {
         }
         let key = symmetricKey
         
-        if let key = key, let encrypted = encryptMessage(message, using: key) {
+        if let key = key, let encrypted = encryptData(data, using: key) {
             session.writeText(encrypted)
-        } else {
+        } else if let message = String(data: data, encoding: .utf8) {
             session.writeText(message)
         }
         return true
@@ -45,11 +50,9 @@ extension WebSocketServer {
         
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: messageDict, options: [])
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                let sent = sendToFirstAvailable(message: jsonString)
-                if !sent && BLECentralManager.shared.isAuthenticated {
-                    sendOverBLE(type: type, data: data)
-                }
+            let sent = sendDataToFirstAvailable(jsonData)
+            if !sent && BLECentralManager.shared.isAuthenticated {
+                sendOverBLE(type: type, data: data)
             }
         } catch {
             print("[websocket] Error creating \(type) message: \(error)")
@@ -133,8 +136,7 @@ extension WebSocketServer {
                 BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: payload)
             }
         case "disconnectRequest":
-            // Maybe handle disconnect?
-            break
+            BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charMediaControl, payload: "manual_disconnect")
         default:
             print("[ble] No BLE mapping for type: \(type)")
         }
@@ -337,10 +339,6 @@ extension WebSocketServer {
         if let data = payload.data(using: .utf8) {
             BLECentralManager.shared.write(characteristicUUID: BLEConstants.charMacBattery, data: data)
         }
-        
-        // Also send name if we have it
-        let name = Host.current().localizedName ?? "My Mac"
-        BLECentralManager.shared.writeChunked(characteristicUUID: BLEConstants.charDeviceName, payload: name)
     }
 
     func sendCallAction(eventId: String, action: String) {

@@ -32,7 +32,7 @@
   "settings.notifications.ai.showToolbarButton": "Pulsante Riassumi notifiche nella barra degli strumenti",
   "settings.notifications.ai.includeSilent": "Includi notifiche silenziose",
   "settings.notifications.ai.menubarSummary": "Riepilogo pop-up della barra dei menu",
-  "settings.notifications.ai.autoMenubarSummary": "Automatic menubar summary",
+  "settings.notifications.ai.autoMenubarSummary": "Riepilogo automatico nella barra dei menu",
   "settings.notifications.ai.unavailable.title": "Apple Intelligence non disponibile",
   "settings.notifications.ai.unavailable.body": "Queste funzionalità richiedono macOS 26.0 o versioni successive per eseguire modelli linguistici locali.",
   "settings.notifications.calls": "Avvisi di chiamata",
@@ -64,7 +64,7 @@
   "media.play": "Riproduci",
   "media.pause": "Pausa",
   "settings.wiredAdb": "Supporto ADB via cavo",
-  "settings.alwaysKillAdbBeforeConnect": "Always kill-server before connect",
+  "settings.alwaysKillAdbBeforeConnect": "Termina sempre il server prima di connetterti",
   "quickshare.title": "Quick Share",
   "quickshare.button": "Quick Share",
   "quickshare.settings.title": "Impostazioni di Quick Share",
@@ -98,7 +98,6 @@
   "quickshare.device_sending_files": "%1$@ sta inviando %2$@",
   "quickshare.n_files": "%d file",
   "quickshare.drop.send_to": "Invia a %@",
-
   "quickshare.drop.pick_device": "Scegli un dispositivo a cui inviare",
   "settings.quickshare": "Quick Share e file",
   "settings.fileAccess.title": "Accesso ai file",
@@ -133,6 +132,8 @@
   "settings.mirroring.swapCmdCtrl": "Inverti ⌘ e ⌃ (stile macOS)",
   "settings.mirroring.showMirrorControls": "Mostra pulsanti di navigazione (⌘B)",
   "quickshare.copy": "Copia negli appunti",
+  "settings.menubar.showInMenubar": "Mostra nella barra dei menu",
+  "settings.menubar.showInMenubar.disabledInfo": "Per mantenere AirSync accessibile, la barra dei menu non può essere nascosta quando l'icona del Dock è nascosta.",
   "settings.menubar.showIcon": "Mostra icona nella barra dei menu",
   "settings.menubar.showText": "Mostra testo nella barra dei menu",
   "settings.menubar.enableMarquee": "Effetto testo scorrevole",
@@ -199,5 +200,12 @@
   "whatsnew.nearby.message": "Clicca per connettere",
   "connection.wiredAdb": "ADB cablato",
   "connection.selectDevice": "Seleziona dispositivo",
-  "connection.wireless": "Wireless"
+  "connection.wireless": "Wireless",
+  "settings.connectionMode": "Connection Mode",
+  "connectionMode.network": "Network",
+  "connectionMode.dynamic": "Dynamic",
+  "connectionMode.nearby": "Nearby",
+  "settings.connectionMode.network.info": "Uses local area network only. Bluetooth LE is disabled.",
+  "settings.connectionMode.dynamic.info": "Uses Wi-Fi and Bluetooth LE with automatic fallback and switching.",
+  "settings.connectionMode.nearby.info": "Uses Bluetooth LE only. Local network discovery is disabled."
 }

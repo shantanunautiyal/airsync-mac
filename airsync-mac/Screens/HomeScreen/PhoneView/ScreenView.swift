@@ -56,6 +56,7 @@ struct ScreenView: View {
                             }
                         }
                     )
+                    .help("Send Files")
                     .transition(.identity)
                     .keyboardShortcut(
                         "f",
@@ -76,6 +77,7 @@ struct ScreenView: View {
                                 }
                             }
                         )
+                        .help("Browse Files")
                         .transition(.identity)
                         .keyboardShortcut(
                             "b",
@@ -95,6 +97,7 @@ struct ScreenView: View {
                             appState.silenceAllNotifications.toggle()
                         }
                     )
+                    .help(appState.silenceAllNotifications ? "Unmute Notifications" : "Mute Notifications")
                     .transition(.identity)
 
                     GlassButtonView(
@@ -106,6 +109,7 @@ struct ScreenView: View {
                             sendClipboard()
                         }
                     )
+                    .help("Send Clipboard")
                     .transition(.identity)
 
                 }

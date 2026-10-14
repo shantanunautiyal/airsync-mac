@@ -97,7 +97,7 @@ struct ConnectionWeakOverlay: View {
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.accentColor)
 
-            Text("Reconnecting to \(appState.device?.name ?? "device")...")
+            Text("Looking for \(appState.device?.name ?? "device")...")
                 .font(.subheadline)
                 .fontWeight(.medium)
 
@@ -109,7 +109,7 @@ struct ConnectionWeakOverlay: View {
                 primary: true,
                 action: {
                     withAnimation {
-                        appState.disconnectDevice()
+                        appState.disconnectDevice(manual: true)
                     }
                 }
             )

@@ -3,7 +3,7 @@ import Network
 
 class BonjourServiceAdvertiser: NSObject, NetServiceDelegate {
     private var netService: NetService?
-    private let pathMonitor = NWPathMonitor()
+    private var pathMonitor: NWPathMonitor?
     private let queue = DispatchQueue(label: "com.airsync.bonjour.advertiser")
     private var isAdvertising = false
     
@@ -19,20 +19,25 @@ class BonjourServiceAdvertiser: NSObject, NetServiceDelegate {
         guard isAdvertising else { return }
         isAdvertising = false
         
-        pathMonitor.cancel()
+        pathMonitor?.cancel()
+        pathMonitor = nil
         netService?.stop()
         netService = nil
     }
     
     private func setupPathMonitor() {
-        pathMonitor.pathUpdateHandler = { [weak self] path in
+        pathMonitor?.cancel()
+        
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
             guard let self = self, self.isAdvertising else { return }
             if path.status == .satisfied {
                 print("[Bonjour] Network interface changed, re-publishing service")
                 self.publishService()
             }
         }
-        pathMonitor.start(queue: queue)
+        self.pathMonitor = monitor
+        monitor.start(queue: queue)
     }
     
     private func publishService() {

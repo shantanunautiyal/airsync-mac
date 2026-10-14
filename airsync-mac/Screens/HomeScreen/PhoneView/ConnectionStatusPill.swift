@@ -29,6 +29,7 @@ struct ConnectionStatusPill: View {
                     if appState.adbConnecting {
                         ProgressView()
                             .controlSize(.small)
+                            .help("ADB Connecting...")
                             .transition(.asymmetric(
                                 insertion: .scale.combined(with: .opacity),
                                 removal: .opacity
@@ -38,6 +39,7 @@ struct ConnectionStatusPill: View {
                         HStack(spacing: 6) {
                             Image(systemName: "iphone.gen3.crop.circle")
                                 .contentTransition(.symbolEffect(.replace))
+                                .help("ADB Connected")
                             
                             // ADB Mode Icon
                             Image(systemName: adbModeIcon)
@@ -146,8 +148,8 @@ struct ConnectionPillPopover: View {
                         activeIp: appState.device?.ipAddress == "BLE" ? nil : appState.activeMacIp
                     )
                     
-                    if appState.isPlus && appState.adbConnected {
-                        if appState.adbConnectionMode == .wired {
+                    if appState.isPlus {
+                        if appState.wiredAdbEnabled {
                             HStack {
                                 Label(L("connection.wiredAdb"), systemImage: "cable.connector")
                                 Spacer()
@@ -169,7 +171,9 @@ struct ConnectionPillPopover: View {
                                 .pickerStyle(MenuPickerStyle())
                                 .frame(width: 140)
                             }
-                        } else {
+                        }
+                        
+                        if appState.adbConnected && appState.adbConnectionMode == .wireless {
                             ConnectionInfoText(
                                 label: "ADB Connection",
                                 icon: "airplay.audio",
@@ -225,7 +229,7 @@ struct ConnectionPillPopover: View {
                         iconOnly: false,
                         primary: true,
                         action: {
-                            appState.disconnectDevice()
+                            appState.disconnectDevice(manual: true)
                             if appState.isPlus {
                                 ADBConnector.disconnectADB()
                             }
@@ -236,22 +240,36 @@ struct ConnectionPillPopover: View {
                     Spacer()
                 }
             } else {
-            VStack(alignment: .leading, spacing: 8) {
-                
-                HStack {
-                    Label("Bluetooth LE Discovery", image: "logo.bluetooth")
-                        .font(.system(size: 12))
-                    Spacer()
-                    Toggle("", isOn: $appState.isBLEEnabled)
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(loc: "settings.connectionMode")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.secondary)
+
+                    Picker("", selection: $appState.connectionMode) {
+                        ForEach(AppState.AppConnectionMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .controlSize(.large)
                 }
-                
+
                 HStack {
                     Label("Auto-connect", systemImage: "arrow.triangle.2.circlepath")
                         .font(.system(size: 12))
                     Spacer()
                     Toggle("", isOn: $appState.isBLEAutoConnectEnabled)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .disabled(!appState.isBLEEnabled)
+                }
+
+                HStack {
+                    Label("Auto switch with nearby", systemImage: "arrow.triangle.swap")
+                        .font(.system(size: 12))
+                    Spacer()
+                    Toggle("", isOn: $appState.isAutoSwitchWithBLEEnabled)
                         .toggleStyle(.switch)
                         .controlSize(.small)
                         .disabled(!appState.isBLEEnabled)

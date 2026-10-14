@@ -14,10 +14,16 @@ struct PlusFeaturesView: View {
 
     var body: some View {
         VStack(spacing: 15) {
-            Text("AirSync+, to sync even more!")
-                .font(.title)
-                .multilineTextAlignment(.center)
-                .padding()
+            VStack(spacing: 4) {
+                Text("AirSync+, to sync even more!")
+                    .font(.title)
+                    .multilineTextAlignment(.center)
+                
+                Text("Now even more affordable!")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top)
 
             Text("Getting AirSync+ supports the development and unlocks more features for you. But, AirSync's core features will always remain free. Appreciate your support. (っ◕‿◕)っ")
                 .font(.body)
@@ -32,7 +38,6 @@ struct PlusFeaturesView: View {
                     featureRow(icon: "phone", title: "Control calls", description: "Accept, decline, or end phone calls from your Mac (ADB)")
                     featureRow(icon: "folder", title: "File Browser & Mounting", description: "Browse, manage, and mount your Android storage directly as a local Finder drive")
                     featureRow(icon: "menubar.rectangle", title: "MenuBar Customizations", description: "Customize menu bar text style, font size, battery style, and album art layout")
-                    featureRow(icon: "bell.badge", title: "Advanced Notifications", description: "Enhanced notification management and customization", soon: true)
                     featureRow(icon: "battery.25percent", title: "Low Battery Alerts", description: "Get notified when your Android device needs charging", soon: true)
                     featureRow(icon: "widget.small.badge.plus", title: "Widgets", description: "Synced widgets with device status and more", soon: true)
                 }

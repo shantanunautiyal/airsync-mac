@@ -28,6 +28,8 @@ extension WebSocketServer {
             handleNotification(message)
         case .callEvent:
             handleCallEvent(message)
+        case .callProgress:
+            handleCallProgress(message)
         case .notificationActionResponse:
             handleNotificationActionResponse(message)
         case .notificationAction:
@@ -64,6 +66,8 @@ extension WebSocketServer {
             handleRemoteControl(message)
         case .browseData:
             handleBrowseData(message)
+        case .userDisconnected:
+            handleUserDisconnected()
         case .volumeControl, .macVolume, .toggleAppNotif, .browseLs, .wakeUpRequest, .macMediaControlResponse, .macInfo, .callControl:
             // Outgoing or unexpected messages
             break
@@ -120,6 +124,7 @@ extension WebSocketServer {
 
             if let base64 = dict["wallpaper"] as? String {
                 AppState.shared.currentDeviceWallpaperBase64 = base64
+                UserDefaults.standard.set(base64, forKey: "lastCachedWallpaperBase64")
                 
                 // Save wallpaper to disk for DeviceCard
                 if let id = dict["id"] as? String,
@@ -133,7 +138,9 @@ extension WebSocketServer {
                                     try fileManager.createDirectory(at: wallpaperDir, withIntermediateDirectories: true)
                                 }
                                 let fileURL = wallpaperDir.appendingPathComponent("\(id).jpg")
+                                let fallbackURL = wallpaperDir.appendingPathComponent("last_wallpaper.jpg")
                                 try data.write(to: fileURL)
+                                try? data.write(to: fallbackURL)
                                 print("[websocket] Saved wallpaper for device \(id)")
                             }
                         } catch {
@@ -306,6 +313,15 @@ extension WebSocketServer {
             )
             DispatchQueue.main.async {
                 AppState.shared.updateCallEvent(callEvent)
+            }
+        }
+    }
+
+    private func handleCallProgress(_ message: Message) {
+        if let dict = message.data.value as? [String: Any],
+           let eventId = dict["eventId"] as? String {
+            DispatchQueue.main.async {
+                AppState.shared.receivedCallProgress(eventId: eventId)
             }
         }
     }
@@ -794,6 +810,12 @@ extension WebSocketServer {
            let action = dict["action"] as? String,
            let success = dict["success"] as? Bool {
             print("[websocket] Media control \(action) \(success ? "succeeded" : "failed")")
+        }
+    }
+
+    private func handleUserDisconnected() {
+        DispatchQueue.main.async {
+            AppState.shared.disconnectDevice(manual: true)
         }
     }
 

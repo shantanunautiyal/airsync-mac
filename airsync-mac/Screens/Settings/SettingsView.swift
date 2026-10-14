@@ -26,6 +26,8 @@ struct SettingsView: View {
                 AppleIntelligenceSettingsView()
             case .appearance:
                 AppearanceSettingsView()
+            case .keyboardShortcuts:
+                KeyboardShortcutsSettingsView()
             case .airsyncPlus:
                 AirSyncPlusSettingsView()
             }

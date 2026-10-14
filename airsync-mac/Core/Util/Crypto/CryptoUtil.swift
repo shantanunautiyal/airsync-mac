@@ -15,7 +15,10 @@ func generateSymmetricKey() -> String {
 }
 
 func encryptMessage(_ message: String, using key: SymmetricKey) -> String? {
-    let data = Data(message.utf8)
+    return encryptData(Data(message.utf8), using: key)
+}
+
+func encryptData(_ data: Data, using key: SymmetricKey) -> String? {
     do {
         let sealed = try AES.GCM.seal(data, using: key)
         let combined = sealed.combined! // nonce + ciphertext + tag
@@ -27,24 +30,17 @@ func encryptMessage(_ message: String, using key: SymmetricKey) -> String? {
 }
 
 func decryptMessage(_ base64: String, using key: SymmetricKey) -> String? {
-    guard let combinedData = Data(base64Encoded: base64) else {
-        // Try with options for padding tolerance
-        guard let combinedData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) else {
-            print("[crypto-util] Base64 decode failed (len=\(base64.count), prefix=\(base64.prefix(20))...)")
-            return nil
-        }
-        return decryptAESGCM(combinedData, using: key)
-    }
-    return decryptAESGCM(combinedData, using: key)
+    guard let data = decryptMessageToData(base64, using: key) else { return nil }
+    return String(data: data, encoding: .utf8)
 }
 
-private func decryptAESGCM(_ combinedData: Data, using key: SymmetricKey) -> String? {
+func decryptMessageToData(_ base64: String, using key: SymmetricKey) -> Data? {
+    guard let combinedData = Data(base64Encoded: base64) else { return nil }
     do {
         let sealedBox = try AES.GCM.SealedBox(combined: combinedData)
-        let decrypted = try AES.GCM.open(sealedBox, using: key)
-        return String(data: decrypted, encoding: .utf8)
+        return try AES.GCM.open(sealedBox, using: key)
     } catch {
-        print("[crypto-util] AES-GCM decryption failed (dataLen=\(combinedData.count)): \(error)")
+        print("[crypto-util] Decryption failed: \(error)")
         return nil
     }
 }

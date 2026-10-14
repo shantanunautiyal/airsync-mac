@@ -19,7 +19,29 @@ struct MyMacSettingsView: View {
                 .padding()
                 .glassBoxIfAvailable(radius: 18)
 
-                // 2. Server settings
+                // 2. Connection Mode
+                SettingsHeaderView(title: L("settings.connectionMode"), icon: "antenna.radiowaves.left.and.right")
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack{
+                        Picker("", selection: $appState.connectionMode) {
+                            ForEach(AppState.AppConnectionMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                    .pickerStyle(.segmented)
+                    .controlSize(.large)
+
+                    Spacer()
+                    }
+
+                    Text(connectionModeDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .glassBoxIfAvailable(radius: 18)
+
+                // 3. Server settings
                 SettingsHeaderView(title: "Server Configuration", icon: "server.rack")
                 VStack(spacing: 12) {
                     HStack {
@@ -74,6 +96,7 @@ struct MyMacSettingsView: View {
                 .padding()
                 .glassBoxIfAvailable(radius: 18)
 
+
                 HStack {
                     Spacer()
                     SaveAndRestartButton(
@@ -86,6 +109,53 @@ struct MyMacSettingsView: View {
                         onRestart: nil
                     )
                 }
+
+                // 4. Connection settings
+                SettingsHeaderView(title: "Nearby", icon: "dot.radiowaves.left.and.right")
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.title3)
+                            .foregroundColor(.accentColor)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Auto-connect Bluetooth")
+                                .font(.body)
+                            Text("Automatically connect to known nearby devices over Bluetooth")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $appState.isBLEAutoConnectEnabled)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                            .disabled(!appState.isBLEEnabled)
+                    }
+
+                    HStack(spacing: 12) {
+                        Image(systemName: "arrow.triangle.swap")
+                            .font(.title3)
+                            .foregroundColor(.accentColor)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Auto switch with nearby")
+                                .font(.body)
+                            Text("Automatically switch between Wi-Fi and Bluetooth LE when detected and stable")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $appState.isAutoSwitchWithBLEEnabled)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                            .disabled(!appState.isBLEEnabled)
+                    }
+                }
+                .padding()
+                .glassBoxIfAvailable(radius: 18)
+
             }
             .padding()
         }
@@ -99,6 +169,17 @@ struct MyMacSettingsView: View {
                 port = UserDefaults.standard.string(forKey: "devicePort")
                 ?? String(Defaults.serverPort)
             }
+        }
+    }
+
+    private var connectionModeDescription: String {
+        switch appState.connectionMode {
+        case .network:
+            return L("settings.connectionMode.network.info")
+        case .dynamic:
+            return L("settings.connectionMode.dynamic.info")
+        case .nearby:
+            return L("settings.connectionMode.nearby.info")
         }
     }
 }
