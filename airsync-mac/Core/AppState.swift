@@ -810,6 +810,7 @@ class AppState: ObservableObject {
     @Published var connectionMode: AppConnectionMode = .network {
         didSet {
             UserDefaults.standard.set(connectionMode.rawValue, forKey: "appConnectionMode")
+            guard hasCompletedLaunchSetup else { return }
             let bleShouldBeEnabled = (connectionMode != .network)
             if self.isBLEEnabled != bleShouldBeEnabled {
                 self.isBLEEnabled = bleShouldBeEnabled
