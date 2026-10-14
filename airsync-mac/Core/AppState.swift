@@ -285,6 +285,7 @@ class AppState: ObservableObject {
 
     @Published var device: Device? = nil {
         didSet {
+            guard hasCompletedLaunchSetup else { return }
             // Store the last connected device when a new device connects
             if let newDevice = device {
                 UserDefaults.standard.isManuallyDisconnected = false
@@ -852,6 +853,7 @@ class AppState: ObservableObject {
     @Published var isAutoSwitchWithBLEEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isAutoSwitchWithBLEEnabled, forKey: "isAutoSwitchWithBLEEnabled")
+            guard hasCompletedLaunchSetup else { return }
             DiscoveryManager.shared.updateAvailableWifiDevice()
         }
     }
@@ -877,6 +879,7 @@ class AppState: ObservableObject {
     @Published var silenceAllNotifications: Bool = false {
         didSet {
             UserDefaults.standard.set(silenceAllNotifications, forKey: "silenceAllNotifications")
+            guard hasCompletedLaunchSetup else { return }
             if silenceAllNotifications {
                 UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                 UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -923,6 +926,7 @@ class AppState: ObservableObject {
     @Published var airBridgeEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(airBridgeEnabled, forKey: "airBridgeEnabled")
+            guard hasCompletedLaunchSetup else { return }
             // Connection is managed explicitly:
             // Onboarding: connects after "Continue"
             // Settings: connects on "Save & Reconnect"
@@ -1002,6 +1006,7 @@ class AppState: ObservableObject {
 
     @Published var isFileAccessEnabled: Bool = false {
         didSet {
+            guard hasCompletedLaunchSetup else { return }
             if !isPlus && licenseCheck {
                 if isFileAccessEnabled {
                     isFileAccessEnabled = false
