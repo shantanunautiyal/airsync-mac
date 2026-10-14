@@ -7,7 +7,7 @@
 
 import Foundation
 import Cocoa
-internal import Combine
+import Combine
 
 class WebDAVManager {
     static let shared = WebDAVManager()

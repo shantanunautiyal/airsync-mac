@@ -8,7 +8,7 @@
 import SwiftUI
 import UserNotifications
 import AppKit
-internal import Combine
+import Combine
 
 @MainActor
 class NotificationDelegate: NSObject, @preconcurrency UNUserNotificationCenterDelegate {

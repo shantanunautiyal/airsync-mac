@@ -6,7 +6,7 @@
 //
 
 import Foundation
-internal import Combine
+import Combine
 
 class ADBPairingManager: NSObject, ObservableObject, NetServiceDelegate, NetServiceBrowserDelegate {
     static let shared = ADBPairingManager()

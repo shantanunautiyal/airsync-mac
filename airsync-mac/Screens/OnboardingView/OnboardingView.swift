@@ -8,7 +8,7 @@
 import SwiftUI
 import AppKit
 import QRCode
-internal import SwiftImageReadWrite
+import SwiftImageReadWrite
 
 enum OnboardingStep {
     case welcome

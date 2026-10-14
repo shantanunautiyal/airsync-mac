@@ -6,7 +6,7 @@
 //
 
 import Foundation
-internal import Combine
+import Combine
 
 // A simple persisted notification model keyed by device identifier (e.g., IP)
 struct DeviceNotification: Codable, Identifiable, Equatable {

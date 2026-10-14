@@ -6,8 +6,7 @@
 //
 
 import SwiftUI
-import LottieUI
-internal import Lottie
+import Lottie
 
 struct NotificationEmptyView: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -15,12 +14,8 @@ struct NotificationEmptyView: View {
     var body: some View {
         VStack {
             Spacer()
-//            LottieView("empty-notification-v1-clear")
-//                .loopMode(.loop)
-//                .frame(width: 100, height: 100)
-//                .modifier(InvertIfLightMode(colorScheme: colorScheme))
-            LottieView("empty-notification-v1-clear")
-                .loopMode(.playOnce)
+            LottieView(animation: .named("empty-notification-v1-clear"))
+                .playing(loopMode: .playOnce)
                 .frame(width: 100, height: 100)
                 .modifier(InvertIfLightMode(colorScheme: colorScheme))
 

@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-internal import Combine
+import Combine
 
 struct CallsView: View {
     @ObservedObject private var manager = LiveNotificationManager.shared

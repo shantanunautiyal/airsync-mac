@@ -2,8 +2,28 @@ import Foundation
 import CoreBluetooth
 import Combine
 
+enum BLEConnectionStatus: Equatable {
+    case disconnected
+    case scanning
+    case connected
+    case authenticated
+}
+
 class BLECentralManager: NSObject, ObservableObject {
     static let shared = BLECentralManager()
+    
+    var centralManagerStateDescription: String {
+        guard let centralManager = centralManager else { return "uninitialized" }
+        switch centralManager.state {
+        case .unknown: return "unknown"
+        case .resetting: return "resetting"
+        case .unsupported: return "unsupported"
+        case .unauthorized: return "unauthorized"
+        case .poweredOff: return "poweredOff"
+        case .poweredOn: return "poweredOn"
+        @unknown default: return "unknown"
+        }
+    }
     
     private var centralManager: CBCentralManager!
     private var discoveredPeripheral: CBPeripheral?
@@ -35,12 +55,7 @@ class BLECentralManager: NSObject, ObservableObject {
         connectionStatus == .authenticated
     }
     
-    enum BLEConnectionStatus: Equatable {
-        case disconnected
-        case scanning
-        case connected
-        case authenticated
-    }
+    typealias BLEConnectionStatus = AirSync.BLEConnectionStatus
     
     private var cancellables = Set<AnyCancellable>()
     private var scanTimer: Timer?

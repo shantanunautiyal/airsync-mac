@@ -19,7 +19,7 @@
 		B99D63FC3059A794003D951A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B99D63FB3059A794003D951A /* SwiftUI.framework */; };
 		B99D64093059A795003D951A /* AirSyncWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B99D63F83059A794003D951A /* AirSyncWidgetExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B9AA00032FEB0003000AA003 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = B9AA00022FEB0002000AA002 /* KeyboardShortcuts */; };
-		B9B1C00D2E94E15D0005F6CB /* LottieUI in Frameworks */ = {isa = PBXBuildFile; productRef = B9B1C00C2E94E15D0005F6CB /* LottieUI */; };
+		B9B1C00D2E94E15D0005F6CB /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = B9B1C00C2E94E15D0005F6CB /* Lottie */; };
 		B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = B9C3181D2E37AA1D00367F16 /* QRCode */; };
 		B9D742FC2E39CF850053128A /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = B9D742FB2E39CF850053128A /* Swifter */; };
 		B9E423832FBD914900526D40 /* scrcpy-server in Resources */ = {isa = PBXBuildFile; fileRef = B9E423822FBD914900526D40 /* scrcpy-server */; };
@@ -120,7 +120,7 @@
 				B9C3181E2E37AA1D00367F16 /* QRCode in Frameworks */,
 				B98CBE802FE69D9000C950DA /* Sparkle in Frameworks */,
 				B9AA00032FEB0003000AA003 /* KeyboardShortcuts in Frameworks */,
-				B9B1C00D2E94E15D0005F6CB /* LottieUI in Frameworks */,
+				B9B1C00D2E94E15D0005F6CB /* Lottie in Frameworks */,
 				B949716B2F62525800F59BC9 /* SwiftProtobufPluginLibrary in Frameworks */,
 				B94971632F6250DE00F59BC9 /* ASN1 in Frameworks */,
 				B98CBE7B2FE6935F00C950DA /* Installations in Frameworks */,
@@ -195,7 +195,7 @@
 			packageProductDependencies = (
 				B9C3181D2E37AA1D00367F16 /* QRCode */,
 				B9D742FB2E39CF850053128A /* Swifter */,
-				B9B1C00C2E94E15D0005F6CB /* LottieUI */,
+				B9B1C00C2E94E15D0005F6CB /* Lottie */,
 				B949715F2F62509A00F59BC9 /* BigInt */,
 				B94971622F6250DE00F59BC9 /* ASN1 */,
 				B94971652F62514500F59BC9 /* SwiftECC */,
@@ -243,9 +243,11 @@
 				TargetAttributes = {
 					B9673B562E35A2A1006D284A = {
 						CreatedOnToolsVersion = 26.0;
+						ProvisioningStyle = Manual;
 					};
 					B99D63F73059A794003D951A = {
 						CreatedOnToolsVersion = 27.0;
+						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -261,7 +263,7 @@
 			packageReferences = (
 				B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */,
 				B9D742FA2E39CF850053128A /* XCRemoteSwiftPackageReference "swifter" */,
-				B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "LottieUI" */,
+				B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				B949715E2F62509A00F59BC9 /* XCRemoteSwiftPackageReference "BigInt" */,
 				B94971612F6250DE00F59BC9 /* XCRemoteSwiftPackageReference "ASN1" */,
 				B94971642F62514500F59BC9 /* XCRemoteSwiftPackageReference "SwiftECC" */,
@@ -398,11 +400,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = AirSync.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 32;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -412,6 +415,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -423,7 +428,6 @@
 				MARKETING_VERSION = 4.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
 				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
@@ -579,11 +583,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = AirSync.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 32;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -593,6 +598,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -604,7 +611,6 @@
 				MARKETING_VERSION = 4.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
 				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
@@ -632,11 +638,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = AirSync.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 32;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -646,6 +653,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = AirSync;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "AirSync needs permission to control Music playback from your Android device.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "AirSync uses Bluetooth to sync notifications and media controls with your Android phone when Wi-Fi is unavailable.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -657,7 +666,6 @@
 				MARKETING_VERSION = 4.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
 				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
@@ -681,9 +689,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = AirSyncWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -699,7 +708,6 @@
 				MARKETING_VERSION = 4.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -715,9 +723,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = AirSyncWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -733,7 +742,6 @@
 				MARKETING_VERSION = 4.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -749,9 +757,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = AirSyncWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = WCB4HTANA6;
+				DEVELOPMENT_TEAM = TD49A7CHD2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -767,7 +776,6 @@
 				MARKETING_VERSION = 4.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "sameerasw.airsync-mac.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -869,12 +877,12 @@
 				minimumVersion = 2.2.0;
 			};
 		};
-		B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "LottieUI" */ = {
+		B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/tfmart/LottieUI";
+			repositoryURL = "https://github.com/airbnb/lottie-spm.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.1;
+				minimumVersion = 4.4.3;
 			};
 		};
 		B9C3181C2E37AA1D00367F16 /* XCRemoteSwiftPackageReference "QRCode" */ = {
@@ -936,10 +944,10 @@
 			package = B9AA00012FEB0001000AA001 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
-		B9B1C00C2E94E15D0005F6CB /* LottieUI */ = {
+		B9B1C00C2E94E15D0005F6CB /* Lottie */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "LottieUI" */;
-			productName = LottieUI;
+			package = B9B1C00B2E94E15D0005F6CB /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
 		};
 		B9C3181D2E37AA1D00367F16 /* QRCode */ = {
 			isa = XCSwiftPackageProductDependency;

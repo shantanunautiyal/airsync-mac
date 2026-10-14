@@ -8,7 +8,7 @@
 import Foundation
 import UserNotifications
 import SwiftUI
-internal import Combine
+import Combine
 
 @available(macOS 13.0, *)
 class LiveActivitiesManager: ObservableObject {

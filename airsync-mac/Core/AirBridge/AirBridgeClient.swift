@@ -9,7 +9,7 @@
 //
 
 import Foundation
-internal import Combine
+import Combine
 import CryptoKit
 import AppKit
 

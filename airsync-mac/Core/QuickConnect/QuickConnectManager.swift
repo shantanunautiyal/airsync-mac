@@ -7,7 +7,7 @@
 
 import Foundation
 import Darwin
-internal import Combine
+import Combine
 
 /// Manages quick reconnection functionality for previously connected devices
 class QuickConnectManager: ObservableObject, @unchecked Sendable {

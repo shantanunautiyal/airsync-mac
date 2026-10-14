@@ -7,7 +7,7 @@
 
 import SwiftUI
 import QRCode
-internal import SwiftImageReadWrite
+import SwiftImageReadWrite
 
 struct ADBPairingSheetView: View {
     @Environment(\.dismiss) private var dismiss

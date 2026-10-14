@@ -8,7 +8,7 @@ import SwiftUI
 import ServiceManagement
 import Foundation
 import Cocoa
-internal import Combine
+import Combine
 import UserNotifications
 import AVFoundation
 

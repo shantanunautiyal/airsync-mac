@@ -7,7 +7,7 @@
 
 import Foundation
 import Network
-internal import Combine
+import Combine
 
 class ScrcpyStreamClient: ObservableObject {
     static let shared = ScrcpyStreamClient()

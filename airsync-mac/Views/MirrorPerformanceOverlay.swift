@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-internal import Combine
+import Combine
 
 struct MirrorPerformanceOverlay: View {
     @StateObject private var monitor = PerformanceMonitor.shared

@@ -7,7 +7,7 @@
 
 import Foundation
 import QRCode
-internal import SwiftImageReadWrite
+import SwiftImageReadWrite
 import CoreGraphics
 import SwiftUI
 

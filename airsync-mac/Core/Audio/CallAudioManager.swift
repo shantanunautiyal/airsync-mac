@@ -8,7 +8,7 @@
 
 import Foundation
 import AVFoundation
-internal import Combine
+import Combine
 
 class CallAudioManager: ObservableObject {
     static let shared = CallAudioManager()

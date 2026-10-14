@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-internal import Combine
+import Combine
 
 #if canImport(SwiftUI)
 struct LiveCallView: View {
