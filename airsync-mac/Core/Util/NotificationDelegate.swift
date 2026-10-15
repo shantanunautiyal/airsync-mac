@@ -61,16 +61,21 @@ class NotificationDelegate: NSObject, @preconcurrency UNUserNotificationCenterDe
         }
         // Handle view action
         else if response.actionIdentifier == "VIEW_ACTION" {
-            if let package = userInfo["package"] as? String,
-               let ip = AppState.shared.device?.ipAddress,
-               let name = AppState.shared.device?.name {
-
-                ADBConnector.startScrcpy(
-                    ip: ip,
-                    port: AppState.shared.adbPort,
-                    deviceName: name,
-                    package: package
-                )
+            if let package = userInfo["package"] as? String {
+                if AppState.shared.useNativeMirroringByDefault || !AppState.shared.adbConnected {
+                    WebSocketServer.shared.sendMirrorRequest(action: "start", mode: "app", package: package)
+                    DispatchQueue.main.async {
+                        AppState.shared.isNativeMirroring = true
+                    }
+                } else if let ip = AppState.shared.device?.ipAddress,
+                          let name = AppState.shared.device?.name {
+                    ADBConnector.startScrcpy(
+                        ip: ip,
+                        port: AppState.shared.adbPort,
+                        deviceName: name,
+                        package: package
+                    )
+                }
             } else {
                 print("[notification-delegate] Missing device details or package for scrcpy.")
             }

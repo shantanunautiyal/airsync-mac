@@ -195,6 +195,9 @@ struct HealthView: View {
                                 }
                             }
                         }
+                        
+                        // AI Health Coach Section
+                        AiHealthCoachGlassCard(summary: summary, selectedDate: selectedDate)
                     }
                     .padding()
                 } else {
@@ -214,6 +217,9 @@ struct HealthView: View {
                                 .foregroundColor(.secondary)
                                 .padding()
                         }
+                        
+                        // AI Health Coach Section
+                        AiHealthCoachGlassCard(summary: nil, selectedDate: selectedDate)
                     }
                     .padding()
                 }
@@ -495,3 +501,143 @@ struct GlassVitalRow: View {
         }
     }
 }
+
+// MARK: - AI Health Coach Glass Card
+
+struct AiHealthCoachGlassCard: View {
+    let summary: HealthSummary?
+    let selectedDate: Date
+    @ObservedObject var openRouterCoach = OpenRouterHealthCoach.shared
+    @ObservedObject var appState = AppState.shared
+    @State private var currentSuggestion: String? = nil
+    @State private var isLoadingAi: Bool = false
+    @State private var aiError: String? = nil
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(colors: [Color(hex: "8E24AA"), Color(hex: "1E88E5")], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AI Health & Fitness Coach")
+                        .font(.headline)
+                    Text(openRouterCoach.isEnabled ? (OpenRouterHealthCoach.curatedFreeModels.first(where: { $0.id == openRouterCoach.selectedModel })?.displayName ?? openRouterCoach.selectedModel) : "OpenRouter AI Add-on")
+                        .font(.caption)
+                        .foregroundColor(Color.accentColor)
+                }
+                
+                Spacer()
+                
+                if openRouterCoach.isEnabled && !openRouterCoach.apiKey.isEmpty && summary != nil {
+                    Button(action: {
+                        guard let summary = summary else { return }
+                        isLoadingAi = true
+                        aiError = nil
+                        Task {
+                            let result = await openRouterCoach.generateHealthSuggestions(summary: summary, date: selectedDate)
+                            isLoadingAi = false
+                            switch result {
+                            case .success(let text):
+                                currentSuggestion = text
+                            case .failure(let err):
+                                aiError = err.localizedDescription
+                            }
+                        }
+                    }) {
+                        HStack(spacing: 5) {
+                            if isLoadingAi {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 11))
+                            }
+                            Text(currentSuggestion != nil ? "Refresh" : "Analyze")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(isLoadingAi)
+                }
+            }
+            
+            // Content
+            if !openRouterCoach.isEnabled || openRouterCoach.apiKey.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Get personalized daily activity analysis, recovery recommendations, and workout tips powered by free AI models (Gemini 2.0 Flash, Llama 3.3, DeepSeek R1).")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Button(action: {
+                        appState.selectedTab = .settings
+                        appState.selectedSettingsTab = .appleIntelligence
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "gearshape")
+                            Text("Configure in Settings")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            } else if isLoadingAi {
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Analyzing health metrics with \(OpenRouterHealthCoach.curatedFreeModels.first(where: { $0.id == openRouterCoach.selectedModel })?.displayName ?? openRouterCoach.selectedModel)...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 8)
+            } else if let error = aiError {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Analysis Error")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.red)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(10)
+                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            } else if let suggestion = currentSuggestion ?? openRouterCoach.cachedSuggestion(for: selectedDate) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(suggestion)
+                        .font(.system(size: 13, weight: .regular, design: .default))
+                        .lineSpacing(4)
+                        .textSelection(.enabled)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 12))
+            } else {
+                Text("Click 'Analyze' above to have your AI coach review today's Health Connect metrics and offer recovery suggestions.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(18)
+        .glassBoxIfAvailable(radius: 20)
+        .onAppear {
+            currentSuggestion = openRouterCoach.cachedSuggestion(for: selectedDate)
+        }
+        .onChange(of: selectedDate) { _, newDate in
+            currentSuggestion = openRouterCoach.cachedSuggestion(for: newDate)
+            aiError = nil
+        }
+    }
+}
+

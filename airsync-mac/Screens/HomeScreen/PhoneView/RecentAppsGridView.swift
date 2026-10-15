@@ -34,12 +34,19 @@ private struct RecentAppIconView: View {
     var body: some View {
         Button {
             appState.trackAppUse(app) // Move to front
-            ADBConnector.startScrcpy(
-                ip: appState.device?.ipAddress ?? "",
-                port: appState.adbPort,
-                deviceName: appState.device?.name ?? "My Phone",
-                package: app.packageName
-            )
+            if appState.useNativeMirroringByDefault || !appState.adbConnected {
+                print("[apps] Launching recent app via Native Mirroring: \(app.packageName)")
+                WebSocketServer.shared.sendMirrorRequest(action: "start", mode: "app", package: app.packageName)
+                appState.isNativeMirroring = true
+            } else if let device = appState.device, appState.adbConnected {
+                print("[apps] Launching recent app via scrcpy: \(app.packageName)")
+                ADBConnector.startScrcpy(
+                    ip: device.ipAddress,
+                    port: appState.adbPort,
+                    deviceName: device.name,
+                    package: app.packageName
+                )
+            }
         } label: {
             ZStack {
                 if let iconPath = app.iconUrl, let image = Image(filePath: iconPath) {

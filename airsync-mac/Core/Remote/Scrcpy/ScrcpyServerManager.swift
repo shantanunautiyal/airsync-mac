@@ -26,6 +26,9 @@ class ScrcpyServerManager: NSObject {
         let cleanupPort = Process()
         cleanupPort.executableURL = URL(fileURLWithPath: adbPath)
         cleanupPort.arguments = ["-s", serial, "forward", "--remove", "tcp:\(serverPort)"]
+        let dummyPipe = Pipe()
+        cleanupPort.standardOutput = dummyPipe
+        cleanupPort.standardError = dummyPipe
         try? cleanupPort.run()
         cleanupPort.waitUntilExit()
         
@@ -33,6 +36,8 @@ class ScrcpyServerManager: NSObject {
         let killProcess = Process()
         killProcess.executableURL = URL(fileURLWithPath: adbPath)
         killProcess.arguments = ["-s", serial, "shell", "pkill -f com.genymobile.scrcpy.Server || true"]
+        killProcess.standardOutput = dummyPipe
+        killProcess.standardError = dummyPipe
         try? killProcess.run()
         killProcess.waitUntilExit()
         
@@ -202,11 +207,16 @@ class ScrcpyServerManager: NSObject {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: adbPath)
         process.arguments = ["forward", "--remove", "tcp:\(serverPort)"]
+        let dummyPipe = Pipe()
+        process.standardOutput = dummyPipe
+        process.standardError = dummyPipe
         
         do {
             try process.run()
             process.waitUntilExit()
-            print("[ScrcpyServerManager] Port forward removed")
+            if process.terminationStatus == 0 {
+                print("[ScrcpyServerManager] Port forward removed")
+            }
         } catch {
             print("[ScrcpyServerManager] Failed to remove port forward: \(error)")
         }
