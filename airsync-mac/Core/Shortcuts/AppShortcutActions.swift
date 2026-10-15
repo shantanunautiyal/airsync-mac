@@ -22,8 +22,8 @@ enum AppShortcutActions {
 
     static func mirrorPrimary() {
         let appState = AppState.shared
-        guard let device = appState.device, appState.adbConnected else { return }
-        if appState.useNativeMirroringByDefault {
+        guard let device = appState.device else { return }
+        if appState.useNativeMirroringByDefault || !appState.adbConnected {
             appState.isNativeMirroring = true
         } else {
             ADBConnector.startScrcpy(ip: device.ipAddress, port: UInt16(appState.adbPort), deviceName: device.name)
@@ -32,8 +32,8 @@ enum AppShortcutActions {
 
     static func mirrorAlternate() {
         let appState = AppState.shared
-        guard let device = appState.device, appState.adbConnected else { return }
-        if appState.useNativeMirroringByDefault {
+        guard let device = appState.device else { return }
+        if appState.useNativeMirroringByDefault && appState.adbConnected {
             ADBConnector.startScrcpy(ip: device.ipAddress, port: UInt16(appState.adbPort), deviceName: device.name)
         } else {
             appState.isNativeMirroring = true
@@ -42,8 +42,8 @@ enum AppShortcutActions {
 
     static func desktopPrimary() {
         let appState = AppState.shared
-        guard appState.isPlus, appState.licenseCheck, let device = appState.device, appState.adbConnected else { return }
-        if appState.useNativeDesktopMirroringByDefault {
+        guard appState.isPlus, appState.licenseCheck, let device = appState.device else { return }
+        if appState.useNativeDesktopMirroringByDefault || !appState.adbConnected {
             appState.isNativeDesktopMirroring = true
         } else {
             ADBConnector.startScrcpy(ip: device.ipAddress, port: UInt16(appState.adbPort), deviceName: device.name, desktop: true)
@@ -52,8 +52,8 @@ enum AppShortcutActions {
 
     static func desktopAlternate() {
         let appState = AppState.shared
-        guard appState.isPlus, appState.licenseCheck, let device = appState.device, appState.adbConnected else { return }
-        if appState.useNativeDesktopMirroringByDefault {
+        guard appState.isPlus, appState.licenseCheck, let device = appState.device else { return }
+        if appState.useNativeDesktopMirroringByDefault && appState.adbConnected {
             ADBConnector.startScrcpy(ip: device.ipAddress, port: UInt16(appState.adbPort), deviceName: device.name, desktop: true)
         } else {
             appState.isNativeDesktopMirroring = true
@@ -62,7 +62,7 @@ enum AppShortcutActions {
 
     static func toggleMirrorHere() {
         let appState = AppState.shared
-        guard appState.device != nil, appState.adbConnected else { return }
+        guard appState.device != nil else { return }
         appState.isSidebarMirroring.toggle()
     }
 }

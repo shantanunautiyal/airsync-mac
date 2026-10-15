@@ -44,6 +44,10 @@ extension WebSocketServer {
             handleMediaControlResponse(message)
         case .appIcons:
             handleAppIcons(message)
+        case .appIconManifest:
+            handleAppIconManifest(message)
+        case .appIconsDelta:
+            handleAppIcons(message)  // Same format as appIcons, reuse handler
         case .clipboardUpdate:
             handleClipboardUpdate(message)
         case .fileTransferInit:
@@ -68,7 +72,7 @@ extension WebSocketServer {
             handleBrowseData(message)
         case .userDisconnected:
             handleUserDisconnected()
-        case .volumeControl, .macVolume, .toggleAppNotif, .browseLs, .wakeUpRequest, .macMediaControlResponse, .macInfo, .callControl:
+        case .volumeControl, .macVolume, .toggleAppNotif, .browseLs, .wakeUpRequest, .macMediaControlResponse, .macInfo, .callControl, .requestIcons:
             // Outgoing or unexpected messages
             break
         }
@@ -426,6 +430,24 @@ extension WebSocketServer {
         }
     }
 
+    /// Cache of icon content hashes, keyed by package name.
+    /// Used by the manifest-based incremental sync protocol to avoid re-downloading unchanged icons.
+    /// Persisted across launches via UserDefaults.
+    private static var iconHashCache: [String: String] = {
+        UserDefaults.standard.dictionary(forKey: "iconHashCache") as? [String: String] ?? [:]
+    }() {
+        didSet {
+            UserDefaults.standard.set(iconHashCache, forKey: "iconHashCache")
+        }
+    }
+    
+    /// Compute a truncated SHA-256 hash (first 16 hex chars) for data, matching Android's AssetCacheManager.
+    private static func sha256Hash(_ data: String) -> String {
+        let inputData = Data(data.utf8)
+        let hash = SHA256.hash(data: inputData)
+        return hash.prefix(8).map { String(format: "%02x", $0) }.joined()  // 16 hex chars = 8 bytes
+    }
+    
     private func handleAppIcons(_ message: Message) {
         if let dict = message.data.value as? [String: [String: Any]] {
             DispatchQueue.global(qos: .background).async {
@@ -440,6 +462,11 @@ extension WebSocketServer {
 
                     var cleaned = iconBase64
                     if let range = cleaned.range(of: "base64,") { cleaned = String(cleaned[range.upperBound...]) }
+
+                    // Compute and cache the icon hash for future manifest comparisons
+                    if !iconBase64.isEmpty {
+                        WebSocketServer.iconHashCache[package] = WebSocketServer.sha256Hash(iconBase64)
+                    }
 
                     var iconPath: String? = nil
                     if let data = Data(base64Encoded: cleaned), !cleaned.isEmpty {
@@ -472,19 +499,23 @@ extension WebSocketServer {
                     }
                 }
 
-                let toRemove = existingPackages.subtracting(incomingPackages)
-                if !toRemove.isEmpty {
-                    DispatchQueue.main.async {
-                        var pathsToRemove: [String] = []
-                        for pkg in toRemove {
-                            if let iconPath = AppState.shared.androidApps[pkg]?.iconUrl {
-                                pathsToRemove.append(iconPath)
+                // Only remove uninstalled apps when we receive a full appIcons (not a delta)
+                if message.type == .appIcons {
+                    let toRemove = existingPackages.subtracting(incomingPackages)
+                    if !toRemove.isEmpty {
+                        DispatchQueue.main.async {
+                            var pathsToRemove: [String] = []
+                            for pkg in toRemove {
+                                if let iconPath = AppState.shared.androidApps[pkg]?.iconUrl {
+                                    pathsToRemove.append(iconPath)
+                                }
+                                AppState.shared.androidApps.removeValue(forKey: pkg)
+                                WebSocketServer.iconHashCache.removeValue(forKey: pkg)
                             }
-                            AppState.shared.androidApps.removeValue(forKey: pkg)
-                        }
-                        DispatchQueue.global(qos: .background).async {
-                            for path in pathsToRemove {
-                                try? FileManager.default.removeItem(atPath: path)
+                            DispatchQueue.global(qos: .background).async {
+                                for path in pathsToRemove {
+                                    try? FileManager.default.removeItem(atPath: path)
+                                }
                             }
                         }
                     }
@@ -496,6 +527,68 @@ extension WebSocketServer {
             }
         }
     }
+    
+    /// Handle an app icon manifest (hashes only, no icon data).
+    /// Compares received hashes with our local cache to determine which icons are missing/changed,
+    /// then sends a "requestIcons" message with only those package names.
+    private func handleAppIconManifest(_ message: Message) {
+        guard let dict = message.data.value as? [String: [String: Any]] else { return }
+        
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            var missingPackages: [String] = []
+            
+            for (package, details) in dict {
+                guard let name = details["name"] as? String,
+                      let hash = details["hash"] as? String,
+                      let systemApp = details["systemApp"] as? Bool,
+                      let listening = details["listening"] as? Bool else { continue }
+                
+                // Update metadata (name, listening state) regardless of icon status
+                DispatchQueue.main.async {
+                    if var existingApp = AppState.shared.androidApps[package] {
+                        existingApp.listening = listening
+                        AppState.shared.androidApps[package] = existingApp
+                    } else {
+                        // New app without icon data yet — still register it
+                        let app = AndroidApp(
+                            packageName: package,
+                            name: name,
+                            iconUrl: nil,
+                            listening: listening,
+                            systemApp: systemApp
+                        )
+                        AppState.shared.androidApps[package] = app
+                    }
+                }
+                
+                // Compare hash with our cached version
+                let cachedHash = WebSocketServer.iconHashCache[package]
+                let hasIconOnDisk = FileManager.default.fileExists(
+                    atPath: appIconsDirectory().appendingPathComponent("\(package).png").path
+                )
+                
+                if cachedHash != hash || !hasIconOnDisk {
+                    // Icon is new or changed — need to request it
+                    missingPackages.append(package)
+                }
+            }
+            
+            print("[AssetCache] Manifest received: \(dict.count) apps, \(missingPackages.count) icons needed")
+            
+            if missingPackages.isEmpty {
+                print("[AssetCache] ✅ All icons are up-to-date, no transfer needed!")
+                DispatchQueue.main.async {
+                    AppState.shared.saveAppsToDisk()
+                }
+                return
+            }
+            
+            // Request only the missing/changed icons from Android
+            self?.sendMessage(type: "requestIcons", data: ["packages": missingPackages])
+            print("[AssetCache] 📦 Requested \(missingPackages.count) icons from Android")
+        }
+    }
+
 
     private func handleFileTransferInit(_ message: Message) {
         if let dict = message.data.value as? [String: Any],

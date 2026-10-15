@@ -22,6 +22,9 @@ enum MessageType: String, Codable {
     case mirrorRequest
     case mirrorResponse
     case appIcons
+    case appIconManifest   // Manifest with hashes only (incremental sync)
+    case appIconsDelta     // Delta: only changed/new icons
+    case requestIcons      // Mac -> Android: request specific icons by package name
     case clipboardUpdate
     case callEvent = "call_event"
     case callProgress = "call_progress"

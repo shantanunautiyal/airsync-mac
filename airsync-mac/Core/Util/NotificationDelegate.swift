@@ -85,6 +85,15 @@ class NotificationDelegate: NSObject, @preconcurrency UNUserNotificationCenterDe
                 }
             }
         }
+        // Handle Mark as Read / Dismiss action
+        else if response.actionIdentifier == "DISMISS_ACTION" {
+            let nid = userInfo["nid"] as? String ?? response.notification.request.identifier
+            print("[notification-delegate] User marked notification as read / dismissed: \(nid)")
+            WebSocketServer.shared.dismissNotification(id: nid)
+            DispatchQueue.main.async {
+                AppState.shared.removeNotificationById(nid)
+            }
+        }
         // Handle custom actions
         else if response.actionIdentifier.hasPrefix("ACT_") {
             let actionName = String(response.actionIdentifier.dropFirst(4))

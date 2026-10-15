@@ -35,7 +35,6 @@ class MacInfoSyncManager: ObservableObject {
             let isMuted: Bool
             let albumArt: String
             let likeStatus: String
-            let elapsedTime: Int
             let duration: Int
         }
         let batteryLevel: Int
@@ -43,6 +42,8 @@ class MacInfoSyncManager: ObservableObject {
         let isPaired: Bool
         let music: Music?
     }
+    private var lastSentElapsedTime: Int = 0
+    private var lastSentElapsedDate: Date = Date()
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -236,7 +237,6 @@ class MacInfoSyncManager: ObservableObject {
                 isMuted: MacRemoteManager.shared.lastVolumeLevel == 0,
                 albumArt: currentHash ?? "", // Use hash for snapshot comparison
                 likeStatus: "none", // must match payload default
-                elapsedTime: Int(info.elapsedTime ?? 0),
                 duration: Int(info.duration ?? 0)
             )
         }()
@@ -248,8 +248,12 @@ class MacInfoSyncManager: ObservableObject {
             music: musicSnapshot
         )
 
-        // Early exit if nothing changed compared to the last sent payload
-        guard snapshot != lastSentSnapshot else {
+        let currentElapsed = Int(info.elapsedTime ?? 0)
+        let elapsedDiff = abs(currentElapsed - (lastSentElapsedTime + Int(Date().timeIntervalSince(lastSentElapsedDate))))
+        let isSeekOrDrift = shouldIncludeMusicInfo && (info.isPlaying == true) && (elapsedDiff >= 5)
+
+        // Early exit if nothing changed compared to the last sent payload and no significant seek
+        guard snapshot != lastSentSnapshot || isSeekOrDrift else {
 //            print("[mac-info-sync] No change, Skipping")
             return
         }
@@ -262,10 +266,12 @@ class MacInfoSyncManager: ObservableObject {
             musicInfo: shouldIncludeMusicInfo ? info : nil,
             albumArtBase64: artworkToSend
         )
-        print("[mac-info-sync] Sent status \(snapshot.batteryLevel), \(snapshot.isCharging), \(info)")
+        print("[mac-info-sync] Sent status \(snapshot.batteryLevel), \(snapshot.isCharging), \(info.title ?? "")")
 
         // Update last sent trackers
         lastSentSnapshot = snapshot
+        lastSentElapsedTime = currentElapsed
+        lastSentElapsedDate = Date()
         if shouldIncludeMusicInfo { 
             lastSentInfo = info
             if let sent = artworkToSend {

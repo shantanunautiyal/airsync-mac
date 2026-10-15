@@ -63,7 +63,9 @@ class AppState: ObservableObject {
 
         let isPlusLoaded = UserDefaults.standard.bool(forKey: "isPlus")
         self.isPlus = isPlusLoaded
-        self.licenseCheck = UserDefaults.standard.object(forKey: "licenseCheck") == nil ? true : UserDefaults.standard.bool(forKey: "licenseCheck")
+        let licenseCheckLoaded = UserDefaults.standard.object(forKey: "licenseCheck") == nil ? true : UserDefaults.standard.bool(forKey: "licenseCheck")
+        self.licenseCheck = licenseCheckLoaded
+        self.isOtpAutofillEnabled = UserDefaults.standard.object(forKey: "isOtpAutofillEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isOtpAutofillEnabled")
 
         let adbPortValue = UserDefaults.standard.integer(forKey: "adbPort")
         self.adbPort = adbPortValue == 0 ? 5555 : UInt16(adbPortValue)
@@ -101,7 +103,7 @@ class AppState: ObservableObject {
         if UserDefaults.standard.object(forKey: "showMenubarCallDetails") == nil {
             self.showMenubarCallDetails = isPlusLoaded
         } else {
-            self.showMenubarCallDetails = UserDefaults.standard.bool(forKey: "showMenubarCallDetails") && (!licenseCheck || isPlusLoaded)
+            self.showMenubarCallDetails = UserDefaults.standard.bool(forKey: "showMenubarCallDetails") && (!licenseCheckLoaded || isPlusLoaded)
         }
         self.menubarFontSize = UserDefaults.standard.object(forKey: "menubarFontSize") == nil ? 12.0 : UserDefaults.standard.double(forKey: "menubarFontSize")
         self.enableMarquee = UserDefaults.standard.bool(forKey: "enableMarquee")
@@ -111,7 +113,6 @@ class AppState: ObservableObject {
         self.menubarNotificationStyle = UserDefaults.standard.string(forKey: "menubarNotificationStyle") ?? "both"
 
         self.isClipboardSyncEnabled = UserDefaults.standard.bool(forKey: "isClipboardSyncEnabled")
-        self.isOtpAutofillEnabled = UserDefaults.standard.object(forKey: "isOtpAutofillEnabled") == nil ? true : UserDefaults.standard.bool(forKey: "isOtpAutofillEnabled")
         self.autoStartAtLogin = UserDefaults.standard.bool(forKey: "autoStartAtLogin")
         self.keepRunningAfterQuit = UserDefaults.standard.bool(forKey: "keepRunningAfterQuit")
         self.shortcutScopes = UserDefaults.standard.dictionary(forKey: "shortcutScopes") as? [String: String] ?? [:]
@@ -459,7 +460,7 @@ class AppState: ObservableObject {
         }
     }
     /// Copies detected OTP / 2FA codes from Android notifications to the Mac clipboard.
-    @Published var isOtpAutofillEnabled: Bool {
+    @Published var isOtpAutofillEnabled: Bool = true {
         didSet {
             UserDefaults.standard.set(isOtpAutofillEnabled, forKey: "isOtpAutofillEnabled")
         }
@@ -557,7 +558,7 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(selectedNetworkAdapterName, forKey: "selectedNetworkAdapterName")
         }
     }
-    @Published var deviceAdbSerials: [String: String] {
+    @Published var deviceAdbSerials: [String: String] = [:] {
         didSet {
             UserDefaults.standard.set(deviceAdbSerials, forKey: "deviceAdbSerials")
         }
@@ -599,7 +600,7 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var showMenubarNetworkStatus: Bool {
+    @Published var showMenubarNetworkStatus: Bool = false {
         didSet {
             UserDefaults.standard.set(showMenubarNetworkStatus, forKey: "showMenubarNetworkStatus")
         }
@@ -1642,6 +1643,12 @@ class AppState: ObservableObject {
         // Append caller-provided extra actions (e.g., OPEN_LINK)
         unActions.append(contentsOf: extraActions)
 
+        // Add "Mark as Read" action to dismiss on Android if not already present
+        let hasMarkAsRead = unActions.contains { $0.title.localizedCaseInsensitiveContains("read") || $0.title.localizedCaseInsensitiveContains("dismiss") }
+        if !hasMarkAsRead {
+            unActions.append(UNNotificationAction(identifier: "DISMISS_ACTION", title: "Mark as Read", options: []))
+        }
+
         // Choose category: DEFAULT_CATEGORY when no custom actions besides optional view; otherwise derive
         if unActions.isEmpty {
             content.categoryIdentifier = "DEFAULT_CATEGORY"
@@ -1741,15 +1748,16 @@ class AppState: ObservableObject {
     }
 
     func sendClipboardToAndroid(text: String) {
-        let message = """
-    {
-        "type": "clipboardUpdate",
-        "data": {
-            "text": "\(text.replacingOccurrences(of: "\"", with: "\\\""))"
+        let payload: [String: Any] = [
+            "type": "clipboardUpdate",
+            "data": [
+                "text": text
+            ]
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: payload),
+           let message = String(data: data, encoding: .utf8) {
+            WebSocketServer.shared.sendClipboardUpdate(message)
         }
-    }
-    """
-        WebSocketServer.shared.sendClipboardUpdate(message)
         
         // Also send via BLE
         BLETransportBridge.shared.sendClipboard(text)

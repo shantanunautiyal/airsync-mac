@@ -444,11 +444,11 @@ class LiveNotificationManager: ObservableObject {
     
     // MARK: - Health Updates
     
-    func handleHealthSummary(_ summary: HealthSummary) {
-        print("[live-notif] 📊 Received health summary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(summary.distance ?? 0)")
+    func handleHealthSummary(_ summary: HealthSummary, dateString: String? = nil) {
+        print("[live-notif] 📊 Received health summary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(summary.distance ?? 0), dateString=\(dateString ?? "nil")")
         
-        // Cache the health data
-        let dateKey = dateKeyFromTimestamp(summary.date)
+        // Cache the health data using explicit dateString if provided, otherwise date format
+        let dateKey = dateString ?? dateKeyFromTimestamp(summary.date)
         healthCache[dateKey] = summary
         healthCacheTimestamps[dateKey] = Date()
         pendingHealthRequests.remove(dateKey)
@@ -461,6 +461,7 @@ class LiveNotificationManager: ObservableObject {
             // Always update the published property - the view will use
             // cachedHealthSummary(for:) to get data for the selected date
             self.healthSummary = summary
+            self.objectWillChange.send()
             print("[live-notif] 📊 Health summary updated, objectWillChange triggered")
             self.showHealthUpdateIfNeeded(summary)
         }
@@ -475,30 +476,33 @@ class LiveNotificationManager: ObservableObject {
     /// Get cached health data for a date, or request from Android if not cached
     func getHealthSummary(for date: Date, forceRefresh: Bool = false) -> HealthSummary? {
         let dateKey = dateKeyFromDate(date)
+        let isToday = Calendar.current.isDateInToday(date)
         
-        // Check if we have cached data
+        // Check if we have cached data locally on device
         if let cached = healthCache[dateKey], !forceRefresh {
-            let isToday = Calendar.current.isDateInToday(date)
-            let cacheAge = Date().timeIntervalSince(healthCacheTimestamps[dateKey] ?? .distantPast)
-            
-            // For today, cache expires after 5 minutes; for past dates, cache is valid for 1 hour
-            let maxAge: TimeInterval = isToday ? healthCacheExpiry : 3600
-            
-            if cacheAge < maxAge {
-                print("[live-notif] 📊 Using cached health data for \(dateKey) (age: \(Int(cacheAge))s)")
+            if !isToday {
+                // Historical health data does not change; reuse cached data permanently
+                print("[live-notif] 📊 Using permanent cached health data for past date \(dateKey)")
                 return cached
+            } else {
+                // For today, check cache age (5 minutes)
+                let cacheAge = Date().timeIntervalSince(healthCacheTimestamps[dateKey] ?? .distantPast)
+                if cacheAge < healthCacheExpiry {
+                    print("[live-notif] 📊 Using cached health data for today \(dateKey) (age: \(Int(cacheAge))s)")
+                    return cached
+                }
             }
         }
         
-        // Request from Android if not cached or expired
-        requestHealthFromAndroid(for: date)
+        // Request from Android if not cached or expired or explicitly forced
+        requestHealthFromAndroid(for: date, forceRefresh: forceRefresh)
         
         // Return cached data while waiting for fresh data (if available)
         return healthCache[dateKey]
     }
     
     /// Request health data from Android (with deduplication)
-    private func requestHealthFromAndroid(for date: Date) {
+    private func requestHealthFromAndroid(for date: Date, forceRefresh: Bool = false) {
         let dateKey = dateKeyFromDate(date)
         
         // Prevent duplicate requests
@@ -508,9 +512,9 @@ class LiveNotificationManager: ObservableObject {
         }
         
         pendingHealthRequests.insert(dateKey)
-        print("[live-notif] 📊 Requesting health data from Android for \(dateKey)")
+        print("[live-notif] 📊 Requesting health data from Android for \(dateKey) (forceRefresh: \(forceRefresh))")
         
-        WebSocketServer.shared.requestHealthSummary(for: date)
+        WebSocketServer.shared.requestHealthSummary(for: date, forceRefresh: forceRefresh)
         
         // Clear pending flag after timeout (10 seconds)
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in

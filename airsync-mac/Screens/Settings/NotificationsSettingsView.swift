@@ -105,7 +105,30 @@ struct NotificationsSettingsView: View {
                 .glassBoxIfAvailable(radius: 18)
 
                 // 3. Apps
-                headerSection(title: L("settings.notifications.app.title"), icon: "app.badge")
+                HStack {
+                    headerSection(title: L("settings.notifications.app.title"), icon: "app.badge")
+                    Spacer()
+                    if !appState.androidApps.isEmpty {
+                        HStack(spacing: 8) {
+                            Button("Select All") {
+                                for app in appState.androidApps.values where !app.listening {
+                                    WebSocketServer.shared.toggleNotification(for: app.packageName, to: true)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
+                            Button("Deselect All") {
+                                for app in appState.androidApps.values where app.listening {
+                                    WebSocketServer.shared.toggleNotification(for: app.packageName, to: false)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                        .padding(.trailing, 8)
+                    }
+                }
                 VStack(spacing: 12) {
                     if appState.device == nil {
                         Text(L("settings.notifications.apps.connect"))

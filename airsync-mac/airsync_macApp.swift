@@ -211,13 +211,13 @@ struct airsync_macApp: App {
                         AppShortcutActions.mirrorPrimary()
                     }
                     .appShortcut(AppShortcuts.mirrorPrimary, appState: appState)
-                    .disabled(!(appState.device != nil && appState.adbConnected))
+                    .disabled(appState.device == nil && !appState.adbConnected)
                 } else {
                     Button("scrcpy Mirror") {
                         AppShortcutActions.mirrorPrimary()
                     }
                     .appShortcut(AppShortcuts.mirrorPrimary, appState: appState)
-                    .disabled(!(appState.device != nil && appState.adbConnected))
+                    .disabled(appState.device == nil && !appState.adbConnected)
                 }
 
                 // 2. Alternative Mirror Option
@@ -226,13 +226,13 @@ struct airsync_macApp: App {
                         AppShortcutActions.mirrorAlternate()
                     }
                     .appShortcut(AppShortcuts.mirrorAlternate, appState: appState)
-                    .disabled(!(appState.device != nil && appState.adbConnected))
+                    .disabled(appState.device == nil && !appState.adbConnected)
                 } else {
                     Button("Android Mirror") {
                         AppShortcutActions.mirrorAlternate()
                     }
                     .appShortcut(AppShortcuts.mirrorAlternate, appState: appState)
-                    .disabled(!(appState.device != nil && appState.adbConnected))
+                    .disabled(appState.device == nil && !appState.adbConnected)
                 }
 
                 Divider()
@@ -243,25 +243,25 @@ struct airsync_macApp: App {
                         AppShortcutActions.desktopPrimary()
                     }
                     .appShortcut(AppShortcuts.desktopPrimary, appState: appState)
-                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                    .disabled(!(appState.isPlus && appState.licenseCheck && (appState.device != nil || appState.adbConnected)))
 
                     Button("scrcpy Desktop") {
                         AppShortcutActions.desktopAlternate()
                     }
                     .appShortcut(AppShortcuts.desktopAlternate, appState: appState)
-                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                    .disabled(!(appState.isPlus && appState.licenseCheck && (appState.device != nil || appState.adbConnected)))
                 } else {
                     Button("scrcpy Desktop") {
                         AppShortcutActions.desktopPrimary()
                     }
                     .appShortcut(AppShortcuts.desktopPrimary, appState: appState)
-                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                    .disabled(!(appState.isPlus && appState.licenseCheck && (appState.device != nil || appState.adbConnected)))
 
                     Button("Native Desktop") {
                         AppShortcutActions.desktopAlternate()
                     }
                     .appShortcut(AppShortcuts.desktopAlternate, appState: appState)
-                    .disabled(!(appState.isPlus && appState.licenseCheck && appState.device != nil && appState.adbConnected))
+                    .disabled(!(appState.isPlus && appState.licenseCheck && (appState.device != nil || appState.adbConnected)))
                 }
 
                 // 4. Sidebar Mirroring
@@ -269,7 +269,7 @@ struct airsync_macApp: App {
                     AppShortcutActions.toggleMirrorHere()
                 }
                 .appShortcut(AppShortcuts.mirrorHere, appState: appState)
-                .disabled(!(appState.device != nil && appState.adbConnected))
+                .disabled(appState.device == nil && !appState.adbConnected)
 
                 // Only show app list if ADB is connected
                 if appState.adbConnected, let _ = appState.device {

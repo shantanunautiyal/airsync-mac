@@ -31,6 +31,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Dock icon visibility is now controlled by AppState.hideDockIcon
         AppState.shared.updateDockIconVisibility()
+
+        // Global observer to ensure dock icon hides consistently whenever windows close
+        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { _ in
+            DispatchQueue.main.async {
+                if AppState.shared.hideDockIcon {
+                    let hasVisibleStandardWindows = NSApp.windows.contains {
+                        $0.isVisible && !$0.isKind(of: NSClassFromString("NSStatusBarWindow") ?? NSWindow.self) && $0.level == .normal
+                    }
+                    if !hasVisibleStandardWindows {
+                        NSApp.setActivationPolicy(.accessory)
+                    }
+                }
+            }
+        }
         
         // Initialize Menu Bar Manager
         menuBarManager = MenuBarManager.shared

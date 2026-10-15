@@ -155,19 +155,26 @@ struct AppGridView: View {
     }
 
     private func launchApp(_ app: AndroidApp) {
-        if let device = appState.device, appState.adbConnected {
-            launchingPackageName = app.packageName
-            appState.trackAppUse(app)
+        launchingPackageName = app.packageName
+        appState.trackAppUse(app)
+
+        if appState.useNativeMirroringByDefault || !appState.adbConnected {
+            print("[apps] Launching app via Native Mirroring: \(app.packageName)")
+            WebSocketServer.shared.sendMirrorRequest(action: "start", mode: "app", package: app.packageName)
+            appState.isNativeMirroring = true
+        } else if let device = appState.device, appState.adbConnected {
+            print("[apps] Launching app via scrcpy: \(app.packageName)")
             ADBConnector.startScrcpy(
                 ip: device.ipAddress,
                 port: appState.adbPort,
                 deviceName: device.name,
                 package: app.packageName
             )
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                if launchingPackageName == app.packageName {
-                    launchingPackageName = nil
-                }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            if launchingPackageName == app.packageName {
+                launchingPackageName = nil
             }
         }
     }

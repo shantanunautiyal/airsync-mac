@@ -53,13 +53,13 @@ final class ShareViewController: NSViewController {
     }
 
     private func handOff() async {
-        guard let items = extensionContext?.inputItems as? [NSExtensionItem],
-              let group = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: "group.sameerasw.airsync-mac.widget"
-              ) else {
+        guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
             showError("AirSync could not access the shared items.")
             return
         }
+        let group = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: "group.sameerasw.airsync-mac.widget"
+              ) ?? FileManager.default.temporaryDirectory
 
         let loader = ShareInputLoader(groupContainer: group)
         var openingStarted = false

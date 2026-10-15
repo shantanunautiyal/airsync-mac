@@ -53,34 +53,42 @@ struct SidebarView: View {
         .frame(minWidth: 250, minHeight: 400)
         .safeAreaInset(edge: .bottom) {
 
-            if appState.adbConnected {
+            if appState.device != nil || appState.adbConnected {
                 HStack(spacing: 12) {
                     Menu {
                         // 1. Default mirror action
-                        if appState.useNativeMirroringByDefault {
+                        if appState.useNativeMirroringByDefault || !appState.adbConnected {
                             Button("Android Mirror") {
                                 appState.isNativeMirroring = true
                             }
                             .appShortcut(AppShortcuts.mirrorPrimary, appState: appState)
                         } else {
                             Button("scrcpy Mirror") {
-                                ADBConnector.startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? "My Phone"
-                                )
+                                if appState.adbConnected {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone"
+                                    )
+                                } else {
+                                    appState.isNativeMirroring = true
+                                }
                             }
                             .appShortcut(AppShortcuts.mirrorPrimary, appState: appState)
                         }
 
                         // 2. Alternative mirror action
-                        if appState.useNativeMirroringByDefault {
+                        if appState.useNativeMirroringByDefault || !appState.adbConnected {
                             Button("scrcpy Mirror") {
-                                ADBConnector.startScrcpy(
-                                    ip: appState.device?.ipAddress ?? "",
-                                    port: appState.adbPort,
-                                    deviceName: appState.device?.name ?? "My Phone"
-                                )
+                                if appState.adbConnected {
+                                    ADBConnector.startScrcpy(
+                                        ip: appState.device?.ipAddress ?? "",
+                                        port: appState.adbPort,
+                                        deviceName: appState.device?.name ?? "My Phone"
+                                    )
+                                } else {
+                                    appState.showADBPairingSheet = true
+                                }
                             }
                             .appShortcut(AppShortcuts.mirrorAlternate, appState: appState)
                         } else {
@@ -104,7 +112,7 @@ struct SidebarView: View {
                         if appState.isSidebarMirroring {
                             appState.isSidebarMirroring = false
                         } else {
-                            if appState.useNativeMirroringByDefault {
+                            if appState.useNativeMirroringByDefault || !appState.adbConnected {
                                 appState.isNativeMirroring = true
                             } else {
                                 ADBConnector.startScrcpy(
@@ -173,7 +181,7 @@ struct SidebarView: View {
                         Label("Desktop", systemImage: "desktopcomputer")
                     } primaryAction: {
                         if appState.isPlus && appState.licenseCheck {
-                            if appState.useNativeDesktopMirroringByDefault {
+                            if appState.useNativeDesktopMirroringByDefault || !appState.adbConnected {
                                 appState.isNativeDesktopMirroring = true
                             } else {
                                 ADBConnector.startScrcpy(
@@ -207,6 +215,9 @@ struct SidebarView: View {
             WhatsNewTourManager.shared.evaluateActiveItem()
         }
         .onChange(of: appState.adbConnected) { _, _ in
+            WhatsNewTourManager.shared.evaluateActiveItem()
+        }
+        .onChange(of: appState.device) { _, _ in
             WhatsNewTourManager.shared.evaluateActiveItem()
         }
         .onChange(of: appState.selectedTab) { _, _ in

@@ -12,6 +12,7 @@ struct HealthView: View {
     @State private var selectedDate = Date()
     @State private var isLoadingData = false
     @State private var animateRings = false
+    @State private var debounceWorkItem: DispatchWorkItem? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -35,7 +36,17 @@ struct HealthView: View {
                 .datePickerStyle(.compact)
                 .labelsHidden()
                 .onChange(of: selectedDate) { _, newDate in
-                    requestHealthData(for: newDate)
+                    debounceWorkItem?.cancel()
+                    let cached = manager.cachedHealthSummary(for: newDate)
+                    if cached != nil {
+                        requestHealthData(for: newDate, forceRefresh: false)
+                    } else {
+                        let item = DispatchWorkItem {
+                            requestHealthData(for: newDate, forceRefresh: false)
+                        }
+                        debounceWorkItem = item
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: item)
+                    }
                 }
                 
                 Button(action: { changeDate(by: 1) }) {
@@ -57,7 +68,7 @@ struct HealthView: View {
                         .controlSize(.small)
                 }
                 
-                Button(action: { requestHealthData(for: selectedDate) }) {
+                Button(action: { requestHealthData(for: selectedDate, forceRefresh: true) }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 14))
                         .rotationEffect(.degrees(isLoadingData ? 360 : 0))
@@ -224,11 +235,14 @@ struct HealthView: View {
         }
     }
     
-    private func requestHealthData(for date: Date) {
-        isLoadingData = true
+    private func requestHealthData(for date: Date, forceRefresh: Bool = false) {
+        let cached = manager.cachedHealthSummary(for: date)
+        if cached == nil || forceRefresh {
+            isLoadingData = true
+        }
         animateRings = false
-        _ = manager.getHealthSummary(for: date)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        _ = manager.getHealthSummary(for: date, forceRefresh: forceRefresh)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (cached != nil && !forceRefresh ? 0.2 : 2.5)) {
             self.isLoadingData = false
             withAnimation(.easeOut(duration: 1.2)) { self.animateRings = true }
         }

@@ -236,6 +236,58 @@ class WebSocketServer: ObservableObject {
             }
         }
         setupSimpleDecoderCallback()
+        setupNetworkPathMonitor()
+        setupSleepWakeObservers()
+    }
+
+    private func setupSleepWakeObservers() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleSystemWillSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleSystemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleSystemWillSleep() {
+        print("[websocket] 💤 System will sleep, stopping server cleanly...")
+        stop()
+        pingTimer?.invalidate()
+        pingTimer = nil
+    }
+
+    @objc private func handleSystemDidWake() {
+        print("[websocket] ⏰ System did wake, restarting server and re-announcing discovery...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.restartServer()
+        }
+    }
+
+    private func setupNetworkPathMonitor() {
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard let self = self else { return }
+            let currentIP = self.getLocalIPAddress(adapterName: AppState.shared.selectedNetworkAdapterName)
+            if let lastIP = self.lastKnownIP, let newIP = currentIP, lastIP != newIP {
+                print("[websocket] 🌐 Network interface IP changed (\(lastIP) -> \(newIP)), restarting server...")
+                DispatchQueue.main.async {
+                    self.restartServer()
+                }
+            } else if path.status == .satisfied && (self.activeSessions.isEmpty || self.localIPAddress == nil) {
+                DispatchQueue.main.async {
+                    self.restartServer()
+                }
+            }
+            self.lastKnownIP = currentIP
+        }
+        monitor.start(queue: networkMonitorQueue)
+        self.networkPathMonitor = monitor
     }
 
     deinit {
@@ -1961,19 +2013,19 @@ class WebSocketServer: ObservableObject {
                     break
                 }
                 
-                // Validate date is reasonable (not in distant past or future)
+                // Validate date is reasonable
                 let dateSeconds = Double(dateMs) / 1000.0
                 let date = Date(timeIntervalSince1970: dateSeconds)
                 let now = Date()
-                let oneYearAgo = now.addingTimeInterval(-365 * 24 * 60 * 60)
                 let oneWeekFromNow = now.addingTimeInterval(7 * 24 * 60 * 60)
                 
-                guard date > oneYearAgo && date < oneWeekFromNow else {
+                guard dateSeconds > 0 && date < oneWeekFromNow else {
                     print("[websocket] ❌ Health summary date out of range: \(date)")
                     break
                 }
                 
-                print("[websocket] 📊 Parsing health summary with date: \(dateMs) (\(date))")
+                let dateString = dict["dateString"] as? String
+                print("[websocket] 📊 Parsing health summary with date: \(dateMs) (\(date), dateString: \(dateString ?? "nil"))")
                 
                 let summary = HealthSummary(
                     date: date,
@@ -1997,7 +2049,7 @@ class WebSocketServer: ObservableObject {
                     hydration: parseOptionalDouble("hydration")
                 )
                 print("[websocket] 📊 Created HealthSummary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(String(format: "%.2f", summary.distance ?? 0))")
-                LiveNotificationManager.shared.handleHealthSummary(summary)
+                LiveNotificationManager.shared.handleHealthSummary(summary, dateString: dateString)
                 print("[websocket] 📊 Health summary sent to LiveNotificationManager")
             } else {
                 print("[websocket] ❌ Failed to parse health summary data dict")
@@ -2391,19 +2443,19 @@ class WebSocketServer: ObservableObject {
                 break
             }
             
-            // Validate date is reasonable (not in distant past or future)
+            // Validate date is reasonable
             let dateSeconds = Double(dateMs) / 1000.0
             let parsedDate = Date(timeIntervalSince1970: dateSeconds)
             let now = Date()
-            let oneYearAgo = now.addingTimeInterval(-365 * 24 * 60 * 60)
             let oneWeekFromNow = now.addingTimeInterval(7 * 24 * 60 * 60)
             
-            guard parsedDate > oneYearAgo && parsedDate < oneWeekFromNow else {
+            guard dateSeconds > 0 && parsedDate < oneWeekFromNow else {
                 print("[websocket] ❌ Health summary date out of range: \(parsedDate)")
                 break
             }
             
-            print("[websocket] 📊 Parsing health summary with date: \(dateMs) (\(parsedDate))")
+            let dateString = dict["dateString"] as? String
+            print("[websocket] 📊 Parsing health summary with date: \(dateMs) (\(parsedDate), dateString: \(dateString ?? "nil"))")
             
             let summary = HealthSummary(
                 date: parsedDate,
@@ -2427,7 +2479,7 @@ class WebSocketServer: ObservableObject {
                 hydration: parseOptionalDouble("hydration")
             )
             print("[websocket] 📊 Created HealthSummary: steps=\(summary.steps ?? 0), calories=\(summary.calories ?? 0), distance=\(String(format: "%.2f", summary.distance ?? 0))")
-            LiveNotificationManager.shared.handleHealthSummary(summary)
+            LiveNotificationManager.shared.handleHealthSummary(summary, dateString: dateString)
             print("[websocket] 📊 Health summary sent to LiveNotificationManager")
 
         case .smsMessages:
@@ -3416,17 +3468,22 @@ class WebSocketServer: ObservableObject {
     
     // MARK: - Health Data
     
-    func requestHealthSummary(for date: Date? = nil) {
+    func requestHealthSummary(for date: Date? = nil, forceRefresh: Bool = false) {
         let targetDate = date ?? Date()
         let dateMs = Int64(targetDate.timeIntervalSince1970 * 1000)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: targetDate)
         
-        print("[websocket] 📅 Requesting health summary for date: \(targetDate), timestamp: \(dateMs)")
+        print("[websocket] 📅 Requesting health summary for date: \(dateString) (timestamp: \(dateMs), forceRefresh: \(forceRefresh))")
         
         let message = """
         {
             "type": "requestHealthSummary",
             "data": {
-                "date": \(dateMs)
+                "date": \(dateMs),
+                "dateString": "\(dateString)",
+                "forceRefresh": \(forceRefresh)
             }
         }
         """
